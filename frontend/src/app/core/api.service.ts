@@ -7,6 +7,9 @@ import {
   Cliente,
   ClienteInput,
   Dashboard,
+  Documento,
+  DocumentoInput,
+  ModeloDocumento,
   Orcamento,
   OrcamentoInput,
   Projeto,
@@ -17,6 +20,7 @@ import {
   StatusOrcamento,
   StatusRecorrencia,
   Tarefa,
+  TipoDocumento,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -128,5 +132,56 @@ export class ApiService {
   /* Dashboard */
   getDashboard(): Observable<Dashboard> {
     return this.http.get<Dashboard>(`${this.base}/dashboard`);
+  }
+
+  /* Modelos de documento */
+  getModelos(): Observable<ModeloDocumento[]> {
+    return this.http.get<ModeloDocumento[]>(`${this.base}/modelos`);
+  }
+  getModelo(tipo: TipoDocumento): Observable<ModeloDocumento> {
+    return this.http.get<ModeloDocumento>(`${this.base}/modelos/${tipo}`);
+  }
+  salvarModelo(
+    tipo: TipoDocumento,
+    dados: { titulo: string; corpo: string },
+  ): Observable<ModeloDocumento> {
+    return this.http.put<ModeloDocumento>(`${this.base}/modelos/${tipo}`, dados);
+  }
+
+  /* Documentos finais */
+  getDocumentos(vinculo: {
+    projeto_id?: number;
+    orcamento_id?: number;
+  }): Observable<Documento[]> {
+    let params = '';
+    if (vinculo.projeto_id != null) params = `?projeto_id=${vinculo.projeto_id}`;
+    else if (vinculo.orcamento_id != null)
+      params = `?orcamento_id=${vinculo.orcamento_id}`;
+    return this.http.get<Documento[]>(`${this.base}/documentos${params}`);
+  }
+  getDocumento(id: number): Observable<Documento> {
+    return this.http.get<Documento>(`${this.base}/documentos/${id}`);
+  }
+  proximoNumero(
+    tipo: TipoDocumento,
+    orcamento_id?: number,
+  ): Observable<{ numero: string }> {
+    let params = `?tipo=${tipo}`;
+    if (orcamento_id != null) params += `&orcamento_id=${orcamento_id}`;
+    return this.http.get<{ numero: string }>(
+      `${this.base}/documentos/proximo-numero${params}`,
+    );
+  }
+  criarDocumento(dados: DocumentoInput): Observable<Documento> {
+    return this.http.post<Documento>(`${this.base}/documentos`, dados);
+  }
+  atualizarDocumento(
+    id: number,
+    dados: { titulo?: string; conteudo?: string },
+  ): Observable<Documento> {
+    return this.http.put<Documento>(`${this.base}/documentos/${id}`, dados);
+  }
+  excluirDocumento(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/documentos/${id}`);
   }
 }

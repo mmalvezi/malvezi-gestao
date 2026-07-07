@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     Cliente,
+    ModeloDocumento,
     Orcamento,
     OrcamentoItem,
     Projeto,
@@ -108,4 +109,112 @@ def run_seed(db: Session):
     ]
     db.add_all(tarefas)
 
+    db.commit()
+
+
+CORPO_CONTRATO = """
+<p>Pelo presente instrumento, de um lado <b>Malvezi Sistemas e Automação</b>
+(Contratada) e, de outro lado, <b>{{cliente}}</b> {{empresa}} (Contratante),
+ajustam a prestação de serviços descrita abaixo.</p>
+
+<div class="clausula"><b>Cláusula 1. Objeto.</b> A Contratada prestará serviço de
+{{tipo}} conforme o escopo: {{escopo}}.</div>
+
+<div class="clausula"><b>Cláusula 2. Valor e pagamento.</b> O valor total do
+serviço é de {{valor}}. Forma de pagamento: {{pagamento}}.</div>
+
+<div class="clausula"><b>Cláusula 3. Prazo.</b> A entrega está prevista para
+{{entrega}}. Prazo combinado: {{prazo}}.</div>
+
+<div class="clausula"><b>Cláusula 4. Responsabilidades.</b> A Contratada
+compromete-se a executar o serviço com qualidade técnica. A Contratante
+compromete-se a fornecer as informações e os acessos necessários no tempo
+adequado.</div>
+
+<div class="clausula"><b>Cláusula 5. Suporte e garantia.</b> Após a entrega, a
+Contratada oferece 30 dias de garantia para correção de falhas relacionadas ao
+escopo entregue.</div>
+
+<div class="clausula"><b>Cláusula 6. Vigência.</b> Este contrato vigora a partir
+da assinatura até a conclusão do objeto e o cumprimento das obrigações de ambas
+as partes. Fica eleito o foro da {{foro}} para tratar de qualquer questão,
+estando a Contratada sediada em {{cidade_sede}}.</div>
+
+<div class="assinaturas">
+  <div class="assinatura">Malvezi Sistemas e Automação<br><span class="mut">Contratada</span></div>
+  <div class="assinatura">{{cliente}}<br><span class="mut">Contratante</span></div>
+</div>
+""".strip()
+
+CORPO_ORCAMENTO = """
+<div class="row-2">
+  <div class="doc-box">
+    <h4 style="margin-top:0">Cliente</h4>
+    <b>{{cliente}}</b>
+    <div class="doc-sub">{{empresa}}</div>
+    <div class="doc-sub">{{contato}}</div>
+  </div>
+  <div class="doc-box">
+    <h4 style="margin-top:0">Projeto</h4>
+    <b>{{titulo}}</b>
+    <div class="doc-sub">{{tipo}}</div>
+    <div class="doc-sub">Validade: {{validade}} dias</div>
+  </div>
+</div>
+
+<h4>Entregas do escopo</h4>
+{{itens}}
+
+<div class="totais">
+  <div class="linha"><span class="mut">Subtotal</span><span>{{subtotal}}</span></div>
+  <div class="linha"><span class="mut">Desconto</span><span>- {{desconto}}</span></div>
+  <div class="linha total"><span>Total</span><span>{{total}}</span></div>
+</div>
+
+<h4>Condições</h4>
+<div class="doc-box">
+  <div><b>Pagamento:</b> {{pagamento}}</div>
+  <div><b>Prazo de entrega:</b> {{prazo}}</div>
+  <div style="margin-top:6px"><b>Observações:</b> {{obs}}</div>
+</div>
+""".strip()
+
+CORPO_RECIBO = """
+<div class="doc-box" style="margin-bottom:20px">
+  <div class="mut small">Valor recebido</div>
+  <div class="doc-titulo grad-text">{{valor}}</div>
+</div>
+
+<p>Recebi de <b>{{cliente}}</b> a importância de <b>{{valor}}</b>, referente ao
+{{referente}}, dando plena e total quitação do valor ora recebido.</p>
+
+<div class="assinaturas" style="grid-template-columns: minmax(0,1fr)">
+  <div class="assinatura">Malvezi Sistemas e Automação<br><span class="mut">Emitente</span></div>
+</div>
+""".strip()
+
+
+def run_seed_modelos(db: Session):
+    # Cria os 3 modelos padrao se a tabela estiver vazia.
+    if db.query(ModeloDocumento).first():
+        return
+    db.add_all(
+        [
+            ModeloDocumento(
+                tipo="contrato",
+                titulo="Contrato de prestação de serviços",
+                corpo=CORPO_CONTRATO,
+            ),
+            ModeloDocumento(
+                tipo="orcamento",
+                titulo="Orçamento",
+                corpo=CORPO_ORCAMENTO,
+            ),
+            ModeloDocumento(
+                tipo="recibo",
+                titulo="Recibo de pagamento",
+                corpo=CORPO_RECIBO,
+            ),
+        ]
+    )
     db.commit()

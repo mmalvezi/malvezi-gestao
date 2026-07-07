@@ -7,12 +7,14 @@ from .database import Base, SessionLocal, engine
 from .routers import (
     clientes,
     dashboard,
+    documentos,
+    modelos,
     orcamentos,
     projetos,
     recorrencias,
     tarefas,
 )
-from .seed import run_seed
+from .seed import run_seed, run_seed_modelos
 
 # Cria as tabelas
 Base.metadata.create_all(bind=engine)
@@ -35,6 +37,8 @@ app.include_router(orcamentos.router, prefix="/api")
 app.include_router(recorrencias.router, prefix="/api")
 app.include_router(tarefas.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
+app.include_router(modelos.router, prefix="/api")
+app.include_router(documentos.router, prefix="/api")
 
 
 @app.get("/api/health")
@@ -47,5 +51,6 @@ def _seed_inicial():
     db = SessionLocal()
     try:
         run_seed(db)
+        run_seed_modelos(db)
     finally:
         db.close()

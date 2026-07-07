@@ -179,14 +179,9 @@
       <textarea class="textarea" [(ngModel)]="form.escopo" name="escopo" placeholder="O que será entregue"></textarea>
     </div>
 
-    @if (editId) {
+    @if (editId && projetoAtual()) {
       <div class="documentos">
-        <div class="mut tiny mb-8">Documentos do projeto</div>
-        <div class="chips">
-          <button class="btn sm" (click)="abrirDoc('orcamento')">Orçamento</button>
-          <button class="btn sm" (click)="abrirDoc('contrato')">Contrato de prestação</button>
-          <button class="btn sm" (click)="abrirDoc('recibo')">Recibo de pagamento</button>
-        </div>
+        <app-documentos-area [tipos]="tiposDoc" [projeto]="projetoAtual()!"></app-documentos-area>
       </div>
     }
 
@@ -206,12 +201,3 @@
   </app-dialog>
 }
 
-<!-- Visualizador de documento -->
-@if (doc) {
-  <app-documento-viewer
-    [tipo]="doc.tipo"
-    [projeto]="doc.projeto"
-    [orcamento]="doc.orcamento"
-    (fechar)="fecharDoc()"
-  ></app-documento-viewer>
-}

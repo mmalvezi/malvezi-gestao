@@ -118,3 +118,31 @@ class Tarefa(Base):
     texto = Column(String, nullable=False)
     done = Column(Boolean, default=False)
     criado = Column(DateTime, default=agora)
+
+
+class ModeloDocumento(Base):
+    __tablename__ = "modelos_documento"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo = Column(String, unique=True, nullable=False)  # contrato | orcamento | recibo
+    titulo = Column(String, nullable=False, default="")
+    corpo = Column(Text, nullable=False, default="")  # HTML com marcadores
+    atualizado = Column(DateTime, default=agora, onupdate=agora)
+
+
+class Documento(Base):
+    __tablename__ = "documentos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo = Column(String, nullable=False)  # contrato | orcamento | recibo
+    numero = Column(String, nullable=False, default="")
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=True
+    )
+    orcamento_id = Column(
+        Integer, ForeignKey("orcamentos.id", ondelete="CASCADE"), nullable=True
+    )
+    titulo = Column(String, nullable=False, default="")
+    conteudo = Column(Text, nullable=False, default="")  # HTML final ja editado
+    criado = Column(DateTime, default=agora)
+    atualizado = Column(DateTime, default=agora, onupdate=agora)

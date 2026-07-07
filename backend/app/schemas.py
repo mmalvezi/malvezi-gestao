@@ -164,3 +164,54 @@ class StageUpdate(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: str
+
+
+# ---------- Documentos ----------
+TipoDocumento = Literal["contrato", "orcamento", "recibo"]
+
+
+class ModeloDocumentoUpdate(BaseModel):
+    titulo: str = ""
+    corpo: str = ""
+
+
+class ModeloDocumentoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    tipo: TipoDocumento
+    titulo: str
+    corpo: str
+    atualizado: Optional[datetime] = None
+
+
+class DocumentoCreate(BaseModel):
+    tipo: TipoDocumento
+    numero: Optional[str] = None
+    projeto_id: Optional[int] = None
+    orcamento_id: Optional[int] = None
+    titulo: str = ""
+    conteudo: str = ""
+
+
+class DocumentoUpdate(BaseModel):
+    titulo: Optional[str] = None
+    conteudo: Optional[str] = None
+
+
+class DocumentoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    tipo: TipoDocumento
+    numero: str
+    projeto_id: Optional[int] = None
+    orcamento_id: Optional[int] = None
+    titulo: str
+    conteudo: str
+    criado: datetime
+    atualizado: Optional[datetime] = None
+
+
+class ProximoNumero(BaseModel):
+    numero: str

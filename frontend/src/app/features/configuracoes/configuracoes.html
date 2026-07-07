@@ -1,0 +1,65 @@
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando modelos...</div>
+} @else {
+  <div class="between wrap mb-16">
+    <div class="chips">
+      @for (t of tipos; track t) {
+        <button class="chip" [class.active]="tipoSel === t" (click)="selecionar(t)">
+          {{ cab[t].label }}
+        </button>
+      }
+    </div>
+    <div class="items-center">
+      @if (salvo) {
+        <span class="badge ok"><span class="dot"></span> Salvo</span>
+      }
+      <button class="btn ghost" (click)="verExemplo()">Ver exemplo</button>
+      <button class="btn primary" (click)="salvar()" [disabled]="salvando">
+        {{ salvando ? 'Salvando...' : 'Salvar modelo' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="cfg-grid">
+    <div class="card card-pad">
+      <div class="field">
+        <label>Título do modelo</label>
+        <input class="input" [(ngModel)]="titulo" name="titulo" />
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Corpo do documento (o timbre e fixo, so o corpo e editavel)</label>
+        <app-editor-corpo [valor]="corpo" (valorChange)="corpo = $event"></app-editor-corpo>
+      </div>
+    </div>
+
+    <div class="card card-pad marcadores">
+      <div class="section-title">Marcadores</div>
+      <p class="mut tiny mb-8">
+        Clique para inserir no ponto do cursor. Sem dado, o marcador fica vazio.
+      </p>
+      <div class="lista-marc">
+        @for (m of marcadores(); track m) {
+          <button class="marc" (click)="inserir(m)">{{ rotuloMarc(m) }}</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Preview: modelo preenchido com dados ficticios -->
+@if (previewAberto) {
+  <div class="doc-overlay">
+    <div class="doc-toolbar no-print">
+      <button class="btn ghost" (click)="previewAberto = false">Voltar</button>
+      <div class="items-center">
+        <span class="mut small">Exemplo com dados ficticios</span>
+        <button class="btn primary" (click)="imprimirExemplo()">Emitir PDF</button>
+      </div>
+    </div>
+    <div class="doc-scroll">
+      <app-timbre [titulo]="previewTitulo" [linha1]="previewLinha1" [linha2]="previewLinha2">
+        <div [innerHTML]="previewHtml"></div>
+      </app-timbre>
+    </div>
+  </div>
+}

@@ -45,6 +45,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/financeiro/financeiro').then((m) => m.Financeiro),
       },
+      {
+        path: 'configuracoes',
+        loadComponent: () =>
+          import('./features/configuracoes/configuracoes').then(
+            (m) => m.Configuracoes,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

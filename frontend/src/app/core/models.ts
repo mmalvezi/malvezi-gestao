@@ -117,3 +117,35 @@ export interface OrcamentoInput {
   status: StatusOrcamento;
   itens: OrcamentoItem[];
 }
+
+/* Documentos por modelo */
+export type TipoDocumento = 'contrato' | 'orcamento' | 'recibo';
+
+export interface ModeloDocumento {
+  id: number;
+  tipo: TipoDocumento;
+  titulo: string;
+  corpo: string;
+  atualizado?: string | null;
+}
+
+export interface Documento {
+  id: number;
+  tipo: TipoDocumento;
+  numero: string;
+  projeto_id?: number | null;
+  orcamento_id?: number | null;
+  titulo: string;
+  conteudo: string;
+  criado: string;
+  atualizado?: string | null;
+}
+
+export interface DocumentoInput {
+  tipo: TipoDocumento;
+  numero?: string;
+  projeto_id?: number | null;
+  orcamento_id?: number | null;
+  titulo: string;
+  conteudo: string;
+}

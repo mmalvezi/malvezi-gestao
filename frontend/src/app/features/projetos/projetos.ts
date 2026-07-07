@@ -6,11 +6,9 @@ import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
 import {
   Cliente,
-  Orcamento,
   Projeto,
   ProjetoInput,
   StageProjeto,
-  TipoProjeto,
 } from '../../core/models';
 import {
   moeda,
@@ -22,15 +20,12 @@ import {
   TIPO_SIGLA,
 } from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
-import {
-  DocumentoViewer,
-  TipoDocumento,
-} from '../../shared/documentos/documento-viewer';
+import { DocumentosArea } from '../../shared/documentos/documentos-area';
 
 @Component({
   selector: 'app-projetos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, DocumentoViewer],
+  imports: [CommonModule, FormsModule, Dialog, DocumentosArea],
   templateUrl: './projetos.html',
   styleUrl: './projetos.scss',
 })
@@ -58,9 +53,11 @@ export class Projetos implements OnInit {
   form: ProjetoInput = this.novoForm();
   salvando = false;
 
-  /* Documentos */
-  doc: { tipo: TipoDocumento; projeto?: Projeto; orcamento?: Orcamento } | null =
-    null;
+  tiposDoc: ('contrato' | 'orcamento' | 'recibo')[] = [
+    'orcamento',
+    'contrato',
+    'recibo',
+  ];
 
   ngOnInit() {
     this.ui.setTitulo('Projetos');
@@ -189,45 +186,5 @@ export class Projetos implements OnInit {
   /* Documentos */
   projetoAtual(): Projeto | undefined {
     return this.projetos.find((p) => p.id === this.editId);
-  }
-
-  abrirDoc(tipo: TipoDocumento) {
-    const p = this.projetoAtual();
-    if (!p) return;
-    if (tipo === 'orcamento') {
-      this.doc = { tipo, orcamento: this.projetoParaOrcamento(p) };
-    } else {
-      this.doc = { tipo, projeto: p };
-    }
-  }
-
-  fecharDoc() {
-    this.doc = null;
-  }
-
-  private projetoParaOrcamento(p: Projeto): Orcamento {
-    return {
-      id: 0,
-      numero: 'ORC-' + String(p.id).padStart(4, '0'),
-      cliente_id: p.cliente_id,
-      titulo: p.escopo ? p.escopo.slice(0, 60) : this.tipoLabel[p.tipo],
-      tipo: p.tipo as TipoProjeto,
-      desconto: 0,
-      pagamento: 'A combinar',
-      prazo: p.entrega ? 'Entrega prevista' : 'A combinar',
-      validade_dias: 15,
-      obs: '',
-      status: 'rascunho',
-      cliente: p.cliente,
-      itens: [
-        {
-          titulo: this.tipoLabel[p.tipo],
-          descricao: p.escopo || '',
-          valor: Number(p.valor || 0),
-          ordem: 1,
-        },
-      ],
-      total: Number(p.valor || 0),
-    };
   }
 }
