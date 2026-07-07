@@ -1,0 +1,111 @@
+.entrega {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borda);
+}
+.entrega:last-child {
+  border-bottom: none;
+}
+
+.pend {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+}
+.pend .pt {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grad);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.divisor {
+  height: 1px;
+  background: var(--borda);
+  margin: 14px 0;
+}
+
+.lembrete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.lembrete .check {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--borda);
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.lembrete .check.on {
+  background: var(--grad);
+  border: none;
+}
+.lembrete .check svg {
+  width: 14px;
+  height: 14px;
+}
+.lembrete .txt {
+  flex: 1;
+  font-size: 14px;
+  min-width: 0;
+}
+.lembrete .txt.feito {
+  text-decoration: line-through;
+  color: var(--mut);
+}
+.icon-btn.sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.icon-btn.sm svg {
+  width: 15px;
+  height: 15px;
+}
+
+.novo-lembrete {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.funil-linha {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+.funil-linha .rot {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink2);
+}
+.funil-linha .cnt {
+  text-align: right;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.painel-cols {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+@media (max-width: 820px) {
+  .painel-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,86 @@
+<div class="between wrap mb-16">
+  <div class="mut small">{{ filtradas().length }} cliente(s)</div>
+  <button class="btn primary" (click)="abrirNovo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+    </svg>
+    Novo cliente
+  </button>
+</div>
+
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando clientes...</div>
+} @else if (!linhas.length) {
+  <div class="card card-pad empty">Nenhum cliente cadastrado.</div>
+} @else {
+  <div class="grid grid-auto">
+    @for (l of filtradas(); track l.cliente.id) {
+      <div class="card card-pad cli" (click)="verProjetos(l)">
+        <div class="between">
+          <div class="items-center">
+            <div class="avatar">{{ l.cliente.nome.charAt(0) }}</div>
+            <div class="min0">
+              <div class="bold trunc">{{ l.cliente.nome }}</div>
+              <div class="mut small trunc">{{ l.cliente.empresa || l.cliente.contato || 'Sem empresa' }}</div>
+            </div>
+          </div>
+          <button class="icon-btn" (click)="abrirEditar(l, $event)" aria-label="Editar cliente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mini-kpis mt-16">
+          <div>
+            <div class="mut tiny">Projetos</div>
+            <div class="bold">{{ l.projetos }}</div>
+          </div>
+          <div>
+            <div class="mut tiny">Gerado</div>
+            <div class="bold">{{ money(l.gerado) }}</div>
+          </div>
+          <div>
+            <div class="mut tiny">Por mes</div>
+            <div class="bold">{{ money(l.porMes) }}</div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (editorAberto) {
+  <app-dialog
+    [titulo]="editId ? 'Editar cliente' : 'Novo cliente'"
+    [largura]="480"
+    (fechar)="fecharEditor()"
+  >
+    <div class="field">
+      <label>Nome</label>
+      <input class="input" [(ngModel)]="form.nome" name="nome" placeholder="Nome do cliente" />
+    </div>
+    <div class="field">
+      <label>Empresa (opcional)</label>
+      <input class="input" [(ngModel)]="form.empresa" name="empresa" />
+    </div>
+    <div class="field">
+      <label>Contato (opcional)</label>
+      <input class="input" [(ngModel)]="form.contato" name="contato" placeholder="Telefone ou e-mail" />
+    </div>
+
+    <div foot class="between" style="width:100%">
+      <span>
+        @if (editId) {
+          <button class="btn danger" (click)="excluir()">Excluir</button>
+        }
+      </span>
+      <span class="items-center">
+        <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
+        <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.nome.trim()">
+          {{ salvando ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </span>
+    </div>
+  </app-dialog>
+}

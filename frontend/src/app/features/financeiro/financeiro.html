@@ -1,0 +1,72 @@
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando financeiro...</div>
+} @else {
+  <div class="grid grid-4 mb-16">
+    <div class="kpi grad">
+      <span class="rot">Recorrente por mes</span>
+      <span class="val">{{ money(recorrenteMes) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Ja recebido</span>
+      <span class="val">{{ money(recebido) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">A receber</span>
+      <span class="val">{{ money(aReceber) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Carteira total</span>
+      <span class="val">{{ money(carteira) }}</span>
+    </div>
+  </div>
+
+  <!-- Grafico ilustrativo -->
+  <div class="card card-pad mb-16">
+    <div class="section-title">Recebido nos ultimos meses</div>
+    <div class="grafico">
+      @for (b of barras; track b.rot) {
+        <div class="col">
+          <div class="haste" [style.height.%]="b.altura || 2" [title]="money(b.valor)"></div>
+          <span class="mut tiny">{{ b.rot }}</span>
+        </div>
+      }
+    </div>
+    <div class="mut tiny center mt-8">Distribuicao ilustrativa por mes de entrada dos projetos.</div>
+  </div>
+
+  <div class="grid fin-cols">
+    <div class="card card-pad">
+      <div class="section-title">Recorrencia ativa</div>
+      @if (recorrenciasAtivas().length) {
+        @for (r of recorrenciasAtivas(); track r.id) {
+          <div class="linha">
+            <div class="min0">
+              <div class="bold small trunc">{{ r.cliente?.nome || '-' }}</div>
+              <div class="mut tiny trunc">{{ r.plano }}</div>
+            </div>
+            <span class="bold">{{ money(r.valor) }}</span>
+          </div>
+        }
+      } @else {
+        <div class="empty">Sem mensalidades ativas.</div>
+      }
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-title">Orcamentos em aberto</div>
+      @if (orcamentosAbertos().length) {
+        @for (o of orcamentosAbertos(); track o.id) {
+          <div class="linha">
+            <div class="min0">
+              <div class="bold small trunc">{{ o.numero }} &middot; {{ o.titulo }}</div>
+              <div class="mut tiny trunc">{{ o.cliente?.nome || '-' }}</div>
+            </div>
+            <span class="bold">{{ money(o.total) }}</span>
+          </div>
+        }
+      } @else {
+        <div class="empty">Nenhum orcamento em aberto.</div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,120 @@
+<div class="grid grid-4 mb-16">
+  <div class="kpi grad">
+    <span class="rot">MRR (recorrente por mes)</span>
+    <span class="val">{{ money(mrr()) }}</span>
+  </div>
+  <div class="kpi">
+    <span class="rot">Mensalidades ativas</span>
+    <span class="val">{{ contarAtivas() }}</span>
+  </div>
+</div>
+
+<div class="between wrap mb-16">
+  <div class="mut small">{{ itens.length }} mensalidade(s)</div>
+  <button class="btn primary" (click)="abrirNovo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+    </svg>
+    Nova mensalidade
+  </button>
+</div>
+
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando mensalidades...</div>
+} @else if (!itens.length) {
+  <div class="card card-pad empty">Nenhuma mensalidade cadastrada.</div>
+} @else {
+  <div class="card table-wrap">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>O que inclui</th>
+          <th style="text-align:right">Valor / mes</th>
+          <th>Situacao</th>
+          <th style="text-align:right">Acoes</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of itens; track r.id) {
+          <tr>
+            <td class="bold">{{ r.cliente?.nome || '-' }}</td>
+            <td>{{ r.plano }}</td>
+            <td style="text-align:right" class="bold">{{ money(r.valor) }}</td>
+            <td>
+              <button
+                class="badge"
+                [class.ok]="r.status === 'ativo'"
+                [class.warn]="r.status === 'pausado'"
+                (click)="alternarStatus(r)"
+                style="cursor:pointer;border:none"
+                [attr.aria-label]="'Alternar situacao (' + r.status + ')'"
+              >
+                <span class="dot"></span>
+                {{ r.status === 'ativo' ? 'Ativo' : 'Pausado' }}
+              </button>
+            </td>
+            <td>
+              <div class="items-center" style="justify-content:flex-end">
+                <button class="icon-btn" (click)="abrirEditar(r)" aria-label="Editar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <button class="icon-btn" (click)="excluir(r)" aria-label="Excluir">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (editorAberto) {
+  <app-dialog
+    [titulo]="editId ? 'Editar mensalidade' : 'Nova mensalidade'"
+    [largura]="520"
+    (fechar)="fecharEditor()"
+  >
+    <div class="field">
+      <label>Cliente</label>
+      <select class="select" [(ngModel)]="form.cliente_id" name="cliente_id">
+        @for (c of clientes; track c.id) {
+          <option [ngValue]="c.id">{{ c.nome }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label>O que inclui (plano)</label>
+      <input class="input" [(ngModel)]="form.plano" name="plano" placeholder="Ex.: Hospedagem e suporte" />
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Valor por mes (R$)</label>
+        <input class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
+      </div>
+      <div class="field">
+        <label>Situacao</label>
+        <select class="select" [(ngModel)]="form.status" name="status">
+          <option value="ativo">Ativo</option>
+          <option value="pausado">Pausado</option>
+        </select>
+      </div>
+    </div>
+
+    <div foot class="between" style="width:100%">
+      <span></span>
+      <span class="items-center">
+        <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
+        <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id || !form.plano.trim()">
+          {{ salvando ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </span>
+    </div>
+  </app-dialog>
+}

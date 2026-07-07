@@ -1,0 +1,126 @@
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando painel...</div>
+} @else if (dash) {
+  <!-- KPIs -->
+  <div class="grid grid-4 mb-16">
+    <div class="kpi grad">
+      <span class="rot">Recorrente por mes</span>
+      <span class="val">{{ money(dash.recorrente_mes) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">A receber</span>
+      <span class="val">{{ money(dash.a_receber) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Projetos ativos</span>
+      <span class="val">{{ dash.projetos_ativos }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Em producao</span>
+      <span class="val">{{ money(dash.em_producao) }}</span>
+    </div>
+  </div>
+
+  <div class="grid painel-cols">
+    <!-- Proximas entregas -->
+    <div class="card card-pad">
+      <div class="section-title">Proximas entregas</div>
+      @if (dash.proximas_entregas.length) {
+        @for (e of dash.proximas_entregas; track e.id) {
+          <div class="entrega">
+            <div>
+              <div class="bold">{{ e.cliente }}</div>
+              <div class="mut small">{{ e.tipo }}</div>
+            </div>
+            <div style="text-align:right">
+              <span
+                class="badge"
+                [class.bad]="e.dias_restantes < 0"
+                [class.warn]="e.dias_restantes >= 0 && e.dias_restantes <= 7"
+                [class.info]="e.dias_restantes > 7"
+              >
+                @if (e.dias_restantes < 0) {
+                  Atrasado {{ -e.dias_restantes }}d
+                } @else if (e.dias_restantes === 0) {
+                  Entrega hoje
+                } @else {
+                  Faltam {{ e.dias_restantes }}d
+                }
+              </span>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="empty">Nenhuma entrega agendada.</div>
+      }
+    </div>
+
+    <!-- Precisa de atencao -->
+    <div class="card card-pad">
+      <div class="section-title">Precisa de atencao</div>
+
+      @for (p of dash.pendencias; track $index) {
+        <div class="pend">
+          <span class="pt"></span>
+          <div>
+            <div class="bold small">{{ p.titulo }}</div>
+            <div class="mut tiny">{{ p.detalhe }}</div>
+          </div>
+        </div>
+      }
+      @if (!dash.pendencias.length) {
+        <div class="mut small mb-8">Nenhum alerta automatico agora.</div>
+      }
+
+      <div class="divisor"></div>
+      <div class="mut tiny mb-8">Lembretes</div>
+
+      @for (t of tarefas; track t.id) {
+        <div class="lembrete">
+          <button
+            class="check"
+            [class.on]="t.done"
+            (click)="alternar(t)"
+            [attr.aria-label]="t.done ? 'Desmarcar' : 'Concluir'"
+          >
+            @if (t.done) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            }
+          </button>
+          <span class="txt" [class.feito]="t.done">{{ t.texto }}</span>
+          <button class="icon-btn sm" (click)="remover(t)" aria-label="Remover lembrete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      }
+
+      <form class="novo-lembrete" (ngSubmit)="adicionar()">
+        <input
+          class="input"
+          [(ngModel)]="novaTarefa"
+          name="novaTarefa"
+          placeholder="Novo lembrete..."
+        />
+        <button class="btn primary sm" type="submit">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Funil -->
+  <div class="card card-pad mt-16">
+    <div class="section-title">Funil por estagio</div>
+    @for (f of dash.funil; track f.stage) {
+      <div class="funil-linha">
+        <span class="rot">{{ stageLabel[f.stage] }}</span>
+        <div class="bar"><span [style.width]="larguraFunil(f.count)"></span></div>
+        <span class="cnt">{{ f.count }}</span>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="empty">Nao foi possivel carregar o painel.</div>
+}

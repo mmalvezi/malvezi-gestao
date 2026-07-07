@@ -1,0 +1,70 @@
+<div class="shell">
+  <!-- Menu lateral -->
+  <aside class="sidebar" [class.aberta]="gaveta">
+    <div class="logo">
+      <app-brand-mark [size]="30" [lockup]="true"></app-brand-mark>
+    </div>
+    <nav class="menu">
+      @for (item of itens; track item.rota) {
+        <a
+          [routerLink]="item.rota"
+          routerLinkActive="ativo"
+          class="menu-item"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="item.icone" />
+          </svg>
+          <span>{{ item.rot }}</span>
+          @if (cont(item.chave)) {
+            <span class="cont">{{ cont(item.chave) }}</span>
+          }
+        </a>
+      }
+    </nav>
+    <div class="rodape-menu mut tiny">Malvezi Gestao</div>
+  </aside>
+
+  <!-- Fundo escuro da gaveta no mobile -->
+  @if (gaveta) {
+    <div class="scrim" (click)="gaveta = false"></div>
+  }
+
+  <div class="conteudo">
+    <!-- Barra de topo -->
+    <header class="topbar">
+      <button
+        class="icon-btn hamburguer"
+        (click)="gaveta = !gaveta"
+        aria-label="Abrir menu"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round" />
+        </svg>
+      </button>
+      <h2 class="titulo-area">{{ ui.titulo() }}</h2>
+      <div class="busca">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.3-4.3" stroke-linecap="round" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar..."
+          [value]="ui.busca()"
+          (input)="ui.busca.set($any($event.target).value)"
+          aria-label="Buscar"
+        />
+      </div>
+      <button class="btn ghost sair" (click)="sair()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="rot-sair">Sair</span>
+      </button>
+    </header>
+
+    <main class="area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
