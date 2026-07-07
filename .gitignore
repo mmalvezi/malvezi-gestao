@@ -1,0 +1,18 @@
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Ambiente e banco local
+.env
+*.db
+
+# Sistema
+.DS_Store
+Thumbs.db
