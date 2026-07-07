@@ -14,64 +14,65 @@ import { dataBr, moeda, TIPO_LABEL } from '../../core/utils';
         <app-brand-mark [size]="34" [lockup]="true"></app-brand-mark>
         <div style="text-align:right">
           <div class="doc-titulo">Contrato</div>
-          <div class="doc-sub">Prestacao de servico</div>
+          <div class="doc-sub">Prestação de serviços</div>
           <div class="doc-sub">{{ hoje }}</div>
         </div>
       </div>
 
       <p>
         Pelo presente instrumento, de um lado
-        <b>Malvezi Sistemas e Automacao</b> (Contratada) e, de outro lado,
+        <b>Malvezi Sistemas e Automação</b> (Contratada) e, de outro lado,
         <b>{{ cliente }}</b>{{ empresa ? ' (' + empresa + ')' : '' }}
-        (Contratante), ajustam a prestacao de servico descrita abaixo.
+        (Contratante), ajustam a prestação de serviços descrita abaixo.
       </p>
 
       <div class="clausula">
-        <b>Clausula 1 - Objeto.</b> A Contratada prestara servico de
-        {{ tipoLabel[projeto.tipo] }} conforme escopo:
+        <b>Cláusula 1. Objeto.</b> A Contratada prestará serviço de
+        {{ tipoLabel[projeto.tipo] }} conforme o escopo:
         {{ projeto.escopo || 'a ser detalhado entre as partes' }}.
       </div>
       <div class="clausula">
-        <b>Clausula 2 - Valor e pagamento.</b> O valor total do servico e de
+        <b>Cláusula 2. Valor e pagamento.</b> O valor total do serviço é de
         {{ money(projeto.valor) }}.
         @if (projeto.pago > 0) {
-          Ja foi pago o montante de {{ money(projeto.pago) }}, restando
+          Já foi pago o montante de {{ money(projeto.pago) }}, restando
           {{ money(saldo) }}.
         } @else {
-          O pagamento seguira as condicoes combinadas entre as partes.
+          O pagamento seguirá as condições combinadas entre as partes.
         }
       </div>
       <div class="clausula">
-        <b>Clausula 3 - Prazo.</b>
+        <b>Cláusula 3. Prazo.</b>
         @if (projeto.entrega) {
-          A entrega esta prevista para {{ dataEntrega }}.
+          A entrega está prevista para {{ dataEntrega }}.
         } @else {
-          O prazo de entrega sera definido no inicio do projeto.
+          O prazo de entrega será definido no início do projeto.
         }
       </div>
       <div class="clausula">
-        <b>Clausula 4 - Responsabilidades.</b> A Contratada compromete-se a
-        executar o servico com qualidade tecnica. A Contratante compromete-se a
-        fornecer as informacoes e os acessos necessarios no tempo adequado.
+        <b>Cláusula 4. Responsabilidades.</b> A Contratada compromete-se a
+        executar o serviço com qualidade técnica. A Contratante compromete-se a
+        fornecer as informações e os acessos necessários no tempo adequado.
       </div>
       <div class="clausula">
-        <b>Clausula 5 - Suporte e garantia.</b> Apos a entrega, a Contratada
-        oferece 30 dias de garantia para correcao de falhas relacionadas ao
+        <b>Cláusula 5. Suporte e garantia.</b> Após a entrega, a Contratada
+        oferece 30 dias de garantia para correção de falhas relacionadas ao
         escopo entregue.
       </div>
       <div class="clausula">
-        <b>Clausula 6 - Vigencia.</b> Este contrato vigora a partir da assinatura
-        ate a conclusao do objeto e o cumprimento das obrigacoes de ambas as
-        partes.
+        <b>Cláusula 6. Vigência.</b> Este contrato vigora a partir da assinatura
+        até a conclusão do objeto e o cumprimento das obrigações de ambas as
+        partes. Fica eleito o foro da comarca de Jundiaí para tratar de qualquer
+        questão, estando a Contratada sediada em Cabreúva.
       </div>
 
       <div class="assinaturas">
-        <div class="assinatura">Malvezi Sistemas e Automacao<br /><span class="mut">Contratada</span></div>
+        <div class="assinatura">Malvezi Sistemas e Automação<br /><span class="mut">Contratada</span></div>
         <div class="assinatura">{{ cliente }}<br /><span class="mut">Contratante</span></div>
       </div>
 
       <div class="doc-foot">
-        <span>Malvezi Sistemas e Automacao</span>
+        <span>Malvezi Sistemas e Automação</span>
         <span>malvezi.com.br</span>
       </div>
     </div>

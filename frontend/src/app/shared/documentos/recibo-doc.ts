@@ -25,10 +25,10 @@ import { dataBr, moeda, TIPO_LABEL } from '../../core/utils';
       </div>
 
       <p>
-        Recebi de <b>{{ cliente }}</b> a importancia de
-        <b>{{ money(valorRecebido) }}</b>, referente ao servico de
+        Recebi de <b>{{ cliente }}</b> a importância de
+        <b>{{ money(valorRecebido) }}</b>, referente ao serviço de
         {{ tipoLabel[projeto.tipo] }}{{ projeto.escopo ? ' (' + projeto.escopo + ')' : '' }},
-        dando plena e total quitacao do valor ora recebido.
+        dando plena e total quitação do valor ora recebido.
       </p>
 
       @if (saldo > 0) {
@@ -38,18 +38,18 @@ import { dataBr, moeda, TIPO_LABEL } from '../../core/utils';
         </div>
       } @else {
         <div class="doc-box">
-          <b>Situacao:</b> projeto quitado integralmente ({{ money(projeto.valor) }}).
+          <b>Situação:</b> projeto quitado integralmente ({{ money(projeto.valor) }}).
         </div>
       }
 
       <div class="assinaturas" style="grid-template-columns: minmax(0,1fr)">
         <div class="assinatura">
-          Malvezi Sistemas e Automacao<br /><span class="mut">Emitente</span>
+          Malvezi Sistemas e Automação<br /><span class="mut">Emitente</span>
         </div>
       </div>
 
       <div class="doc-foot">
-        <span>Malvezi Sistemas e Automacao</span>
+        <span>Malvezi Sistemas e Automação</span>
         <span>malvezi.com.br</span>
       </div>
     </div>

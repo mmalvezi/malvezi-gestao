@@ -19,14 +19,14 @@ export function dataBr(iso: string | null | undefined): string {
 export const TIPOS: { valor: TipoProjeto; rot: string }[] = [
   { valor: 'site', rot: 'Site' },
   { valor: 'erp', rot: 'ERP' },
-  { valor: 'automacao', rot: 'Automacao' },
+  { valor: 'automacao', rot: 'Automação' },
   { valor: 'portal', rot: 'Portal' },
 ];
 
 export const TIPO_LABEL: Record<TipoProjeto, string> = {
   site: 'Site',
   erp: 'ERP',
-  automacao: 'Automacao',
+  automacao: 'Automação',
   portal: 'Portal',
 };
 
@@ -39,17 +39,17 @@ export const TIPO_SIGLA: Record<TipoProjeto, string> = {
 
 export const STAGES: { valor: StageProjeto; rot: string }[] = [
   { valor: 'lead', rot: 'Lead' },
-  { valor: 'orcamento', rot: 'Orcamento' },
+  { valor: 'orcamento', rot: 'Orçamento' },
   { valor: 'aprovado', rot: 'Aprovado' },
-  { valor: 'desenvolvimento', rot: 'Producao' },
+  { valor: 'desenvolvimento', rot: 'Produção' },
   { valor: 'entregue', rot: 'Entregue' },
 ];
 
 export const STAGE_LABEL: Record<StageProjeto, string> = {
   lead: 'Lead',
-  orcamento: 'Orcamento',
+  orcamento: 'Orçamento',
   aprovado: 'Aprovado',
-  desenvolvimento: 'Em producao',
+  desenvolvimento: 'Em produção',
   entregue: 'Entregue',
 };
 
@@ -77,23 +77,23 @@ export const MODELOS_ESCOPO: Record<
   { titulo: string; descricao: string; valor: number }[]
 > = {
   site: [
-    { titulo: 'Layout e identidade', descricao: 'Design das paginas principais', valor: 1800 },
-    { titulo: 'Desenvolvimento', descricao: 'Site responsivo em ate 6 paginas', valor: 2800 },
-    { titulo: 'Publicacao', descricao: 'Hospedagem e configuracao de dominio', valor: 800 },
+    { titulo: 'Layout e identidade', descricao: 'Design das páginas principais', valor: 1800 },
+    { titulo: 'Desenvolvimento', descricao: 'Site responsivo em até 6 páginas', valor: 2800 },
+    { titulo: 'Publicação', descricao: 'Hospedagem e configuração de domínio', valor: 800 },
   ],
   erp: [
     { titulo: 'Levantamento', descricao: 'Mapeamento de processos e requisitos', valor: 2500 },
-    { titulo: 'Modulos principais', descricao: 'Cadastros, estoque e financeiro', valor: 6500 },
-    { titulo: 'Integracao fiscal', descricao: 'Emissao de notas e relatorios', valor: 3000 },
+    { titulo: 'Módulos principais', descricao: 'Cadastros, estoque e financeiro', valor: 6500 },
+    { titulo: 'Integração fiscal', descricao: 'Emissão de notas e relatórios', valor: 3000 },
   ],
   automacao: [
-    { titulo: 'Analise do fluxo', descricao: 'Desenho da automacao e gatilhos', valor: 1500 },
-    { titulo: 'Implementacao', descricao: 'Rotinas automaticas e integracoes', valor: 3500 },
-    { titulo: 'Testes e ajustes', descricao: 'Homologacao com o cliente', valor: 1000 },
+    { titulo: 'Análise do fluxo', descricao: 'Desenho da automação e gatilhos', valor: 1500 },
+    { titulo: 'Implementação', descricao: 'Rotinas automáticas e integrações', valor: 3500 },
+    { titulo: 'Testes e ajustes', descricao: 'Homologação com o cliente', valor: 1000 },
   ],
   portal: [
-    { titulo: 'UX e telas', descricao: 'Fluxo de navegacao e prototipo', valor: 2200 },
-    { titulo: 'Area logada', descricao: 'Cadastro, login e painel do usuario', valor: 4200 },
-    { titulo: 'Publicacao', descricao: 'Deploy e configuracao inicial', valor: 900 },
+    { titulo: 'UX e telas', descricao: 'Fluxo de navegação e protótipo', valor: 2200 },
+    { titulo: 'Área logada', descricao: 'Cadastro, login e painel do usuário', valor: 4200 },
+    { titulo: 'Publicação', descricao: 'Deploy e configuração inicial', valor: 900 },
   ],
 };

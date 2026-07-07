@@ -17,7 +17,7 @@ from .seed import run_seed
 # Cria as tabelas
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Malvezi Gestao")
+app = FastAPI(title="Malvezi Gestão")
 
 app.add_middleware(
     CORSMiddleware,

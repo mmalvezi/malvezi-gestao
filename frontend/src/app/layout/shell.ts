@@ -57,7 +57,7 @@ export class Shell implements OnInit {
     },
     {
       rota: '/orcamentos',
-      rot: 'Orcamentos',
+      rot: 'Orçamentos',
       chave: 'orcamentos',
       icone: 'M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2M9 3h6v4H9zM8 12h8M8 16h5',
     },

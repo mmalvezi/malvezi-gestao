@@ -70,9 +70,9 @@ export class DocumentoViewer {
 
   get rotulo(): string {
     return this.tipo === 'orcamento'
-      ? 'Orcamento'
+      ? 'Orçamento'
       : this.tipo === 'contrato'
-        ? 'Contrato de prestacao de servico'
+        ? 'Contrato de prestação de serviços'
         : 'Recibo de pagamento';
   }
 

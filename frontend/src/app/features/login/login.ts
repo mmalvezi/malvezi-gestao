@@ -16,7 +16,7 @@ import { BrandMark } from '../../shared/brand-mark';
         <div class="logo">
           <app-brand-mark [size]="42" [lockup]="true"></app-brand-mark>
         </div>
-        <p class="mut">Acesse o painel de gestao com a sua senha.</p>
+        <p class="mut">Acesse o painel de gestão com a sua senha.</p>
 
         <form (ngSubmit)="entrar()">
           <div class="field">
@@ -118,7 +118,7 @@ export class Login {
       error: (e) => {
         this.carregando = false;
         this.erro =
-          e.status === 401 ? 'Senha incorreta. Tente de novo.' : 'Nao foi possivel entrar.';
+          e.status === 401 ? 'Senha incorreta. Tente de novo.' : 'Não foi possível entrar.';
       },
     });
   }

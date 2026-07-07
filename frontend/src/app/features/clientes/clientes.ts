@@ -149,7 +149,7 @@ export class Clientes implements OnInit {
 
   excluir() {
     if (!this.editId) return;
-    if (!confirm('Excluir este cliente? Projetos e mensalidades ligados tambem saem.'))
+    if (!confirm('Excluir este cliente? Projetos e mensalidades ligados também saem.'))
       return;
     this.api.excluirCliente(this.editId).subscribe(() => {
       this.editorAberto = false;

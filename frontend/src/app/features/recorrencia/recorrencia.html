@@ -1,6 +1,6 @@
 <div class="grid grid-4 mb-16">
   <div class="kpi grad">
-    <span class="rot">MRR (recorrente por mes)</span>
+    <span class="rot">MRR (recorrente por mês)</span>
     <span class="val">{{ money(mrr()) }}</span>
   </div>
   <div class="kpi">
@@ -30,9 +30,9 @@
         <tr>
           <th>Cliente</th>
           <th>O que inclui</th>
-          <th style="text-align:right">Valor / mes</th>
-          <th>Situacao</th>
-          <th style="text-align:right">Acoes</th>
+          <th style="text-align:right">Valor / mês</th>
+          <th>Situação</th>
+          <th style="text-align:right">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -48,7 +48,7 @@
                 [class.warn]="r.status === 'pausado'"
                 (click)="alternarStatus(r)"
                 style="cursor:pointer;border:none"
-                [attr.aria-label]="'Alternar situacao (' + r.status + ')'"
+                [attr.aria-label]="'Alternar situação (' + r.status + ')'"
               >
                 <span class="dot"></span>
                 {{ r.status === 'ativo' ? 'Ativo' : 'Pausado' }}
@@ -95,11 +95,11 @@
     </div>
     <div class="row-2">
       <div class="field">
-        <label>Valor por mes (R$)</label>
+        <label>Valor por mês (R$)</label>
         <input class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
       </div>
       <div class="field">
-        <label>Situacao</label>
+        <label>Situação</label>
         <select class="select" [(ngModel)]="form.status" name="status">
           <option value="ativo">Ativo</option>
           <option value="pausado">Pausado</option>

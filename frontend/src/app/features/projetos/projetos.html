@@ -12,7 +12,7 @@
   </div>
   <div class="items-center">
     <div class="toggle">
-      <button [class.on]="vista === 'cartoes'" (click)="vista = 'cartoes'">Cartoes</button>
+      <button [class.on]="vista === 'cartoes'" (click)="vista = 'cartoes'">Cartões</button>
       <button [class.on]="vista === 'quadro'" (click)="vista = 'quadro'">Quadro</button>
     </div>
     <button class="btn primary" (click)="abrirNovo()">
@@ -27,7 +27,7 @@
 @if (carregando) {
   <div class="loading"><span class="spin"></span> Carregando projetos...</div>
 } @else if (!projetos.length) {
-  <div class="card card-pad empty">Nenhum projeto ainda. Crie o primeiro no botao Novo.</div>
+  <div class="card card-pad empty">Nenhum projeto ainda. Crie o primeiro no botão Novo.</div>
 } @else {
   <!-- Vista em cartoes -->
   @if (vista === 'cartoes') {
@@ -78,7 +78,7 @@
               class="select sm"
               [ngModel]="p.stage"
               (ngModelChange)="trocarStage(p, $event)"
-              aria-label="Trocar estagio"
+              aria-label="Trocar estágio"
             >
               @for (s of stages; track s.valor) {
                 <option [value]="s.valor">{{ s.rot }}</option>
@@ -150,7 +150,7 @@
         </select>
       </div>
       <div class="field">
-        <label>Estagio</label>
+        <label>Estágio</label>
         <select class="select" [(ngModel)]="form.stage" name="stage">
           @for (s of stages; track s.valor) {
             <option [value]="s.valor">{{ s.rot }}</option>
@@ -176,15 +176,15 @@
 
     <div class="field">
       <label>Escopo</label>
-      <textarea class="textarea" [(ngModel)]="form.escopo" name="escopo" placeholder="O que sera entregue"></textarea>
+      <textarea class="textarea" [(ngModel)]="form.escopo" name="escopo" placeholder="O que será entregue"></textarea>
     </div>
 
     @if (editId) {
       <div class="documentos">
         <div class="mut tiny mb-8">Documentos do projeto</div>
         <div class="chips">
-          <button class="btn sm" (click)="abrirDoc('orcamento')">Orcamento</button>
-          <button class="btn sm" (click)="abrirDoc('contrato')">Contrato de prestacao</button>
+          <button class="btn sm" (click)="abrirDoc('orcamento')">Orçamento</button>
+          <button class="btn sm" (click)="abrirDoc('contrato')">Contrato de prestação</button>
           <button class="btn sm" (click)="abrirDoc('recibo')">Recibo de pagamento</button>
         </div>
       </div>

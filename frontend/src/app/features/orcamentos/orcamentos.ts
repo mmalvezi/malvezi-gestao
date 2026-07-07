@@ -190,7 +190,7 @@ export class Orcamentos implements OnInit {
   }
 
   excluir(o: Orcamento) {
-    if (!confirm(`Excluir o orcamento ${o.numero}?`)) return;
+    if (!confirm(`Excluir o orçamento ${o.numero}?`)) return;
     this.api.excluirOrcamento(o.id).subscribe(() => this.carregar());
   }
 

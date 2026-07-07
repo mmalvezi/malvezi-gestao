@@ -13,7 +13,7 @@ import { dataBr, moeda, TIPO_LABEL } from '../../core/utils';
       <div class="doc-head">
         <app-brand-mark [size]="34" [lockup]="true"></app-brand-mark>
         <div style="text-align:right">
-          <div class="doc-titulo">Orcamento</div>
+          <div class="doc-titulo">Orçamento</div>
           <div class="doc-sub">{{ orc.numero }}</div>
           <div class="doc-sub">Emitido em {{ hoje }}</div>
         </div>
@@ -78,17 +78,17 @@ import { dataBr, moeda, TIPO_LABEL } from '../../core/utils';
         </div>
       </div>
 
-      <h4>Condicoes</h4>
+      <h4>Condições</h4>
       <div class="doc-box">
         <div><b>Pagamento:</b> {{ orc.pagamento || 'A combinar' }}</div>
         <div><b>Prazo de entrega:</b> {{ orc.prazo || 'A combinar' }}</div>
         @if (orc.obs) {
-          <div style="margin-top:6px"><b>Observacoes:</b> {{ orc.obs }}</div>
+          <div style="margin-top:6px"><b>Observações:</b> {{ orc.obs }}</div>
         }
       </div>
 
       <div class="doc-foot">
-        <span>Malvezi Sistemas e Automacao</span>
+        <span>Malvezi Sistemas e Automação</span>
         <span>malvezi.com.br</span>
       </div>
     </div>

@@ -1,28 +1,28 @@
 <div class="between wrap mb-16">
-  <div class="mut small">{{ filtrados().length }} orcamento(s)</div>
+  <div class="mut small">{{ filtrados().length }} orçamento(s)</div>
   <button class="btn primary" (click)="abrirNovo()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M12 5v14M5 12h14" stroke-linecap="round" />
     </svg>
-    Novo orcamento
+    Novo orçamento
   </button>
 </div>
 
 @if (carregando) {
-  <div class="loading"><span class="spin"></span> Carregando orcamentos...</div>
+  <div class="loading"><span class="spin"></span> Carregando orçamentos...</div>
 } @else if (!orcamentos.length) {
-  <div class="card card-pad empty">Nenhum orcamento ainda.</div>
+  <div class="card card-pad empty">Nenhum orçamento ainda.</div>
 } @else {
   <div class="card table-wrap">
     <table class="tabela">
       <thead>
         <tr>
-          <th>Numero</th>
-          <th>Titulo</th>
+          <th>Número</th>
+          <th>Título</th>
           <th>Cliente</th>
           <th style="text-align:right">Total</th>
           <th>Status</th>
-          <th style="text-align:right">Acoes</th>
+          <th style="text-align:right">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -78,7 +78,7 @@
 <!-- Editor -->
 @if (editorAberto) {
   <app-dialog
-    [titulo]="editId ? 'Editar orcamento' : 'Novo orcamento'"
+    [titulo]="editId ? 'Editar orçamento' : 'Novo orçamento'"
     [largura]="720"
     (fechar)="fecharEditor()"
   >
@@ -105,7 +105,7 @@
     </div>
 
     <div class="field">
-      <label>Titulo</label>
+      <label>Título</label>
       <input class="input" [(ngModel)]="form.titulo" name="titulo" placeholder="Ex.: Site institucional" />
     </div>
 
@@ -117,8 +117,8 @@
       </div>
       @for (item of form.itens; track $index) {
         <div class="item">
-          <input class="input" [(ngModel)]="item.titulo" [name]="'it-tit-' + $index" placeholder="Titulo" />
-          <input class="input" [(ngModel)]="item.descricao" [name]="'it-desc-' + $index" placeholder="Descricao" />
+          <input class="input" [(ngModel)]="item.titulo" [name]="'it-tit-' + $index" placeholder="Título" />
+          <input class="input" [(ngModel)]="item.descricao" [name]="'it-desc-' + $index" placeholder="Descrição" />
           <input class="input valor" type="number" min="0" [(ngModel)]="item.valor" [name]="'it-val-' + $index" placeholder="Valor" />
           <button class="icon-btn" type="button" (click)="removerItem(item)" aria-label="Remover item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -163,7 +163,7 @@
     </div>
 
     <div class="field">
-      <label>Observacoes</label>
+      <label>Observações</label>
       <textarea class="textarea" [(ngModel)]="form.obs" name="obs"></textarea>
     </div>
 

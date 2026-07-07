@@ -4,7 +4,7 @@
   <!-- KPIs -->
   <div class="grid grid-4 mb-16">
     <div class="kpi grad">
-      <span class="rot">Recorrente por mes</span>
+      <span class="rot">Recorrente por mês</span>
       <span class="val">{{ money(dash.recorrente_mes) }}</span>
     </div>
     <div class="kpi">
@@ -16,7 +16,7 @@
       <span class="val">{{ dash.projetos_ativos }}</span>
     </div>
     <div class="kpi">
-      <span class="rot">Em producao</span>
+      <span class="rot">Em produção</span>
       <span class="val">{{ money(dash.em_producao) }}</span>
     </div>
   </div>
@@ -24,7 +24,7 @@
   <div class="grid painel-cols">
     <!-- Proximas entregas -->
     <div class="card card-pad">
-      <div class="section-title">Proximas entregas</div>
+      <div class="section-title">Próximas entregas</div>
       @if (dash.proximas_entregas.length) {
         @for (e of dash.proximas_entregas; track e.id) {
           <div class="entrega">
@@ -55,9 +55,9 @@
       }
     </div>
 
-    <!-- Precisa de atencao -->
+    <!-- Precisa de atenção -->
     <div class="card card-pad">
-      <div class="section-title">Precisa de atencao</div>
+      <div class="section-title">Precisa de atenção</div>
 
       @for (p of dash.pendencias; track $index) {
         <div class="pend">
@@ -69,7 +69,7 @@
         </div>
       }
       @if (!dash.pendencias.length) {
-        <div class="mut small mb-8">Nenhum alerta automatico agora.</div>
+        <div class="mut small mb-8">Nenhum alerta automático agora.</div>
       }
 
       <div class="divisor"></div>
@@ -105,14 +105,14 @@
           name="novaTarefa"
           placeholder="Novo lembrete..."
         />
-        <button class="btn primary sm" type="submit">Add</button>
+        <button class="btn primary sm" type="submit">Adicionar</button>
       </form>
     </div>
   </div>
 
   <!-- Funil -->
   <div class="card card-pad mt-16">
-    <div class="section-title">Funil por estagio</div>
+    <div class="section-title">Funil por estágio</div>
     @for (f of dash.funil; track f.stage) {
       <div class="funil-linha">
         <span class="rot">{{ stageLabel[f.stage] }}</span>
@@ -122,5 +122,5 @@
     }
   </div>
 } @else {
-  <div class="empty">Nao foi possivel carregar o painel.</div>
+  <div class="empty">Não foi possível carregar o painel.</div>
 }
