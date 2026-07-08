@@ -284,10 +284,9 @@ a {
   flex-shrink: 0;
 }
 .stepper .step.done .bola { background: var(--grad); border: none; color: #fff; }
+/* O passo atual (sempre concluido) mantem o degrade e o check, com um anel por cima */
 .stepper .step.atual .bola {
-  border-color: var(--roxo);
-  color: var(--roxo);
-  box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.30);
 }
 .stepper .step .rot { font-size: 10px; color: var(--mut); text-align: center; }
 .stepper .step.done .rot,

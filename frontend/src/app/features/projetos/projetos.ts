@@ -22,17 +22,29 @@ import {
 import { Dialog } from '../../shared/dialog';
 import { DocumentosArea } from '../../shared/documentos/documentos-area';
 import { NotasProjeto } from '../../shared/notas-projeto';
+import { ConfirmService } from '../../shared/ui/confirm.service';
+import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
+import { AppDatepicker } from '../../shared/ui/app-datepicker';
 
 @Component({
   selector: 'app-projetos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, DocumentosArea, NotasProjeto],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Dialog,
+    DocumentosArea,
+    NotasProjeto,
+    AppSelect,
+    AppDatepicker,
+  ],
   templateUrl: './projetos.html',
   styleUrl: './projetos.scss',
 })
 export class Projetos implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
+  private confirm = inject(ConfirmService);
 
   projetos: Projeto[] = [];
   clientes: Cliente[] = [];
@@ -89,6 +101,10 @@ export class Projetos implements OnInit {
     };
   }
 
+  clientesOpc(): OpcaoSelect[] {
+    return this.clientes.map((c) => ({ valor: c.id, rot: c.nome }));
+  }
+
   filtrados(): Projeto[] {
     const busca = this.ui.busca().toLowerCase().trim();
     return this.projetos.filter((p) => {
@@ -111,7 +127,7 @@ export class Projetos implements OnInit {
   }
 
   stepDone(p: Projeto, i: number): boolean {
-    return i < stageIndex(p.stage);
+    return i <= stageIndex(p.stage);
   }
   stepAtual(p: Projeto, i: number): boolean {
     return i === stageIndex(p.stage);
@@ -122,12 +138,19 @@ export class Projetos implements OnInit {
   }
 
   /** Clique no ponto do stepper: avancar aplica direto, voltar pede confirmacao. */
-  clicarEstagio(p: Projeto, i: number) {
+  async clicarEstagio(p: Projeto, i: number) {
     const atualIdx = stageIndex(p.stage);
     if (i === atualIdx) return;
     const alvo = this.stages[i].valor;
     if (i < atualIdx) {
-      if (!confirm(`Voltar este projeto para ${this.stageLabel[alvo]}?`)) return;
+      const ok = await this.confirm.ask({
+        title: 'Voltar etapa do projeto',
+        message: `Voltar este projeto para "${this.stageLabel[alvo]}"?`,
+        confirmText: 'Voltar etapa',
+        cancelText: 'Cancelar',
+        tone: 'danger',
+      });
+      if (!ok) return;
     }
     this.api.patchStage(p.id, alvo).subscribe((atual) => (p.stage = atual.stage));
   }
@@ -180,9 +203,15 @@ export class Projetos implements OnInit {
     });
   }
 
-  excluir() {
+  async excluir() {
     if (!this.editId) return;
-    if (!confirm('Excluir este projeto?')) return;
+    const ok = await this.confirm.ask({
+      title: 'Excluir projeto',
+      message: 'Excluir este projeto? Esta ação não pode ser desfeita.',
+      confirmText: 'Excluir',
+      tone: 'danger',
+    });
+    if (!ok) return;
     this.api.excluirProjeto(this.editId).subscribe(() => {
       this.editorAberto = false;
       this.carregar();

@@ -40,6 +40,7 @@ import { CORPO_ORCAMENTO } from './modelos-auto';
       <app-orcamento-form
         [inicial]="orc"
         [clientes]="clientes"
+        [zIndex]="90"
         (salvo)="aoSalvar($event)"
         (fechar)="formAberto = false"
       ></app-orcamento-form>

@@ -129,29 +129,23 @@
   >
     <div class="field">
       <label>Cliente</label>
-      <select class="select" [(ngModel)]="form.cliente_id" name="cliente_id">
-        @for (c of clientes; track c.id) {
-          <option [ngValue]="c.id">{{ c.nome }}</option>
-        }
-      </select>
+      <app-select
+        [opcoes]="clientesOpc()"
+        placeholder="Selecione o cliente"
+        ariaLabel="Cliente"
+        [(ngModel)]="form.cliente_id"
+        name="cliente_id"
+      ></app-select>
     </div>
 
     <div class="row-2">
       <div class="field">
         <label>Tipo</label>
-        <select class="select" [(ngModel)]="form.tipo" name="tipo">
-          @for (t of tipos; track t.valor) {
-            <option [value]="t.valor">{{ t.rot }}</option>
-          }
-        </select>
+        <app-select [opcoes]="tipos" ariaLabel="Tipo" [(ngModel)]="form.tipo" name="tipo"></app-select>
       </div>
       <div class="field">
         <label>Estágio</label>
-        <select class="select" [(ngModel)]="form.stage" name="stage">
-          @for (s of stages; track s.valor) {
-            <option [value]="s.valor">{{ s.rot }}</option>
-          }
-        </select>
+        <app-select [opcoes]="stages" ariaLabel="Estágio" [(ngModel)]="form.stage" name="stage"></app-select>
       </div>
     </div>
 
@@ -166,7 +160,7 @@
       </div>
       <div class="field">
         <label>Entrega</label>
-        <input class="input" type="date" [(ngModel)]="form.entrega" name="entrega" />
+        <app-datepicker ariaLabel="Data de entrega" [(ngModel)]="form.entrega" name="entrega"></app-datepicker>
       </div>
     </div>
 

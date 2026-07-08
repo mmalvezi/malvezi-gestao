@@ -4,7 +4,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   selector: 'app-dialog',
   standalone: true,
   template: `
-    <div class="overlay" (click)="fundo($event)">
+    <div class="overlay" [style.zIndex]="zIndex" (click)="fundo($event)">
       <div class="dialog" [style.maxWidth.px]="largura">
         <div class="dialog-head">
           <h3>{{ titulo }}</h3>
@@ -27,6 +27,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 export class Dialog {
   @Input() titulo = '';
   @Input() largura = 620;
+  /** Sobrepor a um overlay de documento (z-index 80): passar 90. */
+  @Input() zIndex?: number;
   @Output() fechar = new EventEmitter<void>();
 
   fundo(ev: MouseEvent) {

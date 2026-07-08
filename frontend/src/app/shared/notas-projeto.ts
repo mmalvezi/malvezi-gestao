@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { NotaProjeto } from '../core/models';
 import { dataHoraBr } from '../core/utils';
+import { ConfirmService } from './ui/confirm.service';
 
 @Component({
   selector: 'app-notas-projeto',
@@ -96,6 +97,7 @@ import { dataHoraBr } from '../core/utils';
 })
 export class NotasProjeto implements OnInit {
   private api = inject(ApiService);
+  private confirm = inject(ConfirmService);
 
   @Input({ required: true }) projetoId!: number;
 
@@ -130,8 +132,14 @@ export class NotasProjeto implements OnInit {
     });
   }
 
-  remover(n: NotaProjeto) {
-    if (!confirm('Remover esta anotação?')) return;
+  async remover(n: NotaProjeto) {
+    const ok = await this.confirm.ask({
+      title: 'Remover anotação',
+      message: 'Remover esta anotação?',
+      confirmText: 'Remover',
+      tone: 'danger',
+    });
+    if (!ok) return;
     this.api.excluirNota(n.id).subscribe(() => {
       this.notas = this.notas.filter((x) => x.id !== n.id);
     });

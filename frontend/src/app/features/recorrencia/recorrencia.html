@@ -83,11 +83,13 @@
   >
     <div class="field">
       <label>Cliente</label>
-      <select class="select" [(ngModel)]="form.cliente_id" name="cliente_id">
-        @for (c of clientes; track c.id) {
-          <option [ngValue]="c.id">{{ c.nome }}</option>
-        }
-      </select>
+      <app-select
+        [opcoes]="clientesOpc()"
+        placeholder="Selecione o cliente"
+        ariaLabel="Cliente"
+        [(ngModel)]="form.cliente_id"
+        name="cliente_id"
+      ></app-select>
     </div>
     <div class="field">
       <label>O que inclui (plano)</label>
@@ -100,10 +102,7 @@
       </div>
       <div class="field">
         <label>Situação</label>
-        <select class="select" [(ngModel)]="form.status" name="status">
-          <option value="ativo">Ativo</option>
-          <option value="pausado">Pausado</option>
-        </select>
+        <app-select [opcoes]="situacaoOpc" ariaLabel="Situação" [(ngModel)]="form.status" name="status"></app-select>
       </div>
     </div>
 

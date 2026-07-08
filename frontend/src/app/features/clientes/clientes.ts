@@ -9,6 +9,7 @@ import { UiState } from '../../core/ui-state';
 import { Cliente, ClienteInput } from '../../core/models';
 import { moeda } from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
+import { ConfirmService } from '../../shared/ui/confirm.service';
 
 interface LinhaCliente {
   cliente: Cliente;
@@ -54,6 +55,7 @@ export class Clientes implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
   private router = inject(Router);
+  private confirm = inject(ConfirmService);
 
   linhas: LinhaCliente[] = [];
   carregando = true;
@@ -147,10 +149,16 @@ export class Clientes implements OnInit {
     });
   }
 
-  excluir() {
+  async excluir() {
     if (!this.editId) return;
-    if (!confirm('Excluir este cliente? Projetos e mensalidades ligados também saem.'))
-      return;
+    const ok = await this.confirm.ask({
+      title: 'Excluir cliente',
+      message:
+        'Excluir este cliente? Projetos e mensalidades ligados também saem.',
+      confirmText: 'Excluir',
+      tone: 'danger',
+    });
+    if (!ok) return;
     this.api.excluirCliente(this.editId).subscribe(() => {
       this.editorAberto = false;
       this.carregar();

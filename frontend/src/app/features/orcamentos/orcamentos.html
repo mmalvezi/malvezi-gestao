@@ -36,17 +36,14 @@
             <td>{{ o.cliente?.nome || '-' }}</td>
             <td style="text-align:right" class="bold">{{ money(o.total) }}</td>
             <td>
-              <select
-                class="select sm status-sel"
+              <app-select
+                [opcoes]="statusOpc"
+                [compacto]="true"
+                [triggerCls]="statusClasse[o.status] || null"
+                ariaLabel="Trocar status"
                 [ngModel]="o.status"
                 (ngModelChange)="trocarStatus(o, $event)"
-                [attr.data-cls]="statusClasse[o.status]"
-                aria-label="Trocar status"
-              >
-                @for (s of statusOpc; track s.valor) {
-                  <option [value]="s.valor">{{ s.rot }}</option>
-                }
-              </select>
+              ></app-select>
             </td>
             <td>
               <div class="items-center" style="justify-content:flex-end">

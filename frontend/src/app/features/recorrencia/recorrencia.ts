@@ -7,16 +7,19 @@ import { UiState } from '../../core/ui-state';
 import { Cliente, Recorrencia as Rec, RecorrenciaInput } from '../../core/models';
 import { moeda } from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
+import { ConfirmService } from '../../shared/ui/confirm.service';
+import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
 
 @Component({
   selector: 'app-recorrencia',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog],
+  imports: [CommonModule, FormsModule, Dialog, AppSelect],
   templateUrl: './recorrencia.html',
 })
 export class Recorrencia implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
+  private confirm = inject(ConfirmService);
 
   itens: Rec[] = [];
   clientes: Cliente[] = [];
@@ -24,10 +27,19 @@ export class Recorrencia implements OnInit {
 
   money = moeda;
 
+  situacaoOpc: OpcaoSelect[] = [
+    { valor: 'ativo', rot: 'Ativo' },
+    { valor: 'pausado', rot: 'Pausado' },
+  ];
+
   editorAberto = false;
   editId: number | null = null;
   form: RecorrenciaInput = this.novoForm();
   salvando = false;
+
+  clientesOpc(): OpcaoSelect[] {
+    return this.clientes.map((c) => ({ valor: c.id, rot: c.nome }));
+  }
 
   ngOnInit() {
     this.ui.setTitulo('Mensalidades');
@@ -109,8 +121,14 @@ export class Recorrencia implements OnInit {
       .subscribe((atual) => (r.status = atual.status));
   }
 
-  excluir(r: Rec) {
-    if (!confirm('Excluir esta mensalidade?')) return;
+  async excluir(r: Rec) {
+    const ok = await this.confirm.ask({
+      title: 'Excluir mensalidade',
+      message: 'Excluir esta mensalidade?',
+      confirmText: 'Excluir',
+      tone: 'danger',
+    });
+    if (!ok) return;
     this.api.excluirRecorrencia(r.id).subscribe(() => this.carregar());
   }
 }

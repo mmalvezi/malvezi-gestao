@@ -4,25 +4,28 @@ import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
+import { OrcamentosStore } from '../../core/orcamentos.store';
 import { Cliente, Orcamento, StatusOrcamento } from '../../core/models';
 import { moeda, STATUS_ORC, STATUS_ORC_CLASSE, TIPO_LABEL } from '../../core/utils';
 import { OrcamentoForm } from '../../shared/orcamento-form';
 import { OrcamentoViewer } from '../../shared/documentos/orcamento-viewer';
+import { ConfirmService } from '../../shared/ui/confirm.service';
+import { AppSelect } from '../../shared/ui/app-select';
 
 @Component({
   selector: 'app-orcamentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrcamentoForm, OrcamentoViewer],
+  imports: [CommonModule, FormsModule, OrcamentoForm, OrcamentoViewer, AppSelect],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })
 export class Orcamentos implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
+  private confirm = inject(ConfirmService);
+  store = inject(OrcamentosStore);
 
-  orcamentos: Orcamento[] = [];
   clientes: Cliente[] = [];
-  carregando = true;
 
   statusOpc = STATUS_ORC;
   statusClasse = STATUS_ORC_CLASSE;
@@ -35,21 +38,17 @@ export class Orcamentos implements OnInit {
 
   docOrc: Orcamento | null = null;
 
-  ngOnInit() {
-    this.ui.setTitulo('Orçamentos');
-    this.carregar();
+  get orcamentos(): Orcamento[] {
+    return this.store.orcamentos();
+  }
+  get carregando(): boolean {
+    return this.store.carregando();
   }
 
-  carregar() {
-    this.carregando = true;
+  ngOnInit() {
+    this.ui.setTitulo('Orçamentos');
     this.api.getClientes().subscribe((c) => (this.clientes = c));
-    this.api.getOrcamentos().subscribe({
-      next: (o) => {
-        this.orcamentos = o;
-        this.carregando = false;
-      },
-      error: () => (this.carregando = false),
-    });
+    this.store.carregar();
   }
 
   filtrados(): Orcamento[] {
@@ -75,23 +74,29 @@ export class Orcamentos implements OnInit {
   }
 
   aoSalvarForm() {
+    // O OrcamentoForm ja atualizou o store; so fechamos.
     this.formAberto = false;
-    this.carregar();
   }
 
   trocarStatus(o: Orcamento, status: string) {
     this.api
       .patchStatusOrcamento(o.id, status as StatusOrcamento)
-      .subscribe((atual) => (o.status = atual.status));
+      .subscribe((atual) => this.store.upsert(atual));
   }
 
   duplicar(o: Orcamento) {
-    this.api.duplicarOrcamento(o.id).subscribe(() => this.carregar());
+    this.api.duplicarOrcamento(o.id).subscribe((novo) => this.store.upsert(novo));
   }
 
-  excluir(o: Orcamento) {
-    if (!confirm(`Excluir o orçamento ${o.numero}?`)) return;
-    this.api.excluirOrcamento(o.id).subscribe(() => this.carregar());
+  async excluir(o: Orcamento) {
+    const ok = await this.confirm.ask({
+      title: 'Excluir orçamento',
+      message: `Excluir o orçamento ${o.numero}?`,
+      confirmText: 'Excluir',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    this.api.excluirOrcamento(o.id).subscribe(() => this.store.remover(o.id));
   }
 
   emitir(o: Orcamento) {
@@ -103,9 +108,7 @@ export class Orcamentos implements OnInit {
   }
 
   atualizarDoc(o: Orcamento) {
-    const i = this.orcamentos.findIndex((x) => x.id === o.id);
-    if (i >= 0) this.orcamentos[i] = o;
-    else this.carregar();
+    // O form dentro do viewer ja atualizou o store; refletimos no documento.
     this.docOrc = o;
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../core/api.service';
+import { OrcamentosStore } from '../core/orcamentos.store';
 import {
   Cliente,
   Orcamento,
@@ -11,34 +12,40 @@ import {
 } from '../core/models';
 import { moeda, MODELOS_ESCOPO, STATUS_ORC, TIPOS } from '../core/utils';
 import { Dialog } from './dialog';
+import { AppSelect, OpcaoSelect } from './ui/app-select';
 
 @Component({
   selector: 'app-orcamento-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog],
+  imports: [CommonModule, FormsModule, Dialog, AppSelect],
   template: `
     <app-dialog
       [titulo]="ehEdicao ? 'Editar orçamento' : 'Novo orçamento'"
       [largura]="720"
+      [zIndex]="zIndex"
       (fechar)="fechar.emit()"
     >
       <div class="row-2">
         <div class="field">
           <label>Cliente</label>
-          <select class="select" [(ngModel)]="form.cliente_id" name="cliente_id">
-            @for (c of clientes; track c.id) {
-              <option [ngValue]="c.id">{{ c.nome }}</option>
-            }
-          </select>
+          <app-select
+            [opcoes]="clientesOpc()"
+            placeholder="Selecione o cliente"
+            ariaLabel="Cliente"
+            [(ngModel)]="form.cliente_id"
+            name="cliente_id"
+          ></app-select>
         </div>
         <div class="field">
           <label>Tipo (modelo de escopo)</label>
           <div class="items-center">
-            <select class="select" [(ngModel)]="form.tipo" name="tipo">
-              @for (t of tipos; track t.valor) {
-                <option [value]="t.valor">{{ t.rot }}</option>
-              }
-            </select>
+            <app-select
+              style="flex:1"
+              [opcoes]="tipos"
+              ariaLabel="Tipo"
+              [(ngModel)]="form.tipo"
+              name="tipo"
+            ></app-select>
             <button class="btn sm ghost" type="button" (click)="aplicarModelo()">Aplicar</button>
           </div>
         </div>
@@ -82,11 +89,7 @@ import { Dialog } from './dialog';
         </div>
         <div class="field">
           <label>Status</label>
-          <select class="select" [(ngModel)]="form.status" name="status">
-            @for (s of statusOpc; track s.valor) {
-              <option [value]="s.valor">{{ s.rot }}</option>
-            }
-          </select>
+          <app-select [opcoes]="statusOpc" ariaLabel="Status" [(ngModel)]="form.status" name="status"></app-select>
         </div>
       </div>
 
@@ -172,11 +175,14 @@ import { Dialog } from './dialog';
 })
 export class OrcamentoForm implements OnInit {
   private api = inject(ApiService);
+  private store = inject(OrcamentosStore);
 
   /** Orcamento existente (id > 0) para editar, ou base (id 0) para criar. */
   @Input() inicial: Orcamento | null = null;
   @Input() clientes: Cliente[] = [];
   @Input() clienteIdInicial?: number;
+  /** Quando aberto por cima do documento (viewer), sobrepor com z-index 90. */
+  @Input() zIndex?: number;
 
   @Output() salvo = new EventEmitter<Orcamento>();
   @Output() fechar = new EventEmitter<void>();
@@ -187,6 +193,10 @@ export class OrcamentoForm implements OnInit {
   tipos = TIPOS;
   statusOpc = STATUS_ORC;
   money = moeda;
+
+  clientesOpc(): OpcaoSelect[] {
+    return this.clientes.map((c) => ({ valor: c.id, rot: c.nome }));
+  }
 
   get ehEdicao(): boolean {
     return !!this.inicial && this.inicial.id > 0;
@@ -280,6 +290,7 @@ export class OrcamentoForm implements OnInit {
     req.subscribe({
       next: (o) => {
         this.salvando = false;
+        this.store.upsert(o);
         this.salvo.emit(o);
       },
       error: () => (this.salvando = false),

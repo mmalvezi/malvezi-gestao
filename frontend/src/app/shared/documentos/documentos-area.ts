@@ -11,6 +11,7 @@ import { Dialog } from '../dialog';
 import { DocumentoEditor } from './documento-editor';
 import { DocumentoAuto } from './documento-auto';
 import { OrcamentoViewer } from './orcamento-viewer';
+import { ConfirmService } from '../ui/confirm.service';
 
 const TIPO_DOC_LABEL: Record<TipoDocumento, string> = {
   contrato: 'Contrato',
@@ -147,6 +148,7 @@ function pad(id: number): string {
 })
 export class DocumentosArea implements OnInit {
   private api = inject(ApiService);
+  private confirm = inject(ConfirmService);
 
   @Input({ required: true }) tipos: TipoDocumento[] = [];
   @Input({ required: true }) projeto!: Projeto;
@@ -237,8 +239,14 @@ export class DocumentosArea implements OnInit {
     else this.documentos = [d, ...this.documentos];
   }
 
-  excluir(d: Documento) {
-    if (!confirm(`Excluir ${TIPO_DOC_LABEL[d.tipo]} ${d.numero}?`)) return;
+  async excluir(d: Documento) {
+    const ok = await this.confirm.ask({
+      title: 'Excluir documento',
+      message: `Excluir ${TIPO_DOC_LABEL[d.tipo]} ${d.numero}?`,
+      confirmText: 'Excluir',
+      tone: 'danger',
+    });
+    if (!ok) return;
     this.api.excluirDocumento(d.id).subscribe(() => {
       this.documentos = this.documentos.filter((x) => x.id !== d.id);
     });
