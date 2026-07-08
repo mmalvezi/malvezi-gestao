@@ -146,6 +146,10 @@
   .sidebar.aberta {
     transform: translateX(0);
   }
+  .sidebar {
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-left: calc(14px + env(safe-area-inset-left));
+  }
   .hamburguer {
     display: inline-flex;
   }
@@ -165,13 +169,22 @@
 }
 
 @media (max-width: 480px) {
+  .topbar {
+    gap: 10px;
+    padding: 10px 14px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+  }
   .titulo-area {
     font-size: 17px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .area {
-    padding: 16px;
+    padding: 16px 14px;
   }
-  .topbar {
-    padding: 10px 14px;
+  .busca {
+    max-width: 42vw;
   }
 }

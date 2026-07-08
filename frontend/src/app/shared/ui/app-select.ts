@@ -44,13 +44,17 @@ export interface OpcaoSelect {
       </svg>
     </button>
 
+    @if (aberto && mobile) {
+      <div class="sheet-bd" (click)="fechar()"></div>
+    }
     @if (aberto) {
       <ul
         class="sel-panel"
         role="listbox"
-        [style.top.px]="pos.top"
-        [style.left.px]="pos.left"
-        [style.minWidth.px]="pos.width"
+        [class.sheet]="mobile"
+        [style.top.px]="mobile ? null : pos.top"
+        [style.left.px]="mobile ? null : pos.left"
+        [style.minWidth.px]="mobile ? null : pos.width"
       >
         @for (o of opcoes; track o.valor; let i = $index) {
           <li
@@ -167,6 +171,29 @@ export interface OpcaoSelect {
         color: var(--roxo);
         flex-shrink: 0;
       }
+      /* Bottom-sheet no celular */
+      .sheet-bd {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 22, 43, 0.35);
+        z-index: 129;
+      }
+      .sel-panel.sheet {
+        left: 0 !important;
+        right: 0;
+        bottom: 0;
+        top: auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none;
+        max-height: 70vh;
+        border-radius: 16px 16px 0 0;
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      }
+      .sel-panel.sheet .sel-op {
+        padding: 13px 12px;
+        font-size: 15px;
+      }
     `,
   ],
 })
@@ -185,6 +212,7 @@ export class AppSelect implements ControlValueAccessor {
   aberto = false;
   ativo = -1;
   disabled = false;
+  mobile = false;
   pos = { top: 0, left: 0, width: 0 };
 
   private onChange: (v: any) => void = () => {};
@@ -215,8 +243,9 @@ export class AppSelect implements ControlValueAccessor {
     this.aberto ? this.fechar() : this.abrir();
   }
   abrir() {
+    this.mobile = window.innerWidth <= 640;
     const el = this.trigger?.nativeElement;
-    if (el) {
+    if (el && !this.mobile) {
       const r = el.getBoundingClientRect();
       this.pos = { top: r.bottom + 4, left: r.left, width: r.width };
     }

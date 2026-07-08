@@ -14,7 +14,7 @@
   <div class="card card-pad empty">Nenhum orçamento ainda.</div>
 } @else {
   <div class="card table-wrap">
-    <table class="tabela">
+    <table class="tabela tabela-cards">
       <thead>
         <tr>
           <th>Número</th>
@@ -28,14 +28,14 @@
       <tbody>
         @for (o of filtrados(); track o.id) {
           <tr>
-            <td class="bold">{{ o.numero }}</td>
-            <td>
+            <td class="bold" data-label="Número">{{ o.numero }}</td>
+            <td data-label="Título">
               <a (click)="abrirEditar(o)" style="cursor:pointer">{{ o.titulo }}</a>
               <div class="mut tiny">{{ tipoLabel[o.tipo] }}</div>
             </td>
-            <td>{{ o.cliente?.nome || '-' }}</td>
-            <td style="text-align:right" class="bold">{{ money(o.total) }}</td>
-            <td>
+            <td data-label="Cliente">{{ o.cliente?.nome || '-' }}</td>
+            <td style="text-align:right" class="bold" data-label="Total">{{ money(o.total) }}</td>
+            <td data-label="Status">
               <app-select
                 [opcoes]="statusOpc"
                 [compacto]="true"
@@ -45,7 +45,7 @@
                 (ngModelChange)="trocarStatus(o, $event)"
               ></app-select>
             </td>
-            <td>
+            <td class="acoes-cel">
               <div class="items-center" style="justify-content:flex-end">
                 <button class="icon-btn" (click)="emitir(o)" aria-label="Ver documento" title="Ver documento">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

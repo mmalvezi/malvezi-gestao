@@ -421,6 +421,23 @@ a {
 .mb-8 { margin-bottom: 8px; }
 .mb-16 { margin-bottom: 16px; }
 
+/* Fundacao mobile (sempre ativa) */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+img,
+svg {
+  max-width: 100%;
+}
+.table-wrap,
+.overlay,
+.doc-scroll,
+.quadro {
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 900px) {
   .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -432,6 +449,136 @@ a {
   .row-2,
   .row-3 { grid-template-columns: minmax(0, 1fr); }
   .kpi .val { font-size: 22px; }
+}
+
+/* ===== Adaptacoes para celular (mobile-first: <= 640px) ===== */
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+
+  /* Areas de toque confortaveis */
+  .btn { min-height: 44px; }
+  .btn.sm { min-height: 38px; }
+  .icon-btn { min-width: 40px; min-height: 40px; }
+  .icon-btn.sm { min-width: 36px; min-height: 36px; }
+  .chip { min-height: 38px; }
+
+  /* Diálogos em tela cheia com header/rodape fixos e corpo rolavel */
+  .overlay:not(.confirm-overlay) {
+    padding: 0;
+    align-items: stretch;
+  }
+  .overlay:not(.confirm-overlay) .dialog {
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .overlay:not(.confirm-overlay) .dialog-head {
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+  .overlay:not(.confirm-overlay) .dialog-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .overlay:not(.confirm-overlay) .dialog-foot {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* Confirmacao vira bottom-sheet */
+  .confirm-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .confirm-overlay .confirm-dialog {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Tabelas viram cards empilhados */
+  .tabela-cards thead {
+    display: none;
+  }
+  .tabela-cards,
+  .tabela-cards tbody,
+  .tabela-cards tr,
+  .tabela-cards td {
+    display: block;
+    width: 100%;
+  }
+  .tabela-cards tr {
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .tabela-cards td {
+    border: none !important;
+    padding: 7px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    text-align: right;
+    min-width: 0;
+  }
+  .tabela-cards td::before {
+    content: attr(data-label);
+    color: var(--mut);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .tabela-cards td.acoes-cel {
+    justify-content: flex-end;
+  }
+  .tabela-cards td.acoes-cel::before {
+    display: none;
+  }
+
+  /* Overlays de documento: barra de acoes fixa no rodape.
+     !important para vencer os estilos scoped dos componentes (doc-overlay etc.). */
+  .doc-overlay {
+    flex-direction: column-reverse !important;
+  }
+  .doc-overlay .doc-toolbar {
+    border-bottom: none !important;
+    border-top: 1px solid var(--borda) !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+  .doc-overlay .doc-scroll {
+    padding: 16px 12px 24px !important;
+  }
+
+  /* A folha do documento cabe na largura */
+  .doc-sheet {
+    padding: 22px 18px !important;
+    font-size: 13px !important;
+  }
+  .doc-sheet .totais {
+    width: 100% !important;
+  }
+
+  /* Conteudo com respiro menor */
+  .card-pad { padding: 16px; }
+
+  /* Stepper: alvo de toque confortavel */
+  .stepper .step {
+    min-height: 44px;
+    padding: 8px 0;
+  }
+  .stepper .bola {
+    width: 26px;
+    height: 26px;
+  }
 }
 
 /* Documento (folha A4 na identidade Malvezi) */

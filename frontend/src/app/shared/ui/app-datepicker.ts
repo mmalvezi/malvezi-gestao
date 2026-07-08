@@ -56,8 +56,16 @@ function iso(y: number, m: number, d: number): string {
       </svg>
     </button>
 
+    @if (aberto && mobile) {
+      <div class="sheet-bd" (click)="fechar()"></div>
+    }
     @if (aberto) {
-      <div class="dp-panel" [style.top.px]="pos.top" [style.left.px]="pos.left">
+      <div
+        class="dp-panel"
+        [class.sheet]="mobile"
+        [style.top.px]="mobile ? null : pos.top"
+        [style.left.px]="mobile ? null : pos.left"
+      >
         <div class="dp-topo">
           <button type="button" class="dp-nav" (click)="mudarMes(-1)" aria-label="Mes anterior">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -236,6 +244,25 @@ function iso(y: number, m: number, d: number): string {
       .dp-limpar {
         color: var(--mut);
       }
+      /* Bottom-sheet no celular */
+      .sheet-bd {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 22, 43, 0.35);
+        z-index: 129;
+      }
+      .dp-panel.sheet {
+        left: 0 !important;
+        right: 0;
+        bottom: 0;
+        top: auto !important;
+        width: 100%;
+        border-radius: 18px 18px 0 0;
+        padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+      }
+      .dp-panel.sheet .dp-dia {
+        font-size: 15px;
+      }
     `,
   ],
 })
@@ -250,6 +277,7 @@ export class AppDatepicker implements ControlValueAccessor {
   valor: string | null = null; // 'yyyy-MM-dd'
   aberto = false;
   disabled = false;
+  mobile = false;
   pos = { top: 0, left: 0 };
 
   ano = 2026;
@@ -314,8 +342,9 @@ export class AppDatepicker implements ControlValueAccessor {
     const base = this.valor ? new Date(this.valor + 'T00:00:00') : new Date();
     this.ano = base.getFullYear();
     this.mes = base.getMonth();
+    this.mobile = window.innerWidth <= 640;
     const el = this.trigger?.nativeElement;
-    if (el) {
+    if (el && !this.mobile) {
       const r = el.getBoundingClientRect();
       this.pos = { top: r.bottom + 4, left: r.left };
     }

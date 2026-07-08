@@ -25,7 +25,7 @@
   <div class="card card-pad empty">Nenhuma mensalidade cadastrada.</div>
 } @else {
   <div class="card table-wrap">
-    <table class="tabela">
+    <table class="tabela tabela-cards">
       <thead>
         <tr>
           <th>Cliente</th>
@@ -38,10 +38,10 @@
       <tbody>
         @for (r of itens; track r.id) {
           <tr>
-            <td class="bold">{{ r.cliente?.nome || '-' }}</td>
-            <td>{{ r.plano }}</td>
-            <td style="text-align:right" class="bold">{{ money(r.valor) }}</td>
-            <td>
+            <td class="bold" data-label="Cliente">{{ r.cliente?.nome || '-' }}</td>
+            <td data-label="Inclui">{{ r.plano }}</td>
+            <td style="text-align:right" class="bold" data-label="Valor / mês">{{ money(r.valor) }}</td>
+            <td data-label="Situação">
               <button
                 class="badge"
                 [class.ok]="r.status === 'ativo'"
@@ -54,7 +54,7 @@
                 {{ r.status === 'ativo' ? 'Ativo' : 'Pausado' }}
               </button>
             </td>
-            <td>
+            <td class="acoes-cel">
               <div class="items-center" style="justify-content:flex-end">
                 <button class="icon-btn" (click)="abrirEditar(r)" aria-label="Editar">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
