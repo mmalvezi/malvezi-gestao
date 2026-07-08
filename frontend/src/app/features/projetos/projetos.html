@@ -42,12 +42,20 @@
             </div>
           </div>
 
-          <div class="stepper">
+          <div class="stepper" (click)="$event.stopPropagation()">
             @for (s of stages; track s.valor; let i = $index) {
               @if (i > 0) {
                 <span class="liga" [class.on]="stepDone(p, i)"></span>
               }
-              <div class="step" [class.done]="stepDone(p, i)" [class.atual]="stepAtual(p, i)">
+              <button
+                type="button"
+                class="step"
+                [class.done]="stepDone(p, i)"
+                [class.atual]="stepAtual(p, i)"
+                (click)="clicarEstagio(p, i)"
+                [attr.aria-label]="'Mudar para ' + s.rot"
+                [title]="s.rot"
+              >
                 <span class="bola">
                   @if (stepDone(p, i)) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -58,7 +66,7 @@
                   }
                 </span>
                 <span class="rot">{{ s.rot }}</span>
-              </div>
+              </button>
             }
           </div>
 
@@ -73,18 +81,6 @@
             </div>
           </div>
 
-          <div class="acoes" (click)="$event.stopPropagation()">
-            <select
-              class="select sm"
-              [ngModel]="p.stage"
-              (ngModelChange)="trocarStage(p, $event)"
-              aria-label="Trocar estágio"
-            >
-              @for (s of stages; track s.valor) {
-                <option [value]="s.valor">{{ s.rot }}</option>
-              }
-            </select>
-          </div>
         </div>
       }
     </div>
@@ -181,7 +177,14 @@
 
     @if (editId && projetoAtual()) {
       <div class="documentos">
-        <app-documentos-area [tipos]="tiposDoc" [projeto]="projetoAtual()!"></app-documentos-area>
+        <app-documentos-area
+          [tipos]="tiposDoc"
+          [projeto]="projetoAtual()!"
+          [clientes]="clientes"
+        ></app-documentos-area>
+      </div>
+      <div class="documentos">
+        <app-notas-projeto [projetoId]="editId!"></app-notas-projeto>
       </div>
     }
 

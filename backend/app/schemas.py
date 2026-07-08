@@ -215,3 +215,17 @@ class DocumentoRead(BaseModel):
 
 class ProximoNumero(BaseModel):
     numero: str
+
+
+# ---------- Notas do projeto ----------
+class NotaProjetoCreate(BaseModel):
+    texto: str
+
+
+class NotaProjetoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    projeto_id: int
+    texto: str
+    criado: datetime

@@ -14,6 +14,7 @@ import {
   OrcamentoInput,
   Projeto,
   ProjetoInput,
+  NotaProjeto,
   Recorrencia,
   RecorrenciaInput,
   StageProjeto,
@@ -183,5 +184,21 @@ export class ApiService {
   }
   excluirDocumento(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/documentos/${id}`);
+  }
+
+  /* Notas do projeto */
+  getNotas(projetoId: number): Observable<NotaProjeto[]> {
+    return this.http.get<NotaProjeto[]>(
+      `${this.base}/projetos/${projetoId}/notas`,
+    );
+  }
+  criarNota(projetoId: number, texto: string): Observable<NotaProjeto> {
+    return this.http.post<NotaProjeto>(
+      `${this.base}/projetos/${projetoId}/notas`,
+      { texto },
+    );
+  }
+  excluirNota(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/notas/${id}`);
   }
 }

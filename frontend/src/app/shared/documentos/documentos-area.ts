@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
-import { Documento, Projeto, TipoDocumento } from '../../core/models';
+import { Cliente, Documento, Orcamento, Projeto, TipoDocumento } from '../../core/models';
 import { dataBr } from '../../core/utils';
 import { DadosDoc, preencherCorpo } from '../../core/preencher';
-import { dadosDeProjeto } from '../../core/dados-doc';
+import { dadosDeProjeto, orcamentoDeProjeto } from '../../core/dados-doc';
 import { Dialog } from '../dialog';
 import { DocumentoEditor } from './documento-editor';
 import { DocumentoAuto } from './documento-auto';
+import { OrcamentoViewer } from './orcamento-viewer';
 
 const TIPO_DOC_LABEL: Record<TipoDocumento, string> = {
   contrato: 'Contrato',
@@ -32,7 +33,7 @@ function pad(id: number): string {
 @Component({
   selector: 'app-documentos-area',
   standalone: true,
-  imports: [CommonModule, Dialog, DocumentoEditor, DocumentoAuto],
+  imports: [CommonModule, Dialog, DocumentoEditor, DocumentoAuto, OrcamentoViewer],
   template: `
     <div class="mut tiny mb-8">Documentos</div>
     <div class="chips">
@@ -102,7 +103,16 @@ function pad(id: number): string {
       ></app-documento-editor>
     }
 
-    <!-- Orcamento / recibo: automatico, so emitir -->
+    <!-- Orcamento: documento automatico com botao Alterar -->
+    @if (orcViewer) {
+      <app-orcamento-viewer
+        [orc]="orcViewer"
+        [clientes]="clientes"
+        (fechar)="orcViewer = null"
+      ></app-orcamento-viewer>
+    }
+
+    <!-- Recibo: automatico, so emitir -->
     @if (auto) {
       <app-documento-auto
         [tipo]="auto.tipo"
@@ -140,11 +150,13 @@ export class DocumentosArea implements OnInit {
 
   @Input({ required: true }) tipos: TipoDocumento[] = [];
   @Input({ required: true }) projeto!: Projeto;
+  @Input() clientes: Cliente[] = [];
 
   documentos: Documento[] = [];
   escolha = false;
   cfg: CfgEditor | null = null;
-  auto: { tipo: 'orcamento' | 'recibo'; dados: DadosDoc } | null = null;
+  auto: { tipo: 'recibo'; dados: DadosDoc } | null = null;
+  orcViewer: Orcamento | null = null;
   ocupado = false;
 
   docLabel = TIPO_DOC_LABEL;
@@ -171,8 +183,14 @@ export class DocumentosArea implements OnInit {
     if (tipo === 'contrato') {
       if (this.contratosSalvos().length) this.escolha = true;
       else this.gerarContrato();
+    } else if (tipo === 'orcamento') {
+      this.orcViewer = orcamentoDeProjeto(this.projeto);
     } else {
-      this.abrirAuto(tipo);
+      const numero = 'RC-' + pad(this.projeto.id);
+      this.auto = {
+        tipo: 'recibo',
+        dados: dadosDeProjeto(this.projeto, 'recibo', numero),
+      };
     }
   }
 
@@ -226,14 +244,4 @@ export class DocumentosArea implements OnInit {
     });
   }
 
-  /* ---- Orcamento / recibo (automatico) ---- */
-  abrirAuto(tipo: TipoDocumento) {
-    if (tipo === 'contrato') return;
-    const prefixo = tipo === 'orcamento' ? 'ORC-' : 'RC-';
-    const numero = prefixo + pad(this.projeto.id);
-    this.auto = {
-      tipo,
-      dados: dadosDeProjeto(this.projeto, tipo, numero),
-    };
-  }
 }

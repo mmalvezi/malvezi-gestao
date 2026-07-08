@@ -51,6 +51,34 @@ export function dadosDeProjeto(
   };
 }
 
+/** Orcamento sintetico (id 0) a partir de um projeto: pre-preenche o
+    formulario/documento quando o projeto ainda nao tem orcamento salvo. */
+export function orcamentoDeProjeto(p: Projeto): Orcamento {
+  return {
+    id: 0,
+    numero: 'ORC-' + String(p.id).padStart(4, '0'),
+    cliente_id: p.cliente_id,
+    titulo: p.escopo ? p.escopo.slice(0, 60) : TIPO_LABEL[p.tipo],
+    tipo: p.tipo,
+    desconto: 0,
+    pagamento: 'A combinar',
+    prazo: 'A combinar',
+    validade_dias: 15,
+    obs: '',
+    status: 'rascunho',
+    cliente: p.cliente,
+    itens: [
+      {
+        titulo: TIPO_LABEL[p.tipo],
+        descricao: p.escopo || '',
+        valor: p.valor,
+        ordem: 1,
+      },
+    ],
+    total: p.valor,
+  };
+}
+
 export function dadosDeOrcamento(o: Orcamento, numero?: string): DadosDoc {
   const cli = o.cliente;
   return {

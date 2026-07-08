@@ -50,7 +50,7 @@
             </td>
             <td>
               <div class="items-center" style="justify-content:flex-end">
-                <button class="icon-btn" (click)="emitir(o)" aria-label="Emitir PDF" title="Emitir PDF">
+                <button class="icon-btn" (click)="emitir(o)" aria-label="Ver documento" title="Ver documento">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -75,116 +75,21 @@
   </div>
 }
 
-<!-- Editor -->
-@if (editorAberto) {
-  <app-dialog
-    [titulo]="editId ? 'Editar orçamento' : 'Novo orçamento'"
-    [largura]="720"
-    (fechar)="fecharEditor()"
-  >
-    <div class="row-2">
-      <div class="field">
-        <label>Cliente</label>
-        <select class="select" [(ngModel)]="form.cliente_id" name="cliente_id">
-          @for (c of clientes; track c.id) {
-            <option [ngValue]="c.id">{{ c.nome }}</option>
-          }
-        </select>
-      </div>
-      <div class="field">
-        <label>Tipo (modelo de escopo)</label>
-        <div class="items-center">
-          <select class="select" [(ngModel)]="form.tipo" name="tipo">
-            @for (t of tipos; track t.valor) {
-              <option [value]="t.valor">{{ t.rot }}</option>
-            }
-          </select>
-          <button class="btn sm ghost" type="button" (click)="aplicarModelo()">Aplicar</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Título</label>
-      <input class="input" [(ngModel)]="form.titulo" name="titulo" placeholder="Ex.: Site institucional" />
-    </div>
-
-    <!-- Itens -->
-    <div class="itens">
-      <div class="between mb-8">
-        <span class="mut tiny">Itens do escopo</span>
-        <button class="btn sm ghost" type="button" (click)="addItem()">+ Item</button>
-      </div>
-      @for (item of form.itens; track $index) {
-        <div class="item">
-          <input class="input" [(ngModel)]="item.titulo" [name]="'it-tit-' + $index" placeholder="Título" />
-          <input class="input" [(ngModel)]="item.descricao" [name]="'it-desc-' + $index" placeholder="Descrição" />
-          <input class="input valor" type="number" min="0" [(ngModel)]="item.valor" [name]="'it-val-' + $index" placeholder="Valor" />
-          <button class="icon-btn" type="button" (click)="removerItem(item)" aria-label="Remover item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
-      }
-      @if (!form.itens.length) {
-        <div class="mut tiny">Sem itens. Use Aplicar para carregar o modelo ou + Item.</div>
-      }
-    </div>
-
-    <div class="row-3 mt-16">
-      <div class="field">
-        <label>Desconto (R$)</label>
-        <input class="input" type="number" min="0" [(ngModel)]="form.desconto" name="desconto" />
-      </div>
-      <div class="field">
-        <label>Validade (dias)</label>
-        <input class="input" type="number" min="1" [(ngModel)]="form.validade_dias" name="validade" />
-      </div>
-      <div class="field">
-        <label>Status</label>
-        <select class="select" [(ngModel)]="form.status" name="status">
-          @for (s of statusOpc; track s.valor) {
-            <option [value]="s.valor">{{ s.rot }}</option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <div class="row-2">
-      <div class="field">
-        <label>Pagamento</label>
-        <input class="input" [(ngModel)]="form.pagamento" name="pagamento" />
-      </div>
-      <div class="field">
-        <label>Prazo</label>
-        <input class="input" [(ngModel)]="form.prazo" name="prazo" />
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Observações</label>
-      <textarea class="textarea" [(ngModel)]="form.obs" name="obs"></textarea>
-    </div>
-
-    <div class="resumo">
-      <span class="mut">Subtotal {{ money(subtotal()) }} &middot; Desconto {{ money(form.desconto) }}</span>
-      <span class="total">Total {{ money(totalForm()) }}</span>
-    </div>
-
-    <div foot class="between" style="width:100%">
-      <span></span>
-      <span class="items-center">
-        <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
-        <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id || !form.titulo.trim()">
-          {{ salvando ? 'Salvando...' : 'Salvar' }}
-        </button>
-      </span>
-    </div>
-  </app-dialog>
+@if (formAberto) {
+  <app-orcamento-form
+    [inicial]="formInicial"
+    [clientes]="clientes"
+    [clienteIdInicial]="formClienteId"
+    (salvo)="aoSalvarForm()"
+    (fechar)="formAberto = false"
+  ></app-orcamento-form>
 }
 
-@if (docAuto) {
-  <app-documento-auto [tipo]="docAuto.tipo" [dados]="docAuto.dados" (fechar)="fecharDoc()"></app-documento-auto>
+@if (docOrc) {
+  <app-orcamento-viewer
+    [orc]="docOrc"
+    [clientes]="clientes"
+    (atualizado)="atualizarDoc($event)"
+    (fechar)="fecharDoc()"
+  ></app-orcamento-viewer>
 }
-

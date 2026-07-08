@@ -254,6 +254,21 @@ a {
   align-items: center;
   gap: 5px;
   min-width: 0;
+  /* reset de button (o ponto e clicavel) */
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  padding: 4px 0;
+  cursor: pointer;
+  color: inherit;
+}
+.stepper button.step:hover .bola {
+  border-color: var(--roxo);
+  color: var(--roxo);
+}
+.stepper button.step.done:hover .bola {
+  color: #fff;
+  filter: brightness(1.05);
 }
 .stepper .bola {
   width: 24px;

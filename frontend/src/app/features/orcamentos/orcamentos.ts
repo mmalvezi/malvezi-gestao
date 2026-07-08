@@ -4,30 +4,15 @@ import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
-import {
-  Cliente,
-  Orcamento,
-  OrcamentoInput,
-  OrcamentoItem,
-  StatusOrcamento,
-} from '../../core/models';
-import {
-  moeda,
-  MODELOS_ESCOPO,
-  STATUS_ORC,
-  STATUS_ORC_CLASSE,
-  TIPOS,
-  TIPO_LABEL,
-} from '../../core/utils';
-import { Dialog } from '../../shared/dialog';
-import { DocumentoAuto } from '../../shared/documentos/documento-auto';
-import { dadosDeOrcamento } from '../../core/dados-doc';
-import { DadosDoc } from '../../core/preencher';
+import { Cliente, Orcamento, StatusOrcamento } from '../../core/models';
+import { moeda, STATUS_ORC, STATUS_ORC_CLASSE, TIPO_LABEL } from '../../core/utils';
+import { OrcamentoForm } from '../../shared/orcamento-form';
+import { OrcamentoViewer } from '../../shared/documentos/orcamento-viewer';
 
 @Component({
   selector: 'app-orcamentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, DocumentoAuto],
+  imports: [CommonModule, FormsModule, OrcamentoForm, OrcamentoViewer],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })
@@ -39,18 +24,16 @@ export class Orcamentos implements OnInit {
   clientes: Cliente[] = [];
   carregando = true;
 
-  tipos = TIPOS;
   statusOpc = STATUS_ORC;
   statusClasse = STATUS_ORC_CLASSE;
   tipoLabel = TIPO_LABEL;
   money = moeda;
 
-  editorAberto = false;
-  editId: number | null = null;
-  form: OrcamentoInput = this.novoForm();
-  salvando = false;
+  formAberto = false;
+  formInicial: Orcamento | null = null;
+  formClienteId?: number;
 
-  docAuto: { tipo: 'orcamento'; dados: DadosDoc } | null = null;
+  docOrc: Orcamento | null = null;
 
   ngOnInit() {
     this.ui.setTitulo('Orçamentos');
@@ -80,105 +63,20 @@ export class Orcamentos implements OnInit {
     );
   }
 
-  novoForm(): OrcamentoInput {
-    return {
-      cliente_id: 0,
-      titulo: '',
-      tipo: 'site',
-      desconto: 0,
-      pagamento: '50% na entrada e 50% na entrega',
-      prazo: '30 dias',
-      validade_dias: 15,
-      obs: '',
-      status: 'rascunho',
-      itens: [],
-    };
-  }
-
-  subtotal(): number {
-    return this.form.itens.reduce((s, i) => s + Number(i.valor || 0), 0);
-  }
-  totalForm(): number {
-    return Math.max(this.subtotal() - Number(this.form.desconto || 0), 0);
-  }
-
   abrirNovo() {
-    this.editId = null;
-    this.form = this.novoForm();
-    if (this.clientes.length) this.form.cliente_id = this.clientes[0].id;
-    this.aplicarModelo();
-    this.editorAberto = true;
+    this.formInicial = null;
+    this.formClienteId = this.clientes[0]?.id;
+    this.formAberto = true;
   }
 
   abrirEditar(o: Orcamento) {
-    this.editId = o.id;
-    this.form = {
-      cliente_id: o.cliente_id,
-      titulo: o.titulo,
-      tipo: o.tipo,
-      desconto: o.desconto,
-      pagamento: o.pagamento,
-      prazo: o.prazo,
-      validade_dias: o.validade_dias,
-      obs: o.obs,
-      status: o.status,
-      itens: o.itens.map((i) => ({ ...i })),
-    };
-    this.editorAberto = true;
+    this.formInicial = o;
+    this.formAberto = true;
   }
 
-  fecharEditor() {
-    this.editorAberto = false;
-  }
-
-  aplicarModelo() {
-    const modelo = MODELOS_ESCOPO[this.form.tipo] || [];
-    this.form.itens = modelo.map((m, idx) => ({
-      titulo: m.titulo,
-      descricao: m.descricao,
-      valor: m.valor,
-      ordem: idx + 1,
-    }));
-  }
-
-  addItem() {
-    this.form.itens.push({
-      titulo: '',
-      descricao: '',
-      valor: 0,
-      ordem: this.form.itens.length + 1,
-    });
-  }
-
-  removerItem(item: OrcamentoItem) {
-    this.form.itens = this.form.itens.filter((i) => i !== item);
-  }
-
-  salvar() {
-    if (!this.form.cliente_id || !this.form.titulo.trim()) return;
-    this.salvando = true;
-    const payload: OrcamentoInput = {
-      ...this.form,
-      desconto: Number(this.form.desconto) || 0,
-      validade_dias: Number(this.form.validade_dias) || 15,
-      itens: this.form.itens.map((i, idx) => ({
-        titulo: i.titulo,
-        descricao: i.descricao || '',
-        valor: Number(i.valor) || 0,
-        ordem: idx + 1,
-      })),
-    };
-    const req = this.editId
-      ? this.api.atualizarOrcamento(this.editId, payload)
-      : this.api.criarOrcamento(payload);
-    req.subscribe({
-      next: () => {
-        this.salvando = false;
-        this.editorAberto = false;
-        this.carregar();
-      },
-      error: () => (this.salvando = false),
-    });
+  aoSalvarForm() {
+    this.formAberto = false;
+    this.carregar();
   }
 
   trocarStatus(o: Orcamento, status: string) {
@@ -197,10 +95,17 @@ export class Orcamentos implements OnInit {
   }
 
   emitir(o: Orcamento) {
-    this.docAuto = { tipo: 'orcamento', dados: dadosDeOrcamento(o) };
+    this.docOrc = o;
   }
 
   fecharDoc() {
-    this.docAuto = null;
+    this.docOrc = null;
+  }
+
+  atualizarDoc(o: Orcamento) {
+    const i = this.orcamentos.findIndex((x) => x.id === o.id);
+    if (i >= 0) this.orcamentos[i] = o;
+    else this.carregar();
+    this.docOrc = o;
   }
 }

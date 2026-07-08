@@ -120,6 +120,17 @@ class Tarefa(Base):
     criado = Column(DateTime, default=agora)
 
 
+class NotaProjeto(Base):
+    __tablename__ = "notas_projeto"
+
+    id = Column(Integer, primary_key=True, index=True)
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=False
+    )
+    texto = Column(Text, nullable=False)
+    criado = Column(DateTime, default=agora)
+
+
 class ModeloDocumento(Base):
     __tablename__ = "modelos_documento"
 

@@ -9,6 +9,7 @@ from .routers import (
     dashboard,
     documentos,
     modelos,
+    notas,
     orcamentos,
     projetos,
     recorrencias,
@@ -39,6 +40,7 @@ app.include_router(tarefas.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(modelos.router, prefix="/api")
 app.include_router(documentos.router, prefix="/api")
+app.include_router(notas.router, prefix="/api")
 
 
 @app.get("/api/health")

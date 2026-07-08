@@ -21,11 +21,12 @@ import {
 } from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
 import { DocumentosArea } from '../../shared/documentos/documentos-area';
+import { NotasProjeto } from '../../shared/notas-projeto';
 
 @Component({
   selector: 'app-projetos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, DocumentosArea],
+  imports: [CommonModule, FormsModule, Dialog, DocumentosArea, NotasProjeto],
   templateUrl: './projetos.html',
   styleUrl: './projetos.scss',
 })
@@ -120,10 +121,15 @@ export class Projetos implements OnInit {
     return Math.max(Number(p.valor || 0) - Number(p.pago || 0), 0);
   }
 
-  trocarStage(p: Projeto, stage: string) {
-    this.api.patchStage(p.id, stage as StageProjeto).subscribe((atual) => {
-      p.stage = atual.stage;
-    });
+  /** Clique no ponto do stepper: avancar aplica direto, voltar pede confirmacao. */
+  clicarEstagio(p: Projeto, i: number) {
+    const atualIdx = stageIndex(p.stage);
+    if (i === atualIdx) return;
+    const alvo = this.stages[i].valor;
+    if (i < atualIdx) {
+      if (!confirm(`Voltar este projeto para ${this.stageLabel[alvo]}?`)) return;
+    }
+    this.api.patchStage(p.id, alvo).subscribe((atual) => (p.stage = atual.stage));
   }
 
   /* Editor */

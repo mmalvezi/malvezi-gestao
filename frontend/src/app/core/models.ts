@@ -149,3 +149,10 @@ export interface DocumentoInput {
   titulo: string;
   conteudo: string;
 }
+
+export interface NotaProjeto {
+  id: number;
+  projeto_id: number;
+  texto: string;
+  criado: string;
+}
