@@ -217,6 +217,11 @@ class ProximoNumero(BaseModel):
     numero: str
 
 
+# ---------- Alertas dispensados ----------
+class DispensarInput(BaseModel):
+    chave: str
+
+
 # ---------- Notas do projeto ----------
 class NotaProjetoCreate(BaseModel):
     texto: str

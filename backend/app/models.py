@@ -120,6 +120,14 @@ class Tarefa(Base):
     criado = Column(DateTime, default=agora)
 
 
+class AlertaDispensado(Base):
+    __tablename__ = "alertas_dispensados"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chave = Column(String, unique=True, nullable=False)  # {tipo}:{id}:{motivo}
+    criado = Column(DateTime, default=agora)
+
+
 class NotaProjeto(Base):
     __tablename__ = "notas_projeto"
 

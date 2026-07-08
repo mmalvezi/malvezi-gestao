@@ -86,6 +86,7 @@ export interface ProximaEntrega {
 }
 
 export interface Pendencia {
+  chave: string;
   tipo: string;
   titulo: string;
   detalhe: string;

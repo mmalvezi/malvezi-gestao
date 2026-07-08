@@ -57,19 +57,54 @@
 
     <!-- Precisa de atenção -->
     <div class="card card-pad">
-      <div class="section-title">Precisa de atenção</div>
+      <div class="between mb-8">
+        <div class="section-title" style="margin-bottom:0">Precisa de atenção</div>
+        @if (pendenciasDispensadas().length) {
+          <button class="link tiny" (click)="mostrarDispensados = !mostrarDispensados">
+            {{ pendenciasDispensadas().length }} dispensado(s)
+          </button>
+        }
+      </div>
 
-      @for (p of dash.pendencias; track $index) {
+      @if (alertas.erro()) {
+        <div class="aviso-alerta tiny">{{ alertas.erro() }}</div>
+      }
+
+      @for (p of pendenciasVisiveis(); track p.chave) {
         <div class="pend">
           <span class="pt"></span>
-          <div>
+          <div class="corpo">
             <div class="bold small">{{ p.titulo }}</div>
             <div class="mut tiny">{{ p.detalhe }}</div>
           </div>
+          <button
+            class="icon-btn sm dispensar"
+            (click)="alertas.dispensar(p.chave)"
+            title="Dispensar"
+            aria-label="Dispensar alerta"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
       }
-      @if (!dash.pendencias.length) {
+      @if (!pendenciasVisiveis().length) {
         <div class="mut small mb-8">Nenhum alerta automático agora.</div>
+      }
+
+      @if (mostrarDispensados && pendenciasDispensadas().length) {
+        <div class="dispensados-box">
+          <div class="mut tiny mb-8">Dispensados</div>
+          @for (p of pendenciasDispensadas(); track p.chave) {
+            <div class="pend dispensado">
+              <div class="corpo">
+                <div class="small">{{ p.titulo }}</div>
+              </div>
+              <button class="link tiny" (click)="alertas.reexibir(p.chave)">Reexibir</button>
+            </div>
+          }
+        </div>
       }
 
       <div class="divisor"></div>

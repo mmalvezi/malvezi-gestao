@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
-import { Dashboard, Tarefa } from '../../core/models';
+import { AlertasStore } from '../../core/alertas.store';
+import { Dashboard, Pendencia, Tarefa } from '../../core/models';
 import { moeda, STAGE_LABEL } from '../../core/utils';
 
 @Component({
@@ -17,17 +18,20 @@ import { moeda, STAGE_LABEL } from '../../core/utils';
 export class Painel implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
+  alertas = inject(AlertasStore);
 
   dash?: Dashboard;
   tarefas: Tarefa[] = [];
   carregando = true;
   novaTarefa = '';
+  mostrarDispensados = false;
 
   money = moeda;
   stageLabel = STAGE_LABEL;
 
   ngOnInit() {
     this.ui.setTitulo('Painel');
+    this.alertas.carregar();
     this.carregar();
   }
 
@@ -41,6 +45,18 @@ export class Painel implements OnInit {
       error: () => (this.carregando = false),
     });
     this.api.getTarefas().subscribe((t) => (this.tarefas = t));
+  }
+
+  /** Alertas visiveis: os que nao foram dispensados. */
+  pendenciasVisiveis(): Pendencia[] {
+    if (!this.dash) return [];
+    return this.dash.pendencias.filter((p) => !this.alertas.dispensado(p.chave));
+  }
+
+  /** Alertas atualmente ativos que estao dispensados (para o contador). */
+  pendenciasDispensadas(): Pendencia[] {
+    if (!this.dash) return [];
+    return this.dash.pendencias.filter((p) => this.alertas.dispensado(p.chave));
   }
 
   maxFunil(): number {

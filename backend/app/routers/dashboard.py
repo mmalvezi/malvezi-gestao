@@ -62,6 +62,7 @@ def dashboard(db: Session = Depends(get_db)):
             nome = o.cliente.nome if o.cliente else ""
             pendencias.append(
                 {
+                    "chave": f"orcamento:{o.id}:enviado",
                     "tipo": "orcamento",
                     "titulo": f"Orcamento {o.numero} aguardando resposta",
                     "detalhe": f"{o.titulo} - {nome}",
@@ -72,8 +73,10 @@ def dashboard(db: Session = Depends(get_db)):
         if p.entrega is not None:
             dias = (p.entrega - hoje).days
             if dias <= 15:
+                motivo = "atrasada" if dias < 0 else "proxima"
                 pendencias.append(
                     {
+                        "chave": f"entrega:{p.id}:{motivo}",
                         "tipo": "entrega",
                         "titulo": f"Entrega proxima ({_nome_cliente(p)})",
                         "detalhe": f"Faltam {dias} dia(s) para {p.entrega.isoformat()}",
@@ -84,6 +87,7 @@ def dashboard(db: Session = Depends(get_db)):
         if p.stage in ("aprovado", "desenvolvimento") and (p.pago or 0) == 0:
             pendencias.append(
                 {
+                    "chave": f"pagamento:{p.id}:sem_pagamento",
                     "tipo": "pagamento",
                     "titulo": f"Projeto sem pagamento ({_nome_cliente(p)})",
                     "detalhe": f"{p.tipo} aprovado sem entrada registrada",
@@ -95,6 +99,7 @@ def dashboard(db: Session = Depends(get_db)):
             nome = r.cliente.nome if r.cliente else ""
             pendencias.append(
                 {
+                    "chave": f"recorrencia:{r.id}:pausada",
                     "tipo": "recorrencia",
                     "titulo": f"Mensalidade pausada ({nome})",
                     "detalhe": f"Plano {r.plano} esta pausado",

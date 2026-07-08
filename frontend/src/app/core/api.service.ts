@@ -135,6 +135,22 @@ export class ApiService {
     return this.http.get<Dashboard>(`${this.base}/dashboard`);
   }
 
+  /* Alertas dispensados */
+  getAlertasDispensados(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/alertas/dispensados`);
+  }
+  dispensarAlerta(chave: string): Observable<{ chave: string }> {
+    return this.http.post<{ chave: string }>(
+      `${this.base}/alertas/dispensados`,
+      { chave },
+    );
+  }
+  reexibirAlerta(chave: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.base}/alertas/dispensados?chave=${encodeURIComponent(chave)}`,
+    );
+  }
+
   /* Modelos de documento */
   getModelos(): Observable<ModeloDocumento[]> {
     return this.http.get<ModeloDocumento[]>(`${this.base}/modelos`);

@@ -5,6 +5,7 @@ from . import auth
 from .config import settings
 from .database import Base, SessionLocal, engine
 from .routers import (
+    alertas,
     clientes,
     dashboard,
     documentos,
@@ -41,6 +42,7 @@ app.include_router(dashboard.router, prefix="/api")
 app.include_router(modelos.router, prefix="/api")
 app.include_router(documentos.router, prefix="/api")
 app.include_router(notas.router, prefix="/api")
+app.include_router(alertas.router, prefix="/api")
 
 
 @app.get("/api/health")
