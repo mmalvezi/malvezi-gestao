@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/api.service';
 import { Documento, TipoDocumento } from '../../core/models';
 import { dataBr } from '../../core/utils';
+import { imprimirDocumento } from '../../core/imprimir';
 import { Timbre } from '../timbre';
 import { EditorCorpo } from '../editor-corpo';
 
@@ -146,6 +147,6 @@ export class DocumentoEditor implements OnInit {
   }
 
   imprimir() {
-    window.print();
+    imprimirDocumento();
   }
 }

@@ -78,8 +78,12 @@ def obter(documento_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=DocumentoRead, status_code=201)
 def criar(dados: DocumentoCreate, db: Session = Depends(get_db)):
-    if dados.tipo not in PREFIXO:
-        raise HTTPException(status_code=422, detail="Tipo invalido")
+    # Apenas o contrato salva documento final. Orcamento e recibo sao automaticos.
+    if dados.tipo != "contrato":
+        raise HTTPException(
+            status_code=422,
+            detail="Apenas contrato pode ser salvo. Orcamento e recibo sao automaticos.",
+        )
     numero = dados.numero or _proximo_numero(db, dados.tipo, dados.orcamento_id)
     doc = Documento(
         tipo=dados.tipo,

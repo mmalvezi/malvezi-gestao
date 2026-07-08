@@ -20,12 +20,14 @@ import {
   TIPO_LABEL,
 } from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
-import { DocumentosArea } from '../../shared/documentos/documentos-area';
+import { DocumentoAuto } from '../../shared/documentos/documento-auto';
+import { dadosDeOrcamento } from '../../core/dados-doc';
+import { DadosDoc } from '../../core/preencher';
 
 @Component({
   selector: 'app-orcamentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, DocumentosArea],
+  imports: [CommonModule, FormsModule, Dialog, DocumentoAuto],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })
@@ -48,7 +50,7 @@ export class Orcamentos implements OnInit {
   form: OrcamentoInput = this.novoForm();
   salvando = false;
 
-  tiposDoc: ('orcamento')[] = ['orcamento'];
+  docAuto: { tipo: 'orcamento'; dados: DadosDoc } | null = null;
 
   ngOnInit() {
     this.ui.setTitulo('Orçamentos');
@@ -194,7 +196,11 @@ export class Orcamentos implements OnInit {
     this.api.excluirOrcamento(o.id).subscribe(() => this.carregar());
   }
 
-  orcamentoAtual(): Orcamento | undefined {
-    return this.orcamentos.find((o) => o.id === this.editId);
+  emitir(o: Orcamento) {
+    this.docAuto = { tipo: 'orcamento', dados: dadosDeOrcamento(o) };
+  }
+
+  fecharDoc() {
+    this.docAuto = null;
   }
 }

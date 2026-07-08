@@ -533,23 +533,58 @@ a {
   font-size: 12px;
 }
 
-/* Impressao de documentos (A4): esconde tudo, mostra so a folha */
+/* Container de impressao: recebe um clone da folha no nivel do body.
+   Fica escondido na tela; so aparece na impressao. */
+#area-impressao {
+  display: none;
+}
+
+/* Impressao de documentos (A4): so o clone flui, por quantas paginas precisar */
 @media print {
   @page {
     size: A4;
     margin: 14mm;
   }
-  body { background: #fff; }
-  body * { visibility: hidden; }
-  .doc-sheet,
-  .doc-sheet * { visibility: visible; }
-  .doc-sheet {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none !important;
-    border: none !important;
+  html,
+  body {
+    background: #fff;
+    height: auto !important;
+    overflow: visible !important;
   }
-  .no-print { display: none !important; }
+  /* Esconde tudo do app, menos a area de impressao */
+  body.modo-impressao > *:not(#area-impressao) {
+    display: none !important;
+  }
+  #area-impressao {
+    display: block !important;
+  }
+  /* Nada de altura fixa ou overflow cortando o conteudo */
+  #area-impressao,
+  #area-impressao * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  #area-impressao .doc-sheet {
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  /* O corpo pode partir entre paginas; blocos que nao devem quebrar no meio */
+  #area-impressao .doc-corpo,
+  #area-impressao .clausula,
+  #area-impressao p {
+    break-inside: auto;
+  }
+  #area-impressao .assinaturas,
+  #area-impressao .totais,
+  #area-impressao table thead {
+    break-inside: avoid;
+  }
+  .no-print {
+    display: none !important;
+  }
 }

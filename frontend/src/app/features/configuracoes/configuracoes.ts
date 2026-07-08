@@ -7,6 +7,7 @@ import { UiState } from '../../core/ui-state';
 import { ModeloDocumento, TipoDocumento } from '../../core/models';
 import { dataBr } from '../../core/utils';
 import { preencherCorpo, DadosDoc } from '../../core/preencher';
+import { imprimirDocumento } from '../../core/imprimir';
 import { EditorCorpo } from '../../shared/editor-corpo';
 import { Timbre } from '../../shared/timbre';
 
@@ -50,7 +51,8 @@ export class Configuracoes implements OnInit {
   salvando = false;
   salvo = false;
 
-  tipos: TipoDocumento[] = ['contrato', 'orcamento', 'recibo'];
+  // Apenas o contrato usa modelo editavel; orcamento e recibo sao automaticos.
+  tipos: TipoDocumento[] = ['contrato'];
   cab = CAB;
 
   /* Preview */
@@ -153,6 +155,6 @@ export class Configuracoes implements OnInit {
   }
 
   imprimirExemplo() {
-    window.print();
+    imprimirDocumento();
   }
 }

@@ -50,6 +50,11 @@
             </td>
             <td>
               <div class="items-center" style="justify-content:flex-end">
+                <button class="icon-btn" (click)="emitir(o)" aria-label="Emitir PDF" title="Emitir PDF">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
                 <button class="icon-btn" (click)="duplicar(o)" aria-label="Duplicar" title="Duplicar">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="12" height="12" rx="2" />
@@ -167,12 +172,6 @@
       <span class="total">Total {{ money(totalForm()) }}</span>
     </div>
 
-    @if (editId && orcamentoAtual()) {
-      <div class="documentos" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--borda)">
-        <app-documentos-area [tipos]="tiposDoc" [orcamento]="orcamentoAtual()!"></app-documentos-area>
-      </div>
-    }
-
     <div foot class="between" style="width:100%">
       <span></span>
       <span class="items-center">
@@ -183,5 +182,9 @@
       </span>
     </div>
   </app-dialog>
+}
+
+@if (docAuto) {
+  <app-documento-auto [tipo]="docAuto.tipo" [dados]="docAuto.dados" (fechar)="fecharDoc()"></app-documento-auto>
 }
 
