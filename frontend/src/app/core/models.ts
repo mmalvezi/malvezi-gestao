@@ -93,10 +93,37 @@ export interface OrcamentoItem {
   ordem: number;
 }
 
+/* Parcela do PLANO de pagamento do orcamento (a condicao, nao o recebimento) */
+export type TipoValorParcela = 'percentual' | 'fixo';
+export type TipoVencimentoParcela = 'marco' | 'dias';
+export type MarcoParcela = 'aprovacao' | 'entrega';
+
+export interface ParcelaOrcamento {
+  id?: number;
+  descricao: string;
+  tipo_valor: TipoValorParcela;
+  percentual?: number | null;
+  valor_fixo?: number | null;
+  tipo_vencimento: TipoVencimentoParcela;
+  marco?: MarcoParcela | null;
+  dias?: number | null;
+  ordem: number;
+}
+
+/** Situacao do plano de pagamento vista pelo projeto. */
+export interface PlanoInfo {
+  tem_plano: boolean;
+  orcamento_id?: number | null;
+  orcamento_numero?: string | null;
+  gerado?: boolean;
+  plano_mudou?: boolean;
+}
+
 export interface Orcamento {
   id: number;
   numero: string;
   cliente_id: number;
+  projeto_id?: number | null;
   titulo: string;
   tipo: TipoProjeto;
   desconto: number;
@@ -108,6 +135,7 @@ export interface Orcamento {
   criado?: string;
   cliente?: Cliente | null;
   itens: OrcamentoItem[];
+  plano?: ParcelaOrcamento[];
   total: number;
   /* Proposta em PDF anexada (quando existe, e o documento padrao) */
   tem_anexo?: boolean;
@@ -205,6 +233,7 @@ export type ProjetoInput = Omit<Projeto, 'id' | 'criado' | 'cliente'>;
 export type RecorrenciaInput = Omit<Recorrencia, 'id' | 'criado' | 'cliente'>;
 export interface OrcamentoInput {
   cliente_id: number;
+  projeto_id?: number | null;
   titulo: string;
   tipo: TipoProjeto;
   desconto: number;
@@ -214,6 +243,7 @@ export interface OrcamentoInput {
   obs: string;
   status: StatusOrcamento;
   itens: OrcamentoItem[];
+  plano?: ParcelaOrcamento[];
 }
 
 /* Documentos por modelo */

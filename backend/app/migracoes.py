@@ -17,6 +17,9 @@ COLUNAS_NOVAS = [
     ("recorrencias", "dia_vencimento", "INTEGER", "10"),
     ("recorrencias", "inicio", "DATE", None),
     ("recorrencias", "contato", "VARCHAR", None),
+    ("orcamentos", "projeto_id", "INTEGER", None),
+    ("orcamentos", "plano_gerado_em", "DATETIME", None),
+    ("orcamentos", "plano_atualizado_em", "DATETIME", None),
 ]
 
 

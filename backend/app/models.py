@@ -152,6 +152,10 @@ class Orcamento(Base):
     id = Column(Integer, primary_key=True, index=True)
     numero = Column(String, unique=True, nullable=False)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    # Projeto vinculado: e nele que as parcelas do plano de pagamento nascem
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="SET NULL"), nullable=True
+    )
     titulo = Column(String, nullable=False)
     tipo = Column(String, nullable=False)
     desconto = Column(Float, default=0)
@@ -162,14 +166,30 @@ class Orcamento(Base):
     # rascunho | enviado | aprovado | recusado
     status = Column(String, default="rascunho")
     criado = Column(DateTime, default=agora)
+    # Controle do plano de pagamento: quando as parcelas foram geradas no
+    # projeto e quando o plano mudou pela ultima vez (para avisar se divergiu)
+    plano_gerado_em = Column(DateTime, nullable=True)
+    plano_atualizado_em = Column(DateTime, nullable=True)
 
     cliente = relationship("Cliente", back_populates="orcamentos")
+    projeto = relationship("Projeto")
     itens = relationship(
         "OrcamentoItem",
         back_populates="orcamento",
         cascade="all, delete-orphan",
         order_by="OrcamentoItem.ordem",
     )
+    plano = relationship(
+        "ParcelaOrcamento",
+        back_populates="orcamento",
+        cascade="all, delete-orphan",
+        order_by="ParcelaOrcamento.ordem",
+    )
+
+    @property
+    def total(self) -> float:
+        soma = sum(item.valor or 0 for item in self.itens)
+        return max(soma - (self.desconto or 0), 0)
     # Proposta em PDF anexada: no maximo uma por orcamento
     anexo = relationship(
         "AnexoOrcamento",
@@ -210,6 +230,31 @@ class AnexoOrcamento(Base):
     criado = Column(DateTime, default=agora)
 
     orcamento = relationship("Orcamento", back_populates="anexo")
+
+
+class ParcelaOrcamento(Base):
+    """Parcela do PLANO de pagamento do orcamento (a condicao combinada).
+
+    Nao e o recebimento em si: quando o orcamento e aprovado, o plano vira
+    ParcelaProjeto no projeto vinculado, e la sim se controla o que foi pago.
+    """
+
+    __tablename__ = "parcelas_orcamento"
+
+    id = Column(Integer, primary_key=True, index=True)
+    orcamento_id = Column(
+        Integer, ForeignKey("orcamentos.id", ondelete="CASCADE"), nullable=False
+    )
+    descricao = Column(String, nullable=False, default="")
+    tipo_valor = Column(String, nullable=False, default="percentual")  # percentual|fixo
+    percentual = Column(Float, nullable=True)
+    valor_fixo = Column(Float, nullable=True)
+    tipo_vencimento = Column(String, nullable=False, default="marco")  # marco|dias
+    marco = Column(String, nullable=True)  # aprovacao | entrega
+    dias = Column(Integer, nullable=True)  # dias corridos apos a aprovacao
+    ordem = Column(Integer, default=0)
+
+    orcamento = relationship("Orcamento", back_populates="plano")
 
 
 class OrcamentoItem(Base):

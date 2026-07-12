@@ -142,6 +142,17 @@ export function competenciaBr(competencia: string): string {
   return `${MESES[i]} de ${ano}`;
 }
 
+/** Complemento relativo da data: "(há 3 dias)", "(hoje)", "(amanhã)"... */
+export function relativo(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const dias = diasAte(iso);
+  if (dias < -1) return `(há ${-dias} dias)`;
+  if (dias === -1) return '(ontem)';
+  if (dias === 0) return '(hoje)';
+  if (dias === 1) return '(amanhã)';
+  return `(em ${dias} dias)`;
+}
+
 /** Dias entre hoje e a data (negativo quer dizer vencida). */
 export function diasAte(iso: string | null | undefined): number {
   if (!iso) return 0;

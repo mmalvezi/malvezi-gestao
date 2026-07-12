@@ -12,6 +12,7 @@ import {
   Dashboard,
   ParcelaInput,
   ParcelaProjeto,
+  PlanoInfo,
   StatusCobranca,
   Documento,
   DocumentoInput,
@@ -99,6 +100,22 @@ export class ApiService {
   }
   excluirParcela(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/parcelas/${id}`);
+  }
+  /** Situacao do plano de pagamento do orcamento vinculado ao projeto. */
+  getPlanoInfo(projetoId: number): Observable<PlanoInfo> {
+    return this.http.get<PlanoInfo>(
+      `${this.base}/projetos/${projetoId}/plano-info`,
+    );
+  }
+  gerarParcelasDoPlano(
+    projetoId: number,
+    substituir = false,
+  ): Observable<{ criadas: number; orcamento: string }> {
+    const query = substituir ? '?substituir=true' : '';
+    return this.http.post<{ criadas: number; orcamento: string }>(
+      `${this.base}/projetos/${projetoId}/parcelas/gerar-do-plano${query}`,
+      {},
+    );
   }
 
   /* Orcamentos */

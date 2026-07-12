@@ -25,12 +25,61 @@ FECHADOS = ("aprovado", "desenvolvimento", "entregue")
 ATIVOS = ("aprovado", "desenvolvimento")
 
 
+MESES_BR = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+]
+
+
 def _nome_cliente(projeto: Projeto) -> str:
     return projeto.cliente.nome if projeto.cliente else ""
 
 
 def _dinheiro(valor) -> float:
     return round(float(valor or 0), 2)
+
+
+def _data_br(d: date) -> str:
+    return f"{d.day:02d}/{d.month:02d}/{d.year}"
+
+
+def _moeda_br(valor) -> str:
+    """R$ 1.234,56 (virgula decimal, ponto de milhar)."""
+    texto = f"{float(valor or 0):,.2f}"
+    return "R$ " + texto.replace(",", "@").replace(".", ",").replace("@", ".")
+
+
+def _competencia_br(competencia: str) -> str:
+    """"2026-07" vira "julho de 2026"."""
+    partes = (competencia or "").split("-")
+    if len(partes) == 2 and partes[1].isdigit():
+        mes = int(partes[1])
+        if 1 <= mes <= 12:
+            return f"{MESES_BR[mes - 1]} de {partes[0]}"
+    return competencia or ""
+
+
+def _relativo(dias: int) -> str:
+    """Complemento legivel: (há 3 dias), (hoje), (amanhã), (em 5 dias)."""
+    if dias < -1:
+        return f"(há {-dias} dias)"
+    if dias == -1:
+        return "(ontem)"
+    if dias == 0:
+        return "(hoje)"
+    if dias == 1:
+        return "(amanhã)"
+    return f"(em {dias} dias)"
 
 
 @router.get("")
@@ -112,13 +161,18 @@ def dashboard(db: Session = Depends(get_db)):
     for p in com_entrega:
         dias = (p.entrega - hoje).days
         if dias <= 15:
-            motivo = "atrasada" if dias < 0 else "proxima"
+            if dias < 0:
+                motivo, titulo = "atrasada", "Entrega atrasada"
+                detalhe = f"Era para {_data_br(p.entrega)} {_relativo(dias)}"
+            else:
+                motivo, titulo = "proxima", "Entrega proxima"
+                detalhe = f"Entrega em {_data_br(p.entrega)} {_relativo(dias)}"
             pendencias.append(
                 {
                     "chave": f"entrega:{p.id}:{motivo}",
                     "tipo": "entrega",
-                    "titulo": f"Entrega proxima ({_nome_cliente(p)})",
-                    "detalhe": f"Faltam {dias} dia(s) para {p.entrega.isoformat()}",
+                    "titulo": f"{titulo} ({_nome_cliente(p)})",
+                    "detalhe": detalhe,
                 }
             )
 
@@ -141,7 +195,7 @@ def dashboard(db: Session = Depends(get_db)):
                     "tipo": "pagamento",
                     "titulo": f"Receber saldo ({_nome_cliente(p)})",
                     "detalhe": (
-                        f"R$ {p.saldo:.2f} em aberto, projeto ja entregue"
+                        f"{_moeda_br(p.saldo)} em aberto, projeto ja entregue"
                     ),
                 }
             )
@@ -157,8 +211,9 @@ def dashboard(db: Session = Depends(get_db)):
                         "tipo": "pagamento",
                         "titulo": f"Parcela vencida ({_nome_cliente(p)})",
                         "detalhe": (
-                            f"{parcela.descricao}, R$ {parcela.valor:.2f}, "
-                            f"venceu em {parcela.vencimento.isoformat()}"
+                            f"{parcela.descricao}, {_moeda_br(parcela.valor)}, "
+                            f"venceu em {_data_br(parcela.vencimento)} "
+                            f"{_relativo(dias)}"
                         ),
                     }
                 )
@@ -169,8 +224,9 @@ def dashboard(db: Session = Depends(get_db)):
                         "tipo": "pagamento",
                         "titulo": f"Parcela a vencer ({_nome_cliente(p)})",
                         "detalhe": (
-                            f"{parcela.descricao}, R$ {parcela.valor:.2f}, "
-                            f"vence em {parcela.vencimento.isoformat()}"
+                            f"{parcela.descricao}, {_moeda_br(parcela.valor)}, "
+                            f"vence em {_data_br(parcela.vencimento)} "
+                            f"{_relativo(dias)}"
                         ),
                     }
                 )
@@ -192,8 +248,9 @@ def dashboard(db: Session = Depends(get_db)):
                     "tipo": "cobranca",
                     "titulo": f"Mensalidade vencida ({nome})",
                     "detalhe": (
-                        f"Competencia {c.competencia}, R$ {c.valor:.2f}, "
-                        f"venceu em {c.vencimento.isoformat()}"
+                        f"Competência de {_competencia_br(c.competencia)}, "
+                        f"{_moeda_br(c.valor)}, venceu em "
+                        f"{_data_br(c.vencimento)} {_relativo(dias)}"
                     ),
                 }
             )
@@ -204,8 +261,9 @@ def dashboard(db: Session = Depends(get_db)):
                     "tipo": "cobranca",
                     "titulo": f"Mensalidade a vencer ({nome})",
                     "detalhe": (
-                        f"Competencia {c.competencia}, R$ {c.valor:.2f}, "
-                        f"vence em {c.vencimento.isoformat()}"
+                        f"Competência de {_competencia_br(c.competencia)}, "
+                        f"{_moeda_br(c.valor)}, vence em "
+                        f"{_data_br(c.vencimento)} {_relativo(dias)}"
                     ),
                 }
             )

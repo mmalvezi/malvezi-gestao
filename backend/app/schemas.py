@@ -11,6 +11,9 @@ StageProjeto = Literal[
 StatusOrcamento = Literal["rascunho", "enviado", "aprovado", "recusado"]
 StatusRecorrencia = Literal["previsto", "ativo", "pausado"]
 StatusCobranca = Literal["aberta", "paga", "cancelada"]
+TipoValorParcela = Literal["percentual", "fixo"]
+TipoVencimentoParcela = Literal["marco", "dias"]
+MarcoParcela = Literal["aprovacao", "entrega"]
 ColunaTarefa = Literal["afazer", "fazendo", "validacao", "concluido"]
 PrioridadeTarefa = Literal["baixa", "media", "alta"]
 AreaTarefa = Literal["dev", "design", "produto", "cliente"]
@@ -157,8 +160,45 @@ class OrcamentoItemRead(BaseModel):
     ordem: int
 
 
+# ---------- Plano de pagamento do orcamento ----------
+class ParcelaOrcamentoCreate(BaseModel):
+    descricao: str = ""
+    tipo_valor: TipoValorParcela = "percentual"
+    percentual: Optional[float] = None
+    valor_fixo: Optional[float] = None
+    tipo_vencimento: TipoVencimentoParcela = "marco"
+    marco: Optional[MarcoParcela] = None
+    dias: Optional[int] = None
+    ordem: int = 0
+
+
+class ParcelaOrcamentoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    descricao: str = ""
+    tipo_valor: TipoValorParcela
+    percentual: Optional[float] = None
+    valor_fixo: Optional[float] = None
+    tipo_vencimento: TipoVencimentoParcela
+    marco: Optional[MarcoParcela] = None
+    dias: Optional[int] = None
+    ordem: int = 0
+
+
+class PlanoInfo(BaseModel):
+    """Situacao do plano de pagamento visto pelo projeto."""
+
+    tem_plano: bool = False
+    orcamento_id: Optional[int] = None
+    orcamento_numero: Optional[str] = None
+    gerado: bool = False
+    plano_mudou: bool = False
+
+
 class OrcamentoCreate(BaseModel):
     cliente_id: int
+    projeto_id: Optional[int] = None
     titulo: str
     tipo: TipoProjeto
     desconto: float = 0
@@ -168,6 +208,7 @@ class OrcamentoCreate(BaseModel):
     obs: str = ""
     status: StatusOrcamento = "rascunho"
     itens: list[OrcamentoItemCreate] = []
+    plano: list[ParcelaOrcamentoCreate] = []
 
 
 class OrcamentoRead(BaseModel):
@@ -176,6 +217,7 @@ class OrcamentoRead(BaseModel):
     id: int
     numero: str
     cliente_id: int
+    projeto_id: Optional[int] = None
     titulo: str
     tipo: TipoProjeto
     desconto: float
@@ -187,6 +229,7 @@ class OrcamentoRead(BaseModel):
     criado: datetime
     cliente: Optional[ClienteRead] = None
     itens: list[OrcamentoItemRead] = []
+    plano: list[ParcelaOrcamentoRead] = []
     # Proposta em PDF anexada (o front sabe sem outra chamada)
     tem_anexo: bool = False
     anexo_nome: Optional[str] = None

@@ -174,9 +174,9 @@
                 <span class="venc">
                   <span>{{ data(c.vencimento) }}</span>
                   @if (vencida(c)) {
-                    <span class="aviso bad">Vencida</span>
-                  } @else if (aVencer(c)) {
-                    <span class="aviso warn">Vence em breve</span>
+                    <span class="aviso bad">Vencida {{ rel(c.vencimento) }}</span>
+                  } @else if (c.status === 'aberta') {
+                    <span class="aviso" [class.warn]="aVencer(c)">{{ venceTexto(c) }}</span>
                   }
                 </span>
               </td>

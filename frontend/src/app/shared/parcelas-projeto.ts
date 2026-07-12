@@ -10,8 +10,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../core/api.service';
-import { ParcelaInput, ParcelaProjeto, Projeto } from '../core/models';
-import { dataBr, diasAte, moeda } from '../core/utils';
+import {
+  ParcelaInput,
+  ParcelaProjeto,
+  PlanoInfo,
+  Projeto,
+} from '../core/models';
+import { dataBr, diasAte, moeda, relativo } from '../core/utils';
 import { Dialog } from './dialog';
 import { AppDatepicker } from './ui/app-datepicker';
 import { ConfirmService } from './ui/confirm.service';
@@ -55,6 +60,36 @@ import { ConfirmService } from './ui/confirm.service';
       </div>
     </div>
 
+    <!-- Plano de pagamento do orcamento vinculado -->
+    @if (planoInfo; as info) {
+      @if (info.tem_plano) {
+        @if (!parcelas.length) {
+          <div class="plano-box tiny">
+            O orçamento {{ info.orcamento_numero }} tem um plano de pagamento.
+            <button class="btn sm" (click)="gerarDoPlano(false)" [disabled]="gerando">
+              {{ gerando ? 'Gerando...' : 'Gerar parcelas do plano' }}
+            </button>
+          </div>
+        } @else if (info.plano_mudou) {
+          <div class="plano-box tiny warn">
+            O plano do orçamento {{ info.orcamento_numero }} mudou depois que
+            as parcelas foram geradas. Elas não são alteradas sozinhas.
+            <button class="btn sm" (click)="gerarDoPlano(true)" [disabled]="gerando">
+              Regerar do plano
+            </button>
+          </div>
+        } @else if (!info.gerado) {
+          <div class="plano-box tiny">
+            Este projeto já tem recebimentos cadastrados. O plano do orçamento
+            {{ info.orcamento_numero }} não foi aplicado.
+            <button class="btn sm" (click)="gerarDoPlano(true)" [disabled]="gerando">
+              Substituir pelas do plano
+            </button>
+          </div>
+        }
+      }
+    }
+
     @if (parcelas.length && diferenca() !== 0) {
       <div class="aviso tiny">
         A soma das parcelas ({{ money(somaParcelas()) }}) não bate com o valor do
@@ -91,9 +126,9 @@ import { ConfirmService } from './ui/confirm.service';
                   Recebida em {{ data(p.pago_em) }}
                 } @else if (p.vencimento) {
                   @if (vencida(p)) {
-                    Venceu em {{ data(p.vencimento) }}
+                    Venceu em {{ data(p.vencimento) }} {{ rel(p.vencimento) }}
                   } @else {
-                    Vence em {{ data(p.vencimento) }}
+                    Vence em {{ data(p.vencimento) }} {{ rel(p.vencimento) }}
                   }
                 } @else {
                   Sem vencimento definido
@@ -203,6 +238,23 @@ import { ConfirmService } from './ui/confirm.service';
         font-weight: 600;
         margin-bottom: 12px;
       }
+      .plano-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: var(--info-bg);
+        color: var(--info);
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .plano-box.warn {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
       .lista {
         display: flex;
         flex-direction: column;
@@ -286,9 +338,12 @@ export class ParcelasProjeto implements OnInit {
   @Output() mudou = new EventEmitter<ParcelaProjeto[]>();
 
   parcelas: ParcelaProjeto[] = [];
+  planoInfo: PlanoInfo | null = null;
+  gerando = false;
 
   money = moeda;
   data = dataBr;
+  rel = relativo;
 
   editorAberto = false;
   editId: number | null = null;
@@ -297,12 +352,43 @@ export class ParcelasProjeto implements OnInit {
 
   ngOnInit() {
     this.carregar();
+    this.carregarPlanoInfo();
   }
 
   carregar() {
     this.api.getParcelas(this.projeto.id).subscribe((p) => {
       this.parcelas = p;
       this.mudou.emit(this.parcelas);
+    });
+  }
+
+  carregarPlanoInfo() {
+    this.api.getPlanoInfo(this.projeto.id).subscribe({
+      next: (info) => (this.planoInfo = info),
+      error: () => (this.planoInfo = null),
+    });
+  }
+
+  /** Gera (ou substitui) as parcelas a partir do plano do orcamento. */
+  async gerarDoPlano(substituir: boolean) {
+    if (substituir) {
+      const ok = await this.confirm.ask({
+        title: 'Substituir parcelas',
+        message:
+          'Substituir as parcelas atuais pelas do plano do orçamento? Os recebimentos já marcados serão perdidos.',
+        confirmText: 'Substituir',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+    this.gerando = true;
+    this.api.gerarParcelasDoPlano(this.projeto.id, substituir).subscribe({
+      next: () => {
+        this.gerando = false;
+        this.carregar();
+        this.carregarPlanoInfo();
+      },
+      error: () => (this.gerando = false),
     });
   }
 

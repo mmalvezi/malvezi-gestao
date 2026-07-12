@@ -18,6 +18,7 @@ import {
   competenciaBr,
   dataBr,
   diasAte,
+  relativo,
   DIAS_VENCIMENTO,
   moeda,
   STATUS_COB_LABEL,
@@ -61,6 +62,7 @@ export class Recorrencia implements OnInit {
 
   money = moeda;
   data = dataBr;
+  rel = relativo;
   competencia = competenciaBr;
   statusOpc = STATUS_REC;
   statusLabel = STATUS_REC_LABEL;
@@ -225,6 +227,14 @@ export class Recorrencia implements OnInit {
   aVencer(c: Cobranca): boolean {
     const d = diasAte(c.vencimento);
     return c.status === 'aberta' && d >= 0 && d <= 3;
+  }
+
+  /** "Vence hoje", "Vence amanhã", "Vence em 12 dias". */
+  venceTexto(c: Cobranca): string {
+    const d = diasAte(c.vencimento);
+    if (d === 0) return 'Vence hoje';
+    if (d === 1) return 'Vence amanhã';
+    return `Vence em ${d} dias`;
   }
 
   /** Recebido no mes corrente (cobrancas pagas da competencia atual). */

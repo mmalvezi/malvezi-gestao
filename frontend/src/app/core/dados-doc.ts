@@ -58,6 +58,8 @@ export function orcamentoDeProjeto(p: Projeto): Orcamento {
     id: 0,
     numero: 'ORC-' + String(p.id).padStart(4, '0'),
     cliente_id: p.cliente_id,
+    // Nasce vinculado: quando salvo e aprovado, o plano vira parcelas aqui
+    projeto_id: p.id,
     titulo: p.escopo ? p.escopo.slice(0, 60) : TIPO_LABEL[p.tipo],
     tipo: p.tipo,
     desconto: 0,
