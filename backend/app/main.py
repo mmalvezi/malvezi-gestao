@@ -15,6 +15,7 @@ from .routers import (
     projetos,
     recorrencias,
     tarefas,
+    tarefas_projeto,
 )
 from .seed import run_seed, run_seed_modelos
 
@@ -38,6 +39,7 @@ app.include_router(projetos.router, prefix="/api")
 app.include_router(orcamentos.router, prefix="/api")
 app.include_router(recorrencias.router, prefix="/api")
 app.include_router(tarefas.router, prefix="/api")
+app.include_router(tarefas_projeto.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(modelos.router, prefix="/api")
 app.include_router(documentos.router, prefix="/api")

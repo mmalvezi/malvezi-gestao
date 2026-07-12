@@ -27,6 +27,36 @@ export interface Projeto {
   escopo: string;
   criado?: string;
   cliente?: Cliente | null;
+  tarefas_total?: number;
+  tarefas_feitas?: number;
+}
+
+/* Quadro de tarefas dentro do projeto */
+export type ColunaTarefa = 'afazer' | 'fazendo' | 'validacao' | 'concluido';
+export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';
+export type AreaTarefa = 'dev' | 'design' | 'produto' | 'cliente';
+
+export interface TarefaProjeto {
+  id: number;
+  projeto_id: number;
+  titulo: string;
+  descricao: string;
+  coluna: ColunaTarefa;
+  prioridade: PrioridadeTarefa;
+  area: AreaTarefa;
+  responsavel?: string | null;
+  ordem: number;
+  criado?: string;
+  atualizado?: string | null;
+}
+
+export interface TarefaProjetoInput {
+  titulo: string;
+  descricao: string;
+  coluna: ColunaTarefa;
+  prioridade: PrioridadeTarefa;
+  area: AreaTarefa;
+  responsavel?: string | null;
 }
 
 export interface OrcamentoItem {

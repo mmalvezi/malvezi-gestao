@@ -24,6 +24,13 @@ export const routes: Routes = [
           import('./features/projetos/projetos').then((m) => m.Projetos),
       },
       {
+        path: 'projetos/:id',
+        loadComponent: () =>
+          import('./features/projetos/projeto-detalhe').then(
+            (m) => m.ProjetoDetalhe,
+          ),
+      },
+      {
         path: 'orcamentos',
         loadComponent: () =>
           import('./features/orcamentos/orcamentos').then((m) => m.Orcamentos),

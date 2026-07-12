@@ -53,6 +53,10 @@
   justify-content: space-between;
   gap: 12px;
 }
+.projeto .tarefas-prog {
+  border-top: 1px solid var(--borda);
+  padding-top: 12px;
+}
 .select.sm {
   padding: 7px 10px;
   font-size: 13px;

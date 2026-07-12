@@ -1,4 +1,11 @@
-import { StageProjeto, StatusOrcamento, TipoProjeto } from './models';
+import {
+  AreaTarefa,
+  ColunaTarefa,
+  PrioridadeTarefa,
+  StageProjeto,
+  StatusOrcamento,
+  TipoProjeto,
+} from './models';
 
 export function moeda(valor: number | null | undefined): string {
   const n = Number(valor || 0);
@@ -82,6 +89,93 @@ export const STATUS_ORC_CLASSE: Record<StatusOrcamento, string> = {
 
 export function stageIndex(stage: StageProjeto): number {
   return STAGES.findIndex((s) => s.valor === stage);
+}
+
+/* ---------- Quadro de tarefas do projeto ---------- */
+
+/** Icone (path SVG) de cada coluna do quadro. */
+export const COLUNAS: {
+  valor: ColunaTarefa;
+  rot: string;
+  icone: string;
+}[] = [
+  {
+    valor: 'afazer',
+    rot: 'A fazer',
+    icone: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  },
+  {
+    valor: 'fazendo',
+    rot: 'Fazendo',
+    icone: 'M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-7.07-2.83 2.83M9.76 14.24l-2.83 2.83m0-12.14 2.83 2.83m4.48 4.48 2.83 2.83',
+  },
+  {
+    valor: 'validacao',
+    rot: 'Validação',
+    icone: 'M9 12l2 2 4-4m-3-8 7 4v6c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-4z',
+  },
+  {
+    valor: 'concluido',
+    rot: 'Concluído',
+    icone: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3',
+  },
+];
+
+export const COLUNA_LABEL: Record<ColunaTarefa, string> = {
+  afazer: 'A fazer',
+  fazendo: 'Fazendo',
+  validacao: 'Validação',
+  concluido: 'Concluído',
+};
+
+export const PRIORIDADES: { valor: PrioridadeTarefa; rot: string }[] = [
+  { valor: 'baixa', rot: 'Baixa' },
+  { valor: 'media', rot: 'Média' },
+  { valor: 'alta', rot: 'Alta' },
+];
+
+export const PRIORIDADE_LABEL: Record<PrioridadeTarefa, string> = {
+  baixa: 'Baixa',
+  media: 'Média',
+  alta: 'Alta',
+};
+
+export const AREAS: { valor: AreaTarefa; rot: string }[] = [
+  { valor: 'dev', rot: 'Dev' },
+  { valor: 'design', rot: 'Design' },
+  { valor: 'produto', rot: 'Produto' },
+  { valor: 'cliente', rot: 'Cliente' },
+];
+
+export const AREA_LABEL: Record<AreaTarefa, string> = {
+  dev: 'Dev',
+  design: 'Design',
+  produto: 'Produto',
+  cliente: 'Cliente',
+};
+
+export const RESPONSAVEIS: { valor: string; rot: string }[] = [
+  { valor: '', rot: 'Sem responsável' },
+  { valor: 'Matheus', rot: 'Matheus' },
+  { valor: 'Pai', rot: 'Pai' },
+];
+
+/** Iniciais para o avatar do responsavel (ate 2 letras). */
+export function iniciais(nome: string | null | undefined): string {
+  const partes = (nome || '').trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return '';
+  const letras = partes.slice(0, 2).map((p) => p[0].toUpperCase());
+  return letras.join('');
+}
+
+/** Percentual de tarefas concluidas do projeto (0 a 100). */
+export function progressoTarefas(
+  feitas: number | undefined,
+  total: number | undefined,
+): number {
+  const t = Number(total || 0);
+  if (!t) return 0;
+  return Math.round((Number(feitas || 0) / t) * 100);
 }
 
 /* Modelos de escopo para orcamentos (itens sugeridos, editaveis) */

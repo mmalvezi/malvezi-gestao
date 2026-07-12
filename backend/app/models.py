@@ -55,6 +55,46 @@ class Projeto(Base):
     criado = Column(DateTime, default=agora)
 
     cliente = relationship("Cliente", back_populates="projetos")
+    tarefas = relationship(
+        "TarefaProjeto",
+        back_populates="projeto",
+        cascade="all, delete-orphan",
+        order_by="TarefaProjeto.ordem",
+    )
+
+    @property
+    def tarefas_total(self) -> int:
+        return len(self.tarefas)
+
+    @property
+    def tarefas_feitas(self) -> int:
+        return sum(1 for t in self.tarefas if t.coluna == "concluido")
+
+
+class TarefaProjeto(Base):
+    """Tarefa interna de execucao de um projeto (quadro kanban do projeto).
+
+    Nao confundir com Tarefa, que sao os lembretes soltos do painel.
+    """
+
+    __tablename__ = "tarefas_projeto"
+
+    id = Column(Integer, primary_key=True, index=True)
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=False
+    )
+    titulo = Column(String, nullable=False)
+    descricao = Column(Text, default="")
+    # afazer | fazendo | validacao | concluido
+    coluna = Column(String, nullable=False, default="afazer")
+    prioridade = Column(String, nullable=False, default="media")  # baixa|media|alta
+    area = Column(String, nullable=False, default="dev")  # dev|design|produto|cliente
+    responsavel = Column(String, nullable=True)
+    ordem = Column(Integer, default=0)
+    criado = Column(DateTime, default=agora)
+    atualizado = Column(DateTime, default=agora, onupdate=agora)
+
+    projeto = relationship("Projeto", back_populates="tarefas")
 
 
 class Orcamento(Base):

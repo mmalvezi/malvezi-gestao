@@ -23,6 +23,14 @@ def listar(db: Session = Depends(get_db)):
     return db.query(Projeto).order_by(Projeto.criado.desc()).all()
 
 
+@router.get("/{projeto_id}", response_model=ProjetoRead)
+def obter(projeto_id: int, db: Session = Depends(get_db)):
+    projeto = db.get(Projeto, projeto_id)
+    if not projeto:
+        raise HTTPException(status_code=404, detail="Projeto nao encontrado")
+    return projeto
+
+
 @router.post("", response_model=ProjetoRead, status_code=201)
 def criar(dados: ProjetoCreate, db: Session = Depends(get_db)):
     _validar_cliente(dados.cliente_id, db)

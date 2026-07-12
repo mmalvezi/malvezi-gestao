@@ -8,6 +8,9 @@ TipoProjeto = Literal["site", "erp", "automacao", "portal"]
 StageProjeto = Literal["lead", "orcamento", "aprovado", "desenvolvimento", "entregue"]
 StatusOrcamento = Literal["rascunho", "enviado", "aprovado", "recusado"]
 StatusRecorrencia = Literal["ativo", "pausado"]
+ColunaTarefa = Literal["afazer", "fazendo", "validacao", "concluido"]
+PrioridadeTarefa = Literal["baixa", "media", "alta"]
+AreaTarefa = Literal["dev", "design", "produto", "cliente"]
 
 
 # ---------- Auth ----------
@@ -64,6 +67,48 @@ class ProjetoRead(BaseModel):
     escopo: str = ""
     criado: datetime
     cliente: Optional[ClienteRead] = None
+    # Progresso do quadro de tarefas do projeto
+    tarefas_total: int = 0
+    tarefas_feitas: int = 0
+
+
+# ---------- Tarefa do projeto (quadro kanban interno) ----------
+class TarefaProjetoCreate(BaseModel):
+    titulo: str
+    descricao: str = ""
+    coluna: ColunaTarefa = "afazer"
+    prioridade: PrioridadeTarefa = "media"
+    area: AreaTarefa = "dev"
+    responsavel: Optional[str] = None
+
+
+class TarefaProjetoUpdate(BaseModel):
+    titulo: str
+    descricao: str = ""
+    prioridade: PrioridadeTarefa = "media"
+    area: AreaTarefa = "dev"
+    responsavel: Optional[str] = None
+
+
+class TarefaProjetoColunaUpdate(BaseModel):
+    coluna: ColunaTarefa
+    ordem: Optional[int] = None
+
+
+class TarefaProjetoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    projeto_id: int
+    titulo: str
+    descricao: str = ""
+    coluna: ColunaTarefa
+    prioridade: PrioridadeTarefa
+    area: AreaTarefa
+    responsavel: Optional[str] = None
+    ordem: int
+    criado: datetime
+    atualizado: Optional[datetime] = None
 
 
 # ---------- Orcamento ----------

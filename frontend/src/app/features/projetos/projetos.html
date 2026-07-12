@@ -33,7 +33,7 @@
   @if (vista === 'cartoes') {
     <div class="grid grid-auto">
       @for (p of filtrados(); track p.id) {
-        <div class="card projeto" (click)="abrirEditar(p)">
+        <div class="card projeto" (click)="abrirProjeto(p)">
           <div class="topo">
             <div class="avatar">{{ tipoSigla[p.tipo] }}</div>
             <div class="min0">
@@ -70,6 +70,19 @@
             }
           </div>
 
+          <!-- Progresso das tarefas internas do projeto -->
+          <div class="tarefas-prog">
+            <div class="between mb-8">
+              <span class="mut tiny">Tarefas</span>
+              @if (temTarefas(p)) {
+                <span class="bold tiny">{{ p.tarefas_feitas }} de {{ p.tarefas_total }} tarefas</span>
+              } @else {
+                <span class="mut tiny">Nenhuma tarefa</span>
+              }
+            </div>
+            <div class="bar"><span [style.width.%]="pct(p)"></span></div>
+          </div>
+
           <div class="valores">
             <div>
               <div class="mut tiny">Valor</div>
@@ -80,12 +93,11 @@
               <div class="bold">{{ money(p.pago) }}</div>
             </div>
           </div>
-
         </div>
       }
     </div>
   } @else {
-    <!-- Vista em quadro (kanban) -->
+    <!-- Vista em quadro (funil por estagio) -->
     <div class="quadro">
       @for (s of stages; track s.valor) {
         <div class="coluna">
@@ -95,7 +107,7 @@
           </div>
           <div class="coluna-corpo">
             @for (p of porEstagio(s.valor); track p.id) {
-              <div class="mini card" (click)="abrirEditar(p)">
+              <div class="mini card" (click)="abrirProjeto(p)">
                 <div class="items-center">
                   <div class="avatar" style="width:32px;height:32px;border-radius:9px;font-size:12px">
                     {{ tipoSigla[p.tipo] }}
@@ -107,6 +119,9 @@
                 </div>
                 <div class="between mt-8">
                   <span class="bold small">{{ money(p.valor) }}</span>
+                  @if (temTarefas(p)) {
+                    <span class="mut tiny">{{ p.tarefas_feitas }}/{{ p.tarefas_total }} tarefas</span>
+                  }
                 </div>
               </div>
             }
@@ -120,13 +135,9 @@
   }
 }
 
-<!-- Editor -->
+<!-- Novo projeto -->
 @if (editorAberto) {
-  <app-dialog
-    [titulo]="editId ? 'Editar projeto' : 'Novo projeto'"
-    [largura]="640"
-    (fechar)="fecharEditor()"
-  >
+  <app-dialog titulo="Novo projeto" [largura]="640" (fechar)="fecharEditor()">
     <div class="field">
       <label>Cliente</label>
       <app-select
@@ -169,32 +180,11 @@
       <textarea class="textarea" [(ngModel)]="form.escopo" name="escopo" placeholder="O que será entregue"></textarea>
     </div>
 
-    @if (editId && projetoAtual()) {
-      <div class="documentos">
-        <app-documentos-area
-          [tipos]="tiposDoc"
-          [projeto]="projetoAtual()!"
-          [clientes]="clientes"
-        ></app-documentos-area>
-      </div>
-      <div class="documentos">
-        <app-notas-projeto [projetoId]="editId!"></app-notas-projeto>
-      </div>
-    }
-
-    <div foot class="between" style="width:100%">
-      <span>
-        @if (editId) {
-          <button class="btn danger" (click)="excluir()">Excluir</button>
-        }
-      </span>
-      <span class="items-center">
-        <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
-        <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id">
-          {{ salvando ? 'Salvando...' : 'Salvar' }}
-        </button>
-      </span>
+    <div foot class="items-center">
+      <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
+      <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id">
+        {{ salvando ? 'Salvando...' : 'Criar projeto' }}
+      </button>
     </div>
   </app-dialog>
 }
-

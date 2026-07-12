@@ -1,0 +1,57 @@
+.min0 {
+  min-width: 0;
+}
+.trunc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Cabecalho */
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.linha-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.linha-topo .min0 {
+  flex: 1;
+}
+.progresso {
+  border-top: 1px solid var(--borda);
+  padding-top: 14px;
+}
+
+/* Abas */
+.abas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--soft);
+  border-radius: 999px;
+}
+.aba {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink2);
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+}
+.aba.on {
+  background: var(--grad);
+  color: #fff;
+}

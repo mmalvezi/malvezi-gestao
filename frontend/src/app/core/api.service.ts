@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import {
   Cliente,
   ClienteInput,
+  ColunaTarefa,
   Dashboard,
   Documento,
   DocumentoInput,
@@ -21,6 +22,8 @@ import {
   StatusOrcamento,
   StatusRecorrencia,
   Tarefa,
+  TarefaProjeto,
+  TarefaProjetoInput,
   TipoDocumento,
 } from './models';
 
@@ -46,6 +49,9 @@ export class ApiService {
   /* Projetos */
   getProjetos(): Observable<Projeto[]> {
     return this.http.get<Projeto[]>(`${this.base}/projetos`);
+  }
+  getProjeto(id: number): Observable<Projeto> {
+    return this.http.get<Projeto>(`${this.base}/projetos/${id}`);
   }
   criarProjeto(dados: ProjetoInput): Observable<Projeto> {
     return this.http.post<Projeto>(`${this.base}/projetos`, dados);
@@ -128,6 +134,44 @@ export class ApiService {
   }
   excluirTarefa(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/tarefas/${id}`);
+  }
+
+  /* Tarefas do projeto (quadro kanban interno) */
+  getTarefasProjeto(projetoId: number): Observable<TarefaProjeto[]> {
+    return this.http.get<TarefaProjeto[]>(
+      `${this.base}/projetos/${projetoId}/tarefas`,
+    );
+  }
+  criarTarefaProjeto(
+    projetoId: number,
+    dados: TarefaProjetoInput,
+  ): Observable<TarefaProjeto> {
+    return this.http.post<TarefaProjeto>(
+      `${this.base}/projetos/${projetoId}/tarefas`,
+      dados,
+    );
+  }
+  atualizarTarefaProjeto(
+    id: number,
+    dados: Omit<TarefaProjetoInput, 'coluna'>,
+  ): Observable<TarefaProjeto> {
+    return this.http.put<TarefaProjeto>(
+      `${this.base}/tarefas-projeto/${id}`,
+      dados,
+    );
+  }
+  moverTarefaProjeto(
+    id: number,
+    coluna: ColunaTarefa,
+    ordem?: number,
+  ): Observable<TarefaProjeto> {
+    return this.http.patch<TarefaProjeto>(
+      `${this.base}/tarefas-projeto/${id}/coluna`,
+      ordem == null ? { coluna } : { coluna, ordem },
+    );
+  }
+  excluirTarefaProjeto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/tarefas-projeto/${id}`);
   }
 
   /* Dashboard */
