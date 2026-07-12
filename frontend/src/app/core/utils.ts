@@ -113,12 +113,6 @@ export const STATUS_COB_LABEL: Record<StatusCobranca, string> = {
   cancelada: 'Cancelada',
 };
 
-/** Dias 1 a 28 (evita problema com meses curtos). */
-export const DIAS_VENCIMENTO: { valor: number; rot: string }[] = Array.from(
-  { length: 28 },
-  (_, i) => ({ valor: i + 1, rot: `Dia ${i + 1}` }),
-);
-
 const MESES = [
   'janeiro',
   'fevereiro',

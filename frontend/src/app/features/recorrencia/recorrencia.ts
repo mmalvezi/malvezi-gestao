@@ -19,7 +19,6 @@ import {
   dataBr,
   diasAte,
   relativo,
-  DIAS_VENCIMENTO,
   moeda,
   STATUS_COB_LABEL,
   STATUS_REC,
@@ -68,12 +67,13 @@ export class Recorrencia implements OnInit {
   statusLabel = STATUS_REC_LABEL;
   statusClasse = STATUS_REC_CLASSE;
   cobLabel = STATUS_COB_LABEL;
-  dias = DIAS_VENCIMENTO;
 
   editorAberto = false;
   editId: number | null = null;
   form: RecorrenciaInput = this.novoForm();
   salvando = false;
+  /** Erro do dia do vencimento (fora de 1 a 28). */
+  erroDia = '';
 
   copiada: number | null = null;
 
@@ -160,6 +160,7 @@ export class Recorrencia implements OnInit {
 
   abrirNovo() {
     this.editId = null;
+    this.erroDia = '';
     this.form = this.novoForm();
     if (this.clientes.length) this.form.cliente_id = this.clientes[0].id;
     this.editorAberto = true;
@@ -167,6 +168,7 @@ export class Recorrencia implements OnInit {
 
   abrirEditar(r: Rec) {
     this.editId = r.id;
+    this.erroDia = '';
     this.form = {
       cliente_id: r.cliente_id,
       projeto_id: r.projeto_id ?? null,
@@ -186,11 +188,19 @@ export class Recorrencia implements OnInit {
 
   salvar() {
     if (!this.form.cliente_id || !this.form.plano.trim()) return;
+    // Vazio volta ao padrao 10; fora de 1 a 28 avisa e nao salva
+    const bruto = this.form.dia_vencimento;
+    const dia = bruto == null || `${bruto}` === '' ? 10 : Number(bruto);
+    if (!Number.isInteger(dia) || dia < 1 || dia > 28) {
+      this.erroDia = 'Informe um dia de 1 a 28.';
+      return;
+    }
+    this.erroDia = '';
     this.salvando = true;
     const payload: RecorrenciaInput = {
       ...this.form,
       valor: Number(this.form.valor) || 0,
-      dia_vencimento: Number(this.form.dia_vencimento) || 10,
+      dia_vencimento: dia,
     };
     const req = this.editId
       ? this.api.atualizarRecorrencia(this.editId, payload)

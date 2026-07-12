@@ -274,13 +274,21 @@
         <input id="valor" class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
       </div>
       <div class="field">
-        <label>Dia do vencimento</label>
-        <app-select
-          [opcoes]="dias"
-          ariaLabel="Dia do vencimento"
+        <label for="rec-dia">Dia do vencimento <span class="mut">(de 1 a 28)</span></label>
+        <input
+          id="rec-dia"
+          class="input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="28"
+          step="1"
           [(ngModel)]="form.dia_vencimento"
           name="dia_vencimento"
-        ></app-select>
+        />
+        @if (erroDia) {
+          <span class="erro-dia tiny">{{ erroDia }}</span>
+        }
       </div>
       <div class="field">
         <label>Situação</label>

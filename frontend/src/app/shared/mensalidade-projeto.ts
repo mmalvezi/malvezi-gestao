@@ -12,12 +12,10 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { Projeto, Recorrencia, RecorrenciaInput } from '../core/models';
 import {
-  DIAS_VENCIMENTO,
   STATUS_REC_CLASSE,
   STATUS_REC_LABEL,
   moeda,
 } from '../core/utils';
-import { AppSelect } from './ui/app-select';
 import { ConfirmService } from './ui/confirm.service';
 
 /**
@@ -27,7 +25,7 @@ import { ConfirmService } from './ui/confirm.service';
 @Component({
   selector: 'app-mensalidade-projeto',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppSelect],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="between mb-16">
       <span class="section-title" style="margin:0">Mensalidade</span>
@@ -82,14 +80,22 @@ import { ConfirmService } from './ui/confirm.service';
           />
         </div>
         <div class="field">
-          <label>Dia do vencimento</label>
-          <app-select
-            [opcoes]="dias"
-            ariaLabel="Dia do vencimento"
+          <label for="mens-dia">Dia do vencimento <span class="mut">(de 1 a 28)</span></label>
+          <input
+            id="mens-dia"
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="28"
+            step="1"
             [(ngModel)]="form.dia_vencimento"
             name="dia_vencimento"
-            (ngModelChange)="salvar()"
-          ></app-select>
+            (blur)="salvar()"
+          />
+          @if (erroDia) {
+            <span class="erro-dia tiny">{{ erroDia }}</span>
+          }
         </div>
         <div class="field">
           <label for="mens-contato">Contato da cobrança</label>
@@ -148,6 +154,10 @@ import { ConfirmService } from './ui/confirm.service';
         padding: 9px 12px;
         font-weight: 600;
       }
+      .erro-dia {
+        color: var(--bad);
+        font-weight: 600;
+      }
     `,
   ],
 })
@@ -160,8 +170,9 @@ export class MensalidadeProjeto implements OnInit {
 
   rec: Recorrencia | null = null;
   salvando = false;
+  /** Erro do dia do vencimento (fora de 1 a 28). */
+  erroDia = '';
 
-  dias = DIAS_VENCIMENTO;
   statusLabel = STATUS_REC_LABEL;
   classe = STATUS_REC_CLASSE;
   money = moeda;
@@ -242,11 +253,20 @@ export class MensalidadeProjeto implements OnInit {
 
   salvar() {
     if (!this.rec) return;
+    // Vazio volta ao padrao 10; fora de 1 a 28 avisa e nao salva
+    const bruto = this.form.dia_vencimento;
+    const dia = bruto == null || `${bruto}` === '' ? 10 : Number(bruto);
+    if (!Number.isInteger(dia) || dia < 1 || dia > 28) {
+      this.erroDia = 'Informe um dia de 1 a 28.';
+      return;
+    }
+    this.erroDia = '';
+    this.form.dia_vencimento = dia;
     this.salvando = true;
     const payload: RecorrenciaInput = {
       ...this.form,
       valor: Number(this.form.valor) || 0,
-      dia_vencimento: Number(this.form.dia_vencimento) || 10,
+      dia_vencimento: dia,
     };
     this.api.atualizarRecorrencia(this.rec.id, payload).subscribe({
       next: (r) => {

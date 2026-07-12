@@ -48,34 +48,50 @@ export interface OpcaoSelect {
       <div class="sheet-bd" (click)="fechar()"></div>
     }
     @if (aberto) {
-      <ul
+      <div
         class="sel-panel"
-        role="listbox"
         [class.sheet]="mobile"
         [style.top.px]="mobile ? null : pos.top"
         [style.left.px]="mobile ? null : pos.left"
         [style.minWidth.px]="mobile ? null : pos.width"
       >
-        @for (o of opcoes; track o.valor; let i = $index) {
-          <li
-            role="option"
-            [attr.aria-selected]="o.valor === valor"
-            class="sel-op"
-            [class.ativa]="i === ativo"
-            [class.sel]="o.valor === valor"
-            (mouseenter)="ativo = i"
-            (mousedown)="$event.preventDefault()"
-            (click)="escolher(o)"
-          >
-            <span>{{ o.rot }}</span>
-            @if (o.valor === valor) {
-              <svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            }
-          </li>
+        @if (comBusca()) {
+          <input
+            #campoBusca
+            class="sel-busca"
+            type="text"
+            placeholder="Buscar..."
+            [value]="busca"
+            (input)="aoBuscar($any($event.target).value)"
+            (keydown)="tecla($event)"
+            aria-label="Buscar na lista"
+          />
         }
-      </ul>
+        <ul class="sel-lista" role="listbox">
+          @for (o of visiveis(); track o.valor; let i = $index) {
+            <li
+              role="option"
+              [attr.aria-selected]="o.valor === valor"
+              class="sel-op"
+              [class.ativa]="i === ativo"
+              [class.sel]="o.valor === valor"
+              (mouseenter)="ativo = i"
+              (mousedown)="$event.preventDefault()"
+              (click)="escolher(o)"
+            >
+              <span>{{ o.rot }}</span>
+              @if (o.valor === valor) {
+                <svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              }
+            </li>
+          }
+          @if (!visiveis().length) {
+            <li class="sel-vazio mut small">Nada encontrado.</li>
+          }
+        </ul>
+      </div>
     }
   `,
   styles: [
@@ -137,15 +153,40 @@ export interface OpcaoSelect {
       .sel-panel {
         position: fixed;
         z-index: 130;
-        margin: 0;
         padding: 6px;
-        list-style: none;
         background: #fff;
         border: 1px solid var(--borda);
         border-radius: 12px;
         box-shadow: var(--shadow-lg);
-        max-height: 260px;
+        display: flex;
+        flex-direction: column;
+      }
+      .sel-lista {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-height: 240px;
         overflow-y: auto;
+        /* Chegar na borda da lista nao pode rolar a pagina (fecharia o menu) */
+        overscroll-behavior: contain;
+      }
+      .sel-busca {
+        font-family: inherit;
+        font-size: 13px;
+        color: var(--tinta);
+        border: 1px solid var(--borda);
+        border-radius: 8px;
+        padding: 7px 10px;
+        margin-bottom: 6px;
+        outline: none;
+      }
+      .sel-busca:focus {
+        border-color: var(--roxo);
+        box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.15);
+      }
+      .sel-vazio {
+        padding: 10px;
+        text-align: center;
       }
       .sel-op {
         display: flex;
@@ -186,9 +227,11 @@ export interface OpcaoSelect {
         width: 100% !important;
         min-width: 0 !important;
         max-width: none;
-        max-height: 70vh;
         border-radius: 16px 16px 0 0;
         padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      }
+      .sel-panel.sheet .sel-lista {
+        max-height: 60vh;
       }
       .sel-panel.sheet .sel-op {
         padding: 13px 12px;
@@ -207,6 +250,7 @@ export class AppSelect implements ControlValueAccessor {
   @Input() triggerCls: string | null = null;
 
   @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
+  @ViewChild('campoBusca') campoBusca?: ElementRef<HTMLInputElement>;
 
   valor: any = null;
   aberto = false;
@@ -214,6 +258,8 @@ export class AppSelect implements ControlValueAccessor {
   disabled = false;
   mobile = false;
   pos = { top: 0, left: 0, width: 0 };
+  /** Filtro digitado no campo de busca (listas longas). */
+  busca = '';
 
   private onChange: (v: any) => void = () => {};
   private onTouched: () => void = () => {};
@@ -238,6 +284,23 @@ export class AppSelect implements ControlValueAccessor {
     return this.opcoes.find((o) => o.valor === this.valor)?.rot ?? this.placeholder;
   }
 
+  /** Listas longas ganham um campo de busca dentro do menu. */
+  comBusca(): boolean {
+    return this.opcoes.length > 8;
+  }
+
+  /** Opcoes visiveis apos o filtro da busca. */
+  visiveis(): OpcaoSelect[] {
+    const filtro = this.busca.toLowerCase().trim();
+    if (!filtro) return this.opcoes;
+    return this.opcoes.filter((o) => o.rot.toLowerCase().includes(filtro));
+  }
+
+  aoBuscar(texto: string) {
+    this.busca = texto;
+    this.ativo = 0;
+  }
+
   alternar() {
     if (this.disabled) return;
     this.aberto ? this.fechar() : this.abrir();
@@ -249,11 +312,16 @@ export class AppSelect implements ControlValueAccessor {
       const r = el.getBoundingClientRect();
       this.pos = { top: r.bottom + 4, left: r.left, width: r.width };
     }
+    this.busca = '';
     this.ativo = this.opcoes.findIndex((o) => o.valor === this.valor);
     this.aberto = true;
+    if (this.comBusca()) {
+      setTimeout(() => this.campoBusca?.nativeElement.focus());
+    }
   }
   fechar() {
     this.aberto = false;
+    this.busca = '';
     this.onTouched();
   }
 
@@ -272,12 +340,14 @@ export class AppSelect implements ControlValueAccessor {
       }
       return;
     }
+    const lista = this.visiveis();
     if (ev.key === 'Escape') {
       ev.preventDefault();
       this.fechar();
+      this.trigger?.nativeElement.focus();
     } else if (ev.key === 'ArrowDown') {
       ev.preventDefault();
-      this.ativo = Math.min(this.ativo + 1, this.opcoes.length - 1);
+      this.ativo = Math.min(this.ativo + 1, lista.length - 1);
     } else if (ev.key === 'ArrowUp') {
       ev.preventDefault();
       this.ativo = Math.max(this.ativo - 1, 0);
@@ -286,11 +356,12 @@ export class AppSelect implements ControlValueAccessor {
       this.ativo = 0;
     } else if (ev.key === 'End') {
       ev.preventDefault();
-      this.ativo = this.opcoes.length - 1;
+      this.ativo = lista.length - 1;
     } else if (ev.key === 'Enter') {
       ev.preventDefault();
-      if (this.opcoes[this.ativo]) this.escolher(this.opcoes[this.ativo]);
+      if (lista[this.ativo]) this.escolher(lista[this.ativo]);
     }
+    // Demais teclas seguem para o campo de busca digitar normalmente
   }
 
   @HostListener('document:click', ['$event'])
