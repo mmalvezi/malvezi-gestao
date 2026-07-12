@@ -139,11 +139,95 @@ class TarefaProjeto(Base):
     prioridade = Column(String, nullable=False, default="media")  # baixa|media|alta
     area = Column(String, nullable=False, default="dev")  # dev|design|produto|cliente
     responsavel = Column(String, nullable=True)
+    prazo = Column(Date, nullable=True)
+    # De qual modelo de tarefa ela nasceu (trava a duplicacao na geracao)
+    modelo_id = Column(
+        Integer, ForeignKey("modelos_tarefa.id", ondelete="SET NULL"), nullable=True
+    )
     ordem = Column(Integer, default=0)
     criado = Column(DateTime, default=agora)
     atualizado = Column(DateTime, default=agora, onupdate=agora)
 
     projeto = relationship("Projeto", back_populates="tarefas")
+
+
+class ModeloTarefa(Base):
+    """Roteiro da empresa: tarefa que nasce sozinha quando um projeto do tipo
+    indicado entra no estagio gatilho."""
+
+    __tablename__ = "modelos_tarefa"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo_projeto = Column(String, nullable=False)  # site|erp|automacao|portal
+    # lead | orcamento | aprovado | desenvolvimento | entregue
+    stage_gatilho = Column(String, nullable=False)
+    titulo = Column(String, nullable=False)
+    descricao = Column(Text, default="")
+    area = Column(String, nullable=False, default="dev")
+    prioridade = Column(String, nullable=False, default="media")
+    responsavel_padrao = Column(String, nullable=True)  # Matheus | Elvio
+    coluna_inicial = Column(String, nullable=False, default="afazer")
+    dias_prazo = Column(Integer, nullable=True)  # prazo em dias apos nascer
+    ordem = Column(Integer, default=0)
+    ativo = Column(Boolean, default=True)
+
+
+class ModeloVerificacao(Base):
+    """Item do checklist mensal de saude dos projetos entregues, por tipo."""
+
+    __tablename__ = "modelos_verificacao"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo_projeto = Column(String, nullable=False)
+    titulo = Column(String, nullable=False)
+    ordem = Column(Integer, default=0)
+    ativo = Column(Boolean, default=True)
+
+
+class VerificacaoProjeto(Base):
+    """Verificacao mensal de um projeto entregue (uma por competencia)."""
+
+    __tablename__ = "verificacoes_projeto"
+    __table_args__ = (
+        UniqueConstraint(
+            "projeto_id", "competencia", name="uq_verificacao_projeto_competencia"
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=False
+    )
+    competencia = Column(String, nullable=False)  # AAAA-MM
+    status = Column(String, nullable=False, default="aberta")  # aberta|concluida
+    criado = Column(DateTime, default=agora)
+    concluida_em = Column(Date, nullable=True)
+    observacoes = Column(Text, default="")
+
+    projeto = relationship("Projeto")
+    itens = relationship(
+        "ItemVerificacao",
+        back_populates="verificacao",
+        cascade="all, delete-orphan",
+        order_by="ItemVerificacao.ordem",
+    )
+
+
+class ItemVerificacao(Base):
+    __tablename__ = "itens_verificacao"
+
+    id = Column(Integer, primary_key=True, index=True)
+    verificacao_id = Column(
+        Integer,
+        ForeignKey("verificacoes_projeto.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    titulo = Column(String, nullable=False)
+    ok = Column(Boolean, default=False)
+    observacao = Column(Text, default="")
+    ordem = Column(Integer, default=0)
+
+    verificacao = relationship("VerificacaoProjeto", back_populates="itens")
 
 
 class Orcamento(Base):

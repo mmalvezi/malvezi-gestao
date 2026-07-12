@@ -187,6 +187,10 @@
         (mudou)="aoMudarTarefas($event)"
       ></app-quadro-tarefas>
     </div>
+  } @else if (aba === 'verificacoes') {
+    <div class="card card-pad">
+      <app-verificacoes-projeto [projetoId]="projeto.id"></app-verificacoes-projeto>
+    </div>
   } @else if (aba === 'notas') {
     <div class="card card-pad">
       <app-notas-projeto [projetoId]="projeto.id"></app-notas-projeto>

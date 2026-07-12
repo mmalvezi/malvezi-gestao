@@ -1,4 +1,23 @@
-@if (carregando) {
+<!-- Abas de Configuracoes -->
+<div class="abas-cfg" role="tablist">
+  @for (a of abas; track a.valor) {
+    <button
+      role="tab"
+      class="aba-cfg"
+      [class.on]="aba === a.valor"
+      [attr.aria-selected]="aba === a.valor"
+      (click)="aba = a.valor"
+    >
+      {{ a.rot }}
+    </button>
+  }
+</div>
+
+@if (aba === 'tarefas') {
+  <app-modelos-tarefa></app-modelos-tarefa>
+} @else if (aba === 'checklist') {
+  <app-checklist-verificacao></app-checklist-verificacao>
+} @else if (carregando) {
   <div class="loading"><span class="spin"></span> Carregando modelos...</div>
 } @else {
   <div class="between wrap mb-16">

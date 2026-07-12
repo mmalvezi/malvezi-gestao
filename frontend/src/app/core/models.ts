@@ -71,6 +71,9 @@ export interface TarefaProjeto {
   prioridade: PrioridadeTarefa;
   area: AreaTarefa;
   responsavel?: string | null;
+  prazo?: string | null;
+  /** De qual modelo de tarefa ela nasceu (null quando criada a mao). */
+  modelo_id?: number | null;
   ordem: number;
   criado?: string;
   atualizado?: string | null;
@@ -83,6 +86,54 @@ export interface TarefaProjetoInput {
   prioridade: PrioridadeTarefa;
   area: AreaTarefa;
   responsavel?: string | null;
+  prazo?: string | null;
+}
+
+/** Modelo de tarefa: nasce sozinha quando o projeto entra no estagio. */
+export interface ModeloTarefa {
+  id?: number;
+  tipo_projeto: TipoProjeto;
+  stage_gatilho: 'lead' | 'orcamento' | 'aprovado' | 'desenvolvimento' | 'entregue';
+  titulo: string;
+  descricao: string;
+  area: AreaTarefa;
+  prioridade: PrioridadeTarefa;
+  responsavel_padrao?: string | null;
+  coluna_inicial: ColunaTarefa;
+  dias_prazo?: number | null;
+  ordem: number;
+  ativo: boolean;
+}
+
+/** Item do checklist mensal por tipo de projeto (Configuracoes). */
+export interface ModeloVerificacao {
+  id?: number;
+  tipo_projeto: TipoProjeto;
+  titulo: string;
+  ordem: number;
+  ativo: boolean;
+}
+
+export interface ItemVerificacao {
+  id: number;
+  titulo: string;
+  ok: boolean;
+  observacao: string;
+  ordem: number;
+}
+
+/** Verificacao mensal de saude de um projeto entregue. */
+export interface Verificacao {
+  id: number;
+  projeto_id: number;
+  competencia: string; // AAAA-MM
+  status: 'aberta' | 'concluida';
+  criado: string;
+  concluida_em?: string | null;
+  observacoes: string;
+  itens: ItemVerificacao[];
+  cliente?: string | null;
+  tipo_projeto?: string | null;
 }
 
 export interface OrcamentoItem {
@@ -224,6 +275,9 @@ export interface Dashboard {
   em_producao: number;
   recusados_qtd: number;
   taxa_aprovacao: number;
+  /** Verificacoes mensais dos entregues, no mes corrente. */
+  verificacoes_pendentes: number;
+  verificacoes_concluidas: number;
   funil: FunilItem[];
   proximas_entregas: ProximaEntrega[];
   pendencias: Pendencia[];

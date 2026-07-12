@@ -90,6 +90,35 @@ def vencidas(db: Session = Depends(get_db)):
     return [_payload(c) for c in itens]
 
 
+@router.get("/verificacoes-pendentes")
+def verificacoes_pendentes(db: Session = Depends(get_db)):
+    """Verificacoes mensais abertas da competencia atual, para o n8n lembrar."""
+    from ..models import VerificacaoProjeto
+    from ..verificacoes import competencia_atual, garantir_verificacoes
+
+    garantir_verificacoes(db)
+    abertas = (
+        db.query(VerificacaoProjeto)
+        .filter(
+            VerificacaoProjeto.status == "aberta",
+            VerificacaoProjeto.competencia == competencia_atual(),
+        )
+        .all()
+    )
+    return [
+        {
+            "id": v.id,
+            "projeto_id": v.projeto_id,
+            "cliente": (v.projeto.cliente.nome if v.projeto and v.projeto.cliente else ""),
+            "tipo_projeto": (v.projeto.tipo if v.projeto else ""),
+            "competencia": v.competencia,
+            "itens_total": len(v.itens),
+            "itens_pendentes": sum(1 for i in v.itens if not i.ok),
+        }
+        for v in abertas
+    ]
+
+
 @router.post("/cobrancas/{cobranca_id}/notificado")
 def marcar_notificado(cobranca_id: int, db: Session = Depends(get_db)):
     c = db.get(CobrancaMensalidade, cobranca_id)

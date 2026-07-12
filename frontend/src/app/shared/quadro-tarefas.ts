@@ -25,16 +25,19 @@ import {
   PRIORIDADES,
   PRIORIDADE_LABEL,
   RESPONSAVEIS,
+  dataBr,
+  diasAte,
   iniciais,
 } from '../core/utils';
 import { Dialog } from './dialog';
 import { AppSelect, OpcaoSelect } from './ui/app-select';
+import { AppDatepicker } from './ui/app-datepicker';
 import { ConfirmService } from './ui/confirm.service';
 
 @Component({
   selector: 'app-quadro-tarefas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, AppSelect],
+  imports: [CommonModule, FormsModule, Dialog, AppSelect, AppDatepicker],
   template: `
     <!-- Topo: busca, filtro de area e nova tarefa -->
     <div class="quadro-topo">
@@ -63,12 +66,22 @@ import { ConfirmService } from './ui/confirm.service';
         }
       </div>
 
-      <button class="btn primary" (click)="abrirNova('afazer')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14" stroke-linecap="round" />
-        </svg>
-        Nova tarefa
-      </button>
+      <span class="items-center gap-6">
+        <button
+          class="btn ghost sm"
+          (click)="aplicarModelo()"
+          [disabled]="aplicando"
+          title="Gera as tarefas do roteiro deste tipo de projeto, do estágio atual e anteriores, sem duplicar"
+        >
+          {{ aplicando ? 'Aplicando...' : 'Aplicar modelo de tarefas' }}
+        </button>
+        <button class="btn primary" (click)="abrirNova('afazer')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+          </svg>
+          Nova tarefa
+        </button>
+      </span>
     </div>
 
     <!-- Quadro -->
@@ -123,8 +136,19 @@ import { ConfirmService } from './ui/confirm.service';
                 }
 
                 <div class="t-pe">
-                  <span class="badge" [attr.data-pri]="t.prioridade">
-                    {{ prioridadeLabel[t.prioridade] }}
+                  <span class="items-center gap-6">
+                    <span class="badge" [attr.data-pri]="t.prioridade">
+                      {{ prioridadeLabel[t.prioridade] }}
+                    </span>
+                    @if (t.prazo) {
+                      <span
+                        class="prazo tiny"
+                        [class.vencido]="prazoVencido(t)"
+                        [title]="'Prazo: ' + data(t.prazo)"
+                      >
+                        {{ data(t.prazo) }}
+                      </span>
+                    }
                   </span>
                   @if (t.responsavel) {
                     <span class="resp" [title]="t.responsavel">{{ ini(t.responsavel) }}</span>
@@ -258,6 +282,15 @@ import { ConfirmService } from './ui/confirm.service';
               name="responsavel"
             ></app-select>
           </div>
+        </div>
+
+        <div class="field">
+          <label>Prazo (opcional)</label>
+          <app-datepicker
+            ariaLabel="Prazo da tarefa"
+            [(ngModel)]="form.prazo"
+            name="prazo"
+          ></app-datepicker>
         </div>
 
         @if (!editId) {
@@ -489,6 +522,14 @@ import { ConfirmService } from './ui/confirm.service';
         background: var(--soft);
         color: var(--mut);
       }
+      .prazo {
+        font-weight: 600;
+        color: var(--mut);
+        white-space: nowrap;
+      }
+      .prazo.vencido {
+        color: var(--bad);
+      }
       .resp {
         width: 26px;
         height: 26px;
@@ -642,9 +683,11 @@ export class QuadroTarefas implements OnInit {
   areaLabel = AREA_LABEL;
   prioridadeLabel = PRIORIDADE_LABEL;
   ini = iniciais;
+  data = dataBr;
 
   busca = '';
   filtroArea: AreaTarefa | 'todas' = 'todas';
+  aplicando = false;
 
   /* Arrastar e soltar */
   arrastando: TarefaProjeto | null = null;
@@ -680,7 +723,25 @@ export class QuadroTarefas implements OnInit {
       prioridade: 'media',
       area: 'dev',
       responsavel: '',
+      prazo: null,
     };
+  }
+
+  /** Prazo estourado (e a tarefa ainda nao concluida). */
+  prazoVencido(t: TarefaProjeto): boolean {
+    return !!t.prazo && t.coluna !== 'concluido' && diasAte(t.prazo) < 0;
+  }
+
+  /** Gera as tarefas do roteiro (estagio atual e anteriores), sem duplicar. */
+  aplicarModelo() {
+    this.aplicando = true;
+    this.api.aplicarModeloTarefas(this.projetoId).subscribe({
+      next: () => {
+        this.aplicando = false;
+        this.carregar();
+      },
+      error: () => (this.aplicando = false),
+    });
   }
 
   colunasOpc(): OpcaoSelect[] {
@@ -818,6 +879,7 @@ export class QuadroTarefas implements OnInit {
       prioridade: t.prioridade,
       area: t.area,
       responsavel: t.responsavel || '',
+      prazo: t.prazo || null,
     };
     this.editorAberto = true;
   }
@@ -830,7 +892,12 @@ export class QuadroTarefas implements OnInit {
     const titulo = this.form.titulo.trim();
     if (!titulo) return;
     this.salvando = true;
-    const payload = { ...this.form, titulo, responsavel: this.form.responsavel || null };
+    const payload = {
+      ...this.form,
+      titulo,
+      responsavel: this.form.responsavel || null,
+      prazo: this.form.prazo || null,
+    };
 
     const req = this.editId
       ? this.api.atualizarTarefaProjeto(this.editId, {
@@ -839,6 +906,7 @@ export class QuadroTarefas implements OnInit {
           prioridade: payload.prioridade,
           area: payload.area,
           responsavel: payload.responsavel,
+          prazo: payload.prazo,
         })
       : this.api.criarTarefaProjeto(this.projetoId, payload);
 

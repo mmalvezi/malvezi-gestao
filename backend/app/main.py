@@ -17,6 +17,7 @@ from .routers import (
     dashboard,
     documentos,
     modelos,
+    modelos_tarefa,
     notas,
     orcamentos,
     parcelas,
@@ -24,8 +25,15 @@ from .routers import (
     recorrencias,
     tarefas,
     tarefas_projeto,
+    verificacoes,
 )
-from .seed import run_seed, run_seed_modelos
+from .verificacoes import garantir_verificacoes
+from .seed import (
+    run_seed,
+    run_seed_checklist,
+    run_seed_modelos,
+    run_seed_roteiro,
+)
 
 app = FastAPI(title="Malvezi Gestão")
 
@@ -48,6 +56,8 @@ app.include_router(recorrencias.router, prefix="/api")
 app.include_router(cobrancas.router, prefix="/api")
 app.include_router(tarefas.router, prefix="/api")
 app.include_router(tarefas_projeto.router, prefix="/api")
+app.include_router(modelos_tarefa.router, prefix="/api")
+app.include_router(verificacoes.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(modelos.router, prefix="/api")
 app.include_router(documentos.router, prefix="/api")
@@ -76,6 +86,9 @@ def _preparar():
     try:
         run_seed(db)
         run_seed_modelos(db)
+        run_seed_roteiro(db)
+        run_seed_checklist(db)
         garantir_cobrancas(db)
+        garantir_verificacoes(db)
     finally:
         db.close()

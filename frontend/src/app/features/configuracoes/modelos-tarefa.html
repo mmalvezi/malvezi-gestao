@@ -1,0 +1,170 @@
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando modelos...</div>
+} @else {
+  <p class="mut small explica">
+    As tarefas abaixo são criadas automaticamente quando um projeto deste tipo
+    entra no estágio indicado. Elas chegam no quadro do projeto e podem ser
+    editadas ou removidas normalmente.
+  </p>
+
+  <div class="between wrap mb-16">
+    <div class="chips">
+      @for (t of tipos; track t.valor) {
+        <button class="chip" [class.active]="tipoSel === t.valor" (click)="tipoSel = t.valor">
+          {{ t.rot }}
+        </button>
+      }
+    </div>
+    <button class="btn" (click)="abrirDuplicar()">Duplicar para outro tipo</button>
+  </div>
+
+  @for (s of stages; track s.valor) {
+    <div class="card card-pad grupo">
+      <div class="between mb-8">
+        <span class="grupo-titulo">
+          <span class="num">{{ $index + 1 }}</span>
+          Quando entrar em <b>{{ s.rot }}</b>
+        </span>
+        <button class="btn sm ghost" (click)="abrirNovo(s.valor)">+ Adicionar tarefa</button>
+      </div>
+
+      @if (doGrupo(s.valor).length) {
+        @for (m of doGrupo(s.valor); track m.id; let i = $index; let ultimo = $last) {
+          <div class="linha" [class.inativa]="!m.ativo">
+            <div class="ordena">
+              <button
+                class="mini-btn"
+                [disabled]="i === 0"
+                (click)="mover(m, -1)"
+                aria-label="Mover para cima"
+              >▲</button>
+              <button
+                class="mini-btn"
+                [disabled]="ultimo"
+                (click)="mover(m, 1)"
+                aria-label="Mover para baixo"
+              >▼</button>
+            </div>
+
+            <div class="min0">
+              <div class="bold small trunc">
+                {{ m.titulo }}
+                @if (!m.ativo) {
+                  <span class="badge">Inativa</span>
+                }
+              </div>
+              <div class="mut tiny">
+                {{ areaLabel[m.area] }} · {{ prioridadeLabel[m.prioridade] }}
+                @if (m.responsavel_padrao) { · {{ m.responsavel_padrao }} }
+                @if (m.dias_prazo) { · prazo de {{ m.dias_prazo }} dias }
+              </div>
+            </div>
+
+            <div class="items-center gap-6">
+              <button class="icon-btn sm" (click)="abrirEditar(m)" aria-label="Editar tarefa do modelo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="icon-btn sm" (click)="excluir(m)" aria-label="Excluir tarefa do modelo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="mut tiny vazio">Nenhuma tarefa automática neste estágio.</div>
+      }
+    </div>
+  }
+}
+
+<!-- Editor da tarefa do modelo -->
+@if (editorAberto) {
+  <app-dialog
+    [titulo]="editId ? 'Editar tarefa do modelo' : 'Nova tarefa do modelo'"
+    [largura]="560"
+    (fechar)="editorAberto = false"
+  >
+    <div class="field">
+      <label for="mt-titulo">Título</label>
+      <input id="mt-titulo" class="input" [(ngModel)]="form.titulo" name="titulo" maxlength="120" />
+    </div>
+    <div class="field">
+      <label for="mt-desc">Descrição</label>
+      <textarea id="mt-desc" class="textarea" [(ngModel)]="form.descricao" name="descricao"></textarea>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Nasce quando o projeto entrar em</label>
+        <app-select [opcoes]="stages" ariaLabel="Estágio gatilho" [(ngModel)]="form.stage_gatilho" name="stage"></app-select>
+      </div>
+      <div class="field">
+        <label>Coluna inicial no quadro</label>
+        <app-select [opcoes]="colunas" ariaLabel="Coluna inicial" [(ngModel)]="form.coluna_inicial" name="coluna"></app-select>
+      </div>
+    </div>
+    <div class="row-3">
+      <div class="field">
+        <label>Área</label>
+        <app-select [opcoes]="areas" ariaLabel="Área" [(ngModel)]="form.area" name="area"></app-select>
+      </div>
+      <div class="field">
+        <label>Prioridade</label>
+        <app-select [opcoes]="prioridades" ariaLabel="Prioridade" [(ngModel)]="form.prioridade" name="prioridade"></app-select>
+      </div>
+      <div class="field">
+        <label>Responsável padrão</label>
+        <app-select [opcoes]="responsaveis" ariaLabel="Responsável padrão" [(ngModel)]="form.responsavel_padrao" name="responsavel"></app-select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label for="mt-prazo">Prazo (dias após nascer, vazio = sem prazo)</label>
+        <input id="mt-prazo" class="input" type="number" min="0" max="365" [(ngModel)]="form.dias_prazo" name="dias_prazo" />
+      </div>
+      <div class="field">
+        <label class="marcar" style="margin-top:26px">
+          <input type="checkbox" [(ngModel)]="form.ativo" name="ativo" />
+          <span>Ativa (gera tarefas)</span>
+        </label>
+      </div>
+    </div>
+
+    <div foot class="items-center">
+      <button class="btn ghost" (click)="editorAberto = false">Cancelar</button>
+      <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.titulo.trim()">
+        {{ salvando ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </app-dialog>
+}
+
+<!-- Duplicar roteiro para outro tipo -->
+@if (duplicarAberto) {
+  <app-dialog titulo="Duplicar roteiro" [largura]="440" (fechar)="duplicarAberto = false">
+    <p class="mut small">
+      Copia todas as tarefas do roteiro de <b>{{ tipoLabel[tipoSel] }}</b> para o
+      tipo escolhido. Tarefas com o mesmo título no mesmo estágio não são
+      duplicadas, então dá para rodar mais de uma vez sem bagunçar.
+    </p>
+    <div class="field">
+      <label>Copiar para</label>
+      <app-select
+        [opcoes]="outrosTipos()"
+        placeholder="Escolha o tipo de destino"
+        ariaLabel="Tipo de destino"
+        [(ngModel)]="duplicarPara"
+        name="duplicarPara"
+      ></app-select>
+    </div>
+    <div foot class="items-center">
+      <button class="btn ghost" (click)="duplicarAberto = false">Cancelar</button>
+      <button class="btn primary" (click)="duplicar()" [disabled]="duplicando || !duplicarPara">
+        {{ duplicando ? 'Copiando...' : 'Duplicar' }}
+      </button>
+    </div>
+  </app-dialog>
+}

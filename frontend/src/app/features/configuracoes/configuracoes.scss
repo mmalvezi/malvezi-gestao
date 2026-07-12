@@ -1,3 +1,31 @@
+/* Abas de topo (mesmo padrao do detalhe do projeto) */
+.abas-cfg {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--soft);
+  border-radius: 999px;
+}
+.aba-cfg {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink2);
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+}
+.aba-cfg.on {
+  background: var(--grad);
+  color: #fff;
+}
+
 .cfg-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;

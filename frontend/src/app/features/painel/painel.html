@@ -68,6 +68,19 @@
     </button>
   </div>
 
+  <!-- Saude dos projetos entregues no mes -->
+  @if (dash.verificacoes_pendentes + dash.verificacoes_concluidas > 0) {
+    <div class="card verif-resumo mb-16">
+      <span class="bold small">Verificações do mês</span>
+      <span class="items-center gap-6">
+        <span class="badge ok">{{ dash.verificacoes_concluidas }} concluída(s)</span>
+        <span class="badge" [class.warn]="dash.verificacoes_pendentes > 0">
+          {{ dash.verificacoes_pendentes }} pendente(s)
+        </span>
+      </span>
+    </div>
+  }
+
   <div class="grid painel-cols">
     <!-- Proximas entregas -->
     <div class="card card-pad">

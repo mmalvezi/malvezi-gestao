@@ -28,11 +28,18 @@ import { NotasProjeto } from '../../shared/notas-projeto';
 import { QuadroTarefas } from '../../shared/quadro-tarefas';
 import { ParcelasProjeto } from '../../shared/parcelas-projeto';
 import { MensalidadeProjeto } from '../../shared/mensalidade-projeto';
+import { VerificacoesProjeto } from '../../shared/verificacoes-projeto';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
 import { AppDatepicker } from '../../shared/ui/app-datepicker';
 
-type Aba = 'dados' | 'recebimentos' | 'tarefas' | 'notas' | 'documentos';
+type Aba =
+  | 'dados'
+  | 'recebimentos'
+  | 'tarefas'
+  | 'verificacoes'
+  | 'notas'
+  | 'documentos';
 
 @Component({
   selector: 'app-projeto-detalhe',
@@ -45,6 +52,7 @@ type Aba = 'dados' | 'recebimentos' | 'tarefas' | 'notas' | 'documentos';
     QuadroTarefas,
     ParcelasProjeto,
     MensalidadeProjeto,
+    VerificacoesProjeto,
     AppSelect,
     AppDatepicker,
   ],
@@ -68,6 +76,7 @@ export class ProjetoDetalhe implements OnInit {
     { valor: 'dados', rot: 'Dados' },
     { valor: 'recebimentos', rot: 'Recebimentos' },
     { valor: 'tarefas', rot: 'Tarefas' },
+    { valor: 'verificacoes', rot: 'Verificações' },
     { valor: 'notas', rot: 'Notas' },
     { valor: 'documentos', rot: 'Documentos' },
   ];

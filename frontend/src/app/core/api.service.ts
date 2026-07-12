@@ -17,6 +17,8 @@ import {
   Documento,
   DocumentoInput,
   ModeloDocumento,
+  ModeloTarefa,
+  ModeloVerificacao,
   Orcamento,
   OrcamentoInput,
   Projeto,
@@ -31,6 +33,7 @@ import {
   TarefaProjeto,
   TarefaProjetoInput,
   TipoDocumento,
+  Verificacao,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -279,6 +282,103 @@ export class ApiService {
   }
   excluirTarefaProjeto(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/tarefas-projeto/${id}`);
+  }
+
+  /* Modelos de tarefas (roteiro por tipo de projeto) */
+  getModelosTarefa(tipo?: string): Observable<ModeloTarefa[]> {
+    const q = tipo ? `?tipo=${tipo}` : '';
+    return this.http.get<ModeloTarefa[]>(`${this.base}/modelos-tarefa${q}`);
+  }
+  criarModeloTarefa(dados: ModeloTarefa): Observable<ModeloTarefa> {
+    return this.http.post<ModeloTarefa>(`${this.base}/modelos-tarefa`, dados);
+  }
+  atualizarModeloTarefa(id: number, dados: ModeloTarefa): Observable<ModeloTarefa> {
+    return this.http.put<ModeloTarefa>(`${this.base}/modelos-tarefa/${id}`, dados);
+  }
+  reordenarModelosTarefa(ids: number[]): Observable<{ ok: boolean }> {
+    return this.http.post<{ ok: boolean }>(
+      `${this.base}/modelos-tarefa/reordenar`,
+      { ids },
+    );
+  }
+  duplicarModelosTarefa(
+    de: string,
+    para: string,
+  ): Observable<ModeloTarefa[]> {
+    return this.http.post<ModeloTarefa[]>(`${this.base}/modelos-tarefa/duplicar`, {
+      de,
+      para,
+    });
+  }
+  excluirModeloTarefa(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/modelos-tarefa/${id}`);
+  }
+  /** Gera as tarefas do roteiro para o estagio atual e anteriores. */
+  aplicarModeloTarefas(projetoId: number): Observable<{ criadas: number }> {
+    return this.http.post<{ criadas: number }>(
+      `${this.base}/projetos/${projetoId}/tarefas/aplicar-modelo`,
+      {},
+    );
+  }
+
+  /* Checklist de verificacao (modelos, em Configuracoes) */
+  getModelosVerificacao(tipo?: string): Observable<ModeloVerificacao[]> {
+    const q = tipo ? `?tipo=${tipo}` : '';
+    return this.http.get<ModeloVerificacao[]>(
+      `${this.base}/modelos-verificacao${q}`,
+    );
+  }
+  criarModeloVerificacao(dados: ModeloVerificacao): Observable<ModeloVerificacao> {
+    return this.http.post<ModeloVerificacao>(
+      `${this.base}/modelos-verificacao`,
+      dados,
+    );
+  }
+  atualizarModeloVerificacao(
+    id: number,
+    dados: ModeloVerificacao,
+  ): Observable<ModeloVerificacao> {
+    return this.http.put<ModeloVerificacao>(
+      `${this.base}/modelos-verificacao/${id}`,
+      dados,
+    );
+  }
+  reordenarModelosVerificacao(ids: number[]): Observable<{ ok: boolean }> {
+    return this.http.post<{ ok: boolean }>(
+      `${this.base}/modelos-verificacao/reordenar`,
+      { ids },
+    );
+  }
+  excluirModeloVerificacao(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/modelos-verificacao/${id}`);
+  }
+
+  /* Verificacoes mensais dos projetos entregues */
+  getVerificacoesProjeto(projetoId: number): Observable<Verificacao[]> {
+    return this.http.get<Verificacao[]>(
+      `${this.base}/projetos/${projetoId}/verificacoes`,
+    );
+  }
+  marcarItemVerificacao(
+    id: number,
+    dados: { ok: boolean; observacao: string },
+  ): Observable<Verificacao> {
+    return this.http.patch<Verificacao>(
+      `${this.base}/itens-verificacao/${id}`,
+      dados,
+    );
+  }
+  concluirVerificacao(id: number, observacoes: string): Observable<Verificacao> {
+    return this.http.patch<Verificacao>(
+      `${this.base}/verificacoes/${id}/concluir`,
+      { observacoes },
+    );
+  }
+  reabrirVerificacao(id: number): Observable<Verificacao> {
+    return this.http.patch<Verificacao>(
+      `${this.base}/verificacoes/${id}/reabrir`,
+      {},
+    );
   }
 
   /* Dashboard */

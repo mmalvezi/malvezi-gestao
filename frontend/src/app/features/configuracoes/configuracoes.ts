@@ -10,6 +10,10 @@ import { preencherCorpo, DadosDoc } from '../../core/preencher';
 import { imprimirDocumento } from '../../core/imprimir';
 import { EditorCorpo } from '../../shared/editor-corpo';
 import { Timbre } from '../../shared/timbre';
+import { ModelosTarefa } from './modelos-tarefa';
+import { ChecklistVerificacao } from './checklist-verificacao';
+
+type AbaCfg = 'contrato' | 'tarefas' | 'checklist';
 
 const MARCADORES: Record<TipoDocumento, string[]> = {
   contrato: [
@@ -33,7 +37,14 @@ const CAB: Record<TipoDocumento, { titulo: string; sub: string; label: string }>
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, FormsModule, EditorCorpo, Timbre],
+  imports: [
+    CommonModule,
+    FormsModule,
+    EditorCorpo,
+    Timbre,
+    ModelosTarefa,
+    ChecklistVerificacao,
+  ],
   templateUrl: './configuracoes.html',
   styleUrl: './configuracoes.scss',
 })
@@ -42,6 +53,13 @@ export class Configuracoes implements OnInit {
   private ui = inject(UiState);
 
   @ViewChild(EditorCorpo) editor?: EditorCorpo;
+
+  aba: AbaCfg = 'contrato';
+  abas: { valor: AbaCfg; rot: string }[] = [
+    { valor: 'contrato', rot: 'Modelo de contrato' },
+    { valor: 'tarefas', rot: 'Modelos de tarefas' },
+    { valor: 'checklist', rot: 'Checklist de verificação' },
+  ];
 
   modelos: ModeloDocumento[] = [];
   tipoSel: TipoDocumento = 'contrato';

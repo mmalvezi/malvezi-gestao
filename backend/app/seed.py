@@ -5,12 +5,16 @@ from sqlalchemy.orm import Session
 from .models import (
     Cliente,
     ModeloDocumento,
+    ModeloTarefa,
+    ModeloVerificacao,
     Orcamento,
     OrcamentoItem,
     Projeto,
     Recorrencia,
     Tarefa,
 )
+
+TIPOS_PROJETO = ["site", "erp", "automacao", "portal"]
 
 
 def run_seed(db: Session):
@@ -188,3 +192,115 @@ def run_seed_modelos(db: Session):
             )
         )
         db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Roteiro padrao de tarefas por tipo de projeto (ajustavel em Configuracoes)
+# (stage, titulo, area, prioridade, dias_prazo)
+_ROTEIRO_COMUM = [
+    ("orcamento", "Levantamento de requisitos", "cliente", "alta", 3),
+    ("orcamento", "Montar escopo e orçamento", "produto", "media", 3),
+    ("orcamento", "Enviar proposta ao cliente", "cliente", "media", 2),
+    ("aprovado", "Reunião de kickoff com o cliente", "cliente", "alta", 5),
+    ("aprovado", "Cobrar entrada", "produto", "alta", 3),
+    ("aprovado", "Assinar contrato", "cliente", "media", 5),
+    ("aprovado", "Montar cronograma", "produto", "media", 5),
+    ("entregue", "Entregar acessos e documentação", "cliente", "media", 5),
+    ("entregue", "Ativar mensalidade e combinar suporte", "produto", "media", 5),
+]
+
+_ROTEIRO_DESENVOLVIMENTO = {
+    "erp": [
+        ("Modelar banco de dados", "dev"),
+        ("Cadastros básicos", "dev"),
+        ("Telas principais", "dev"),
+        ("Importação de dados do sistema antigo", "dev"),
+        ("Testes com o cliente", "cliente"),
+        ("Treinamento da equipe", "cliente"),
+    ],
+    "site": [
+        ("Coletar textos e imagens do cliente", "cliente"),
+        ("Layout das páginas", "design"),
+        ("Desenvolvimento", "dev"),
+        ("SEO e publicação", "dev"),
+        ("Revisão com o cliente", "cliente"),
+    ],
+    "automacao": [
+        ("Mapear o processo atual", "produto"),
+        ("Desenvolver a automação", "dev"),
+        ("Testes com dados reais", "dev"),
+        ("Acompanhar primeira semana", "cliente"),
+    ],
+    "portal": [
+        ("Desenho das telas", "design"),
+        ("Login e permissões", "dev"),
+        ("Módulos principais", "dev"),
+        ("Treinamento", "cliente"),
+    ],
+}
+
+
+def run_seed_roteiro(db: Session):
+    """Modelos de tarefas padrao. So roda com a tabela vazia: nunca
+    sobrescreve ajustes feitos em Configuracoes."""
+    if db.query(ModeloTarefa).first():
+        return
+    for tipo in TIPOS_PROJETO:
+        ordem_grupo: dict[str, int] = {}
+        for stage, titulo, area, prioridade, dias in _ROTEIRO_COMUM:
+            db.add(ModeloTarefa(
+                tipo_projeto=tipo, stage_gatilho=stage, titulo=titulo,
+                area=area, prioridade=prioridade, dias_prazo=dias,
+                ordem=ordem_grupo.get(stage, 0), ativo=True,
+            ))
+            ordem_grupo[stage] = ordem_grupo.get(stage, 0) + 1
+        for i, (titulo, area) in enumerate(_ROTEIRO_DESENVOLVIMENTO[tipo]):
+            db.add(ModeloTarefa(
+                tipo_projeto=tipo, stage_gatilho="desenvolvimento",
+                titulo=titulo, area=area, prioridade="media",
+                ordem=i, ativo=True,
+            ))
+    db.commit()
+
+
+# Checklist mensal padrao dos projetos entregues, por tipo
+_CHECKLIST_COMUM = [
+    "Sistema está no ar e acessível",
+    "Backup em dia",
+    "Sem erros críticos reportados",
+    "Cliente sem reclamações pendentes",
+    "Mensalidade em dia",
+]
+
+_CHECKLIST_EXTRA = {
+    "erp": [
+        "Banco de dados saudável (espaço e desempenho)",
+        "Integrações funcionando",
+    ],
+    "portal": [
+        "Banco de dados saudável (espaço e desempenho)",
+        "Integrações funcionando",
+    ],
+    "site": [
+        "Certificado HTTPS válido",
+        "Formulário e WhatsApp funcionando",
+        "Domínio não vence nos próximos 30 dias",
+    ],
+    "automacao": [
+        "Rotina executou sem falhas no último mês",
+        "Logs sem erros",
+    ],
+}
+
+
+def run_seed_checklist(db: Session):
+    """Itens padrao do checklist de verificacao mensal. So com a tabela vazia."""
+    if db.query(ModeloVerificacao).first():
+        return
+    for tipo in TIPOS_PROJETO:
+        itens = _CHECKLIST_COMUM + _CHECKLIST_EXTRA.get(tipo, [])
+        for i, titulo in enumerate(itens):
+            db.add(ModeloVerificacao(
+                tipo_projeto=tipo, titulo=titulo, ordem=i, ativo=True,
+            ))
+    db.commit()

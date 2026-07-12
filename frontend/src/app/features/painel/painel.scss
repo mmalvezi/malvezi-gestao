@@ -24,6 +24,16 @@
   box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.3);
 }
 
+/* Resumo das verificacoes mensais dos entregues */
+.verif-resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+}
+
 /* Itens de lista clicaveis (entregas e pendencias) */
 .clicavel {
   cursor: pointer;

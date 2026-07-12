@@ -8,6 +8,7 @@ from ..cobrancas import garantir_cobrancas
 from ..database import get_db
 from ..models import Cliente, Projeto
 from ..plano import gerar_parcelas_do_plano, orcamento_com_plano, plano_info
+from ..roteiro import aplicar_roteiro_completo, gerar_tarefas_do_estagio
 from ..schemas import PlanoInfo, ProjetoCreate, ProjetoRead, StageUpdate
 
 router = APIRouter(
@@ -54,6 +55,9 @@ def criar(dados: ProjetoCreate, db: Session = Depends(get_db)):
     _validar_cliente(dados.cliente_id, db)
     projeto = Projeto(**dados.model_dump())
     db.add(projeto)
+    db.flush()
+    # Criado ja num estagio da trilha: o roteiro daquele estagio nasce junto
+    gerar_tarefas_do_estagio(projeto, projeto.stage, db)
     db.commit()
     db.refresh(projeto)
     return projeto
@@ -65,9 +69,12 @@ def atualizar(projeto_id: int, dados: ProjetoCreate, db: Session = Depends(get_d
     if not projeto:
         raise HTTPException(status_code=404, detail="Projeto nao encontrado")
     _validar_cliente(dados.cliente_id, db)
+    stage_antes = projeto.stage
     for campo, valor in dados.model_dump().items():
         setattr(projeto, campo, valor)
     _ativar_mensalidades(projeto, db)
+    if projeto.stage != stage_antes:
+        gerar_tarefas_do_estagio(projeto, projeto.stage, db)
     db.commit()
     db.refresh(projeto)
     return projeto
@@ -86,12 +93,27 @@ def trocar_stage(projeto_id: int, dados: StageUpdate, db: Session = Depends(get_
         orc = orcamento_com_plano(projeto, db)
         if orc:
             gerar_parcelas_do_plano(orc, projeto, db)
+    # Roteiro do estagio de destino (so o destino; o botao Aplicar modelo
+    # cobre os estagios pulados, se o usuario quiser)
+    gerar_tarefas_do_estagio(projeto, projeto.stage, db)
     db.commit()
     db.refresh(projeto)
     # A entrega pode ter ativado mensalidades: ja deixa as cobrancas em dia
     garantir_cobrancas(db)
     db.refresh(projeto)
     return projeto
+
+
+@router.post("/{projeto_id}/tarefas/aplicar-modelo", status_code=201)
+def aplicar_modelo_tarefas(projeto_id: int, db: Session = Depends(get_db)):
+    """Gera (sem duplicar) as tarefas do roteiro para o estagio atual e os
+    anteriores. E o botao "Aplicar modelo de tarefas" do quadro."""
+    projeto = db.get(Projeto, projeto_id)
+    if not projeto:
+        raise HTTPException(status_code=404, detail="Projeto nao encontrado")
+    criadas = aplicar_roteiro_completo(projeto, db)
+    db.commit()
+    return {"criadas": criadas}
 
 
 @router.get("/{projeto_id}/plano-info", response_model=PlanoInfo)

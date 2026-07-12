@@ -112,6 +112,7 @@ class TarefaProjetoCreate(BaseModel):
     prioridade: PrioridadeTarefa = "media"
     area: AreaTarefa = "dev"
     responsavel: Optional[str] = None
+    prazo: Optional[date] = None
 
 
 class TarefaProjetoUpdate(BaseModel):
@@ -120,6 +121,7 @@ class TarefaProjetoUpdate(BaseModel):
     prioridade: PrioridadeTarefa = "media"
     area: AreaTarefa = "dev"
     responsavel: Optional[str] = None
+    prazo: Optional[date] = None
 
 
 class TarefaProjetoColunaUpdate(BaseModel):
@@ -138,9 +140,92 @@ class TarefaProjetoRead(BaseModel):
     prioridade: PrioridadeTarefa
     area: AreaTarefa
     responsavel: Optional[str] = None
+    prazo: Optional[date] = None
+    modelo_id: Optional[int] = None
     ordem: int
     criado: datetime
     atualizado: Optional[datetime] = None
+
+
+# ---------- Modelos de tarefas (roteiro por tipo de projeto) ----------
+class ModeloTarefaCreate(BaseModel):
+    tipo_projeto: TipoProjeto
+    stage_gatilho: Literal[
+        "lead", "orcamento", "aprovado", "desenvolvimento", "entregue"
+    ]
+    titulo: str
+    descricao: str = ""
+    area: AreaTarefa = "dev"
+    prioridade: PrioridadeTarefa = "media"
+    responsavel_padrao: Optional[str] = None
+    coluna_inicial: ColunaTarefa = "afazer"
+    dias_prazo: Optional[int] = Field(None, ge=0, le=365)
+    ordem: int = 0
+    ativo: bool = True
+
+
+class ModeloTarefaRead(ModeloTarefaCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
+
+class ReordenarInput(BaseModel):
+    ids: list[int]
+
+
+class DuplicarModelosInput(BaseModel):
+    de: TipoProjeto
+    para: TipoProjeto
+
+
+# ---------- Checklist de verificacao mensal ----------
+class ModeloVerificacaoCreate(BaseModel):
+    tipo_projeto: TipoProjeto
+    titulo: str
+    ordem: int = 0
+    ativo: bool = True
+
+
+class ModeloVerificacaoRead(ModeloVerificacaoCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
+
+class ItemVerificacaoUpdate(BaseModel):
+    ok: bool
+    observacao: str = ""
+
+
+class ItemVerificacaoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    titulo: str
+    ok: bool
+    observacao: str = ""
+    ordem: int = 0
+
+
+class VerificacaoConcluir(BaseModel):
+    observacoes: str = ""
+
+
+class VerificacaoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    projeto_id: int
+    competencia: str
+    status: Literal["aberta", "concluida"]
+    criado: datetime
+    concluida_em: Optional[date] = None
+    observacoes: str = ""
+    itens: list[ItemVerificacaoRead] = []
+    # Apoio para as telas
+    cliente: Optional[str] = None
+    tipo_projeto: Optional[str] = None
 
 
 # ---------- Orcamento ----------

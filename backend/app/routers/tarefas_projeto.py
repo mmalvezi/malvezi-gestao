@@ -72,6 +72,7 @@ def criar(
         prioridade=dados.prioridade,
         area=dados.area,
         responsavel=responsavel,
+        prazo=dados.prazo,
         ordem=ordem,
     )
     db.add(tarefa)
@@ -96,6 +97,7 @@ def atualizar(
     tarefa.prioridade = dados.prioridade
     tarefa.area = dados.area
     tarefa.responsavel = (dados.responsavel or "").strip() or None
+    tarefa.prazo = dados.prazo
     db.commit()
     db.refresh(tarefa)
     return tarefa

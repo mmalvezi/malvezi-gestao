@@ -6,7 +6,14 @@ from sqlalchemy.orm import Session
 from ..auth import get_current_user
 from ..cobrancas import garantir_cobrancas
 from ..database import get_db
-from ..models import CobrancaMensalidade, Orcamento, Projeto, Recorrencia
+from ..models import (
+    CobrancaMensalidade,
+    Orcamento,
+    Projeto,
+    Recorrencia,
+    VerificacaoProjeto,
+)
+from ..verificacoes import competencia_atual, garantir_verificacoes
 
 router = APIRouter(
     prefix="/dashboard",
@@ -86,8 +93,9 @@ def _relativo(dias: int) -> str:
 def dashboard(db: Session = Depends(get_db)):
     hoje = date.today()
 
-    # Leitura barata que mantem as cobrancas do mes em dia, sem cron
+    # Leituras baratas que mantem cobrancas e verificacoes em dia, sem cron
     garantir_cobrancas(db, hoje)
+    garantir_verificacoes(db, hoje)
 
     projetos = db.query(Projeto).all()
     recorrencias = db.query(Recorrencia).all()
@@ -276,6 +284,33 @@ def dashboard(db: Session = Depends(get_db)):
                 }
             )
 
+    # Verificacao mensal dos entregues: aberta do mes vira alerta
+    comp = competencia_atual(hoje)
+    verificacoes_mes = (
+        db.query(VerificacaoProjeto)
+        .filter(VerificacaoProjeto.competencia == comp)
+        .all()
+    )
+    verif_pendentes = [v for v in verificacoes_mes if v.status == "aberta"]
+    verif_concluidas = len(verificacoes_mes) - len(verif_pendentes)
+    for v in verif_pendentes:
+        nome = v.projeto.cliente.nome if v.projeto and v.projeto.cliente else ""
+        pendentes_qtd = sum(1 for i in v.itens if not i.ok)
+        pendencias.append(
+            {
+                "chave": f"verificacao:{v.id}:aberta",
+                "link": f"/projetos/{v.projeto_id}",
+                "tipo": "verificacao",
+                "titulo": (
+                    f"Verificação de {_competencia_br(comp)} pendente ({nome})"
+                ),
+                "detalhe": (
+                    f"{pendentes_qtd} de {len(v.itens)} itens do checklist "
+                    "por conferir"
+                ),
+            }
+        )
+
     for r in recorrencias:
         if r.status == "pausado":
             nome = r.cliente.nome if r.cliente else ""
@@ -301,6 +336,9 @@ def dashboard(db: Session = Depends(get_db)):
         "em_producao": em_producao,
         "recusados_qtd": len(recusados),
         "taxa_aprovacao": taxa_aprovacao,
+        # Verificacoes do mes corrente (saude dos entregues)
+        "verificacoes_pendentes": len(verif_pendentes),
+        "verificacoes_concluidas": verif_concluidas,
         "funil": funil,
         "proximas_entregas": proximas_entregas,
         "pendencias": pendencias,

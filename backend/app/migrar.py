@@ -41,6 +41,8 @@ COLUNAS_LEGADAS = [
     ("orcamentos", "plano_gerado_em", "DATETIME", None),
     ("orcamentos", "plano_atualizado_em", "DATETIME", None),
     ("notas_projeto", "titulo", "VARCHAR", "''"),
+    ("tarefas_projeto", "prazo", "DATE", None),
+    ("tarefas_projeto", "modelo_id", "INTEGER", None),
 ]
 
 
