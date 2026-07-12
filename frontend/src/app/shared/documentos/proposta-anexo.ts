@@ -66,9 +66,11 @@ import { ConfirmService } from '../ui/confirm.service';
         (dragleave)="sobre = false"
         (drop)="aoSoltar($event)"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <span class="icone-envio" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
         <div class="bold small">Anexe a proposta pronta em PDF</div>
         <div class="mut tiny">
           Arraste o arquivo aqui ou use o botao. Somente PDF, ate {{ limite }} MB.
@@ -153,11 +155,22 @@ import { ConfirmService } from '../ui/confirm.service';
         border-color: var(--roxo);
         background: rgba(110, 75, 255, 0.07);
       }
-      .solta svg {
-        width: 26px;
-        height: 26px;
-        color: var(--roxo);
-        margin-bottom: 4px;
+      /* Icone branco sobre o degrade da marca, igual ao botao de anexar */
+      .icone-envio {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--grad);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+      }
+      .icone-envio svg {
+        width: 22px;
+        height: 22px;
       }
       .erro {
         background: var(--bad-bg);
