@@ -21,6 +21,29 @@
   border-color: transparent;
 }
 
+/* Selo de proposta anexada */
+.clipe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(110, 75, 255, 0.12);
+  color: var(--roxo);
+  flex-shrink: 0;
+}
+.clipe svg {
+  width: 13px;
+  height: 13px;
+}
+/* Botao de proposta destacado quando ja existe anexo */
+.icon-btn.tem {
+  color: var(--roxo);
+  border-color: rgba(110, 75, 255, 0.35);
+  background: rgba(110, 75, 255, 0.08);
+}
+
 .itens {
   border: 1px solid var(--borda);
   border-radius: 12px;

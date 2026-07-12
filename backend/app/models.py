@@ -121,6 +121,46 @@ class Orcamento(Base):
         cascade="all, delete-orphan",
         order_by="OrcamentoItem.ordem",
     )
+    # Proposta em PDF anexada: no maximo uma por orcamento
+    anexo = relationship(
+        "AnexoOrcamento",
+        back_populates="orcamento",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+    @property
+    def tem_anexo(self) -> bool:
+        return self.anexo is not None
+
+    @property
+    def anexo_nome(self):
+        return self.anexo.nome_original if self.anexo else None
+
+    @property
+    def anexo_tamanho(self):
+        return self.anexo.tamanho if self.anexo else None
+
+    @property
+    def anexo_criado(self):
+        return self.anexo.criado if self.anexo else None
+
+
+class AnexoOrcamento(Base):
+    """Proposta em PDF anexada ao orcamento (o arquivo fica em disco)."""
+
+    __tablename__ = "anexos_orcamento"
+
+    id = Column(Integer, primary_key=True, index=True)
+    orcamento_id = Column(
+        Integer, ForeignKey("orcamentos.id", ondelete="CASCADE"), nullable=False
+    )
+    nome_original = Column(String, nullable=False)
+    nome_arquivo = Column(String, nullable=False)  # nome gerado, unico, em disco
+    tamanho = Column(Integer, default=0)  # bytes
+    criado = Column(DateTime, default=agora)
+
+    orcamento = relationship("Orcamento", back_populates="anexo")
 
 
 class OrcamentoItem(Base):

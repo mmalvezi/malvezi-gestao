@@ -9,13 +9,23 @@ import { Cliente, Orcamento, StatusOrcamento } from '../../core/models';
 import { moeda, STATUS_ORC, STATUS_ORC_CLASSE, TIPO_LABEL } from '../../core/utils';
 import { OrcamentoForm } from '../../shared/orcamento-form';
 import { OrcamentoViewer } from '../../shared/documentos/orcamento-viewer';
+import { PropostaAnexo } from '../../shared/documentos/proposta-anexo';
+import { Dialog } from '../../shared/dialog';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { AppSelect } from '../../shared/ui/app-select';
 
 @Component({
   selector: 'app-orcamentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrcamentoForm, OrcamentoViewer, AppSelect],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Dialog,
+    OrcamentoForm,
+    OrcamentoViewer,
+    PropostaAnexo,
+    AppSelect,
+  ],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })
@@ -37,6 +47,7 @@ export class Orcamentos implements OnInit {
   formClienteId?: number;
 
   docOrc: Orcamento | null = null;
+  propostaOrc: Orcamento | null = null;
 
   get orcamentos(): Orcamento[] {
     return this.store.orcamentos();
@@ -99,6 +110,7 @@ export class Orcamentos implements OnInit {
     this.api.excluirOrcamento(o.id).subscribe(() => this.store.remover(o.id));
   }
 
+  /** Abre o documento: a proposta anexada, se houver; senao o automatico. */
   emitir(o: Orcamento) {
     this.docOrc = o;
   }
@@ -108,7 +120,18 @@ export class Orcamentos implements OnInit {
   }
 
   atualizarDoc(o: Orcamento) {
-    // O form dentro do viewer ja atualizou o store; refletimos no documento.
+    // O form (ou o anexo) dentro do viewer mudou algo: refletimos nos dois.
     this.docOrc = o;
+    this.store.upsert(o);
+  }
+
+  /* Proposta em PDF direto da lista */
+  abrirProposta(o: Orcamento) {
+    this.propostaOrc = o;
+  }
+
+  aoMudarAnexo(o: Orcamento) {
+    this.propostaOrc = o;
+    this.store.upsert(o);
   }
 }

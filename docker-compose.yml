@@ -23,6 +23,10 @@ services:
       DATABASE_URL: postgresql+psycopg2://malvezi:${DB_PASSWORD}@db:5432/malvezi
       SECRET_KEY: ${SECRET_KEY}
       APP_PASSWORD: ${APP_PASSWORD}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      # Propostas em PDF anexadas aos orcamentos: precisam sobreviver ao rebuild
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -37,3 +41,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

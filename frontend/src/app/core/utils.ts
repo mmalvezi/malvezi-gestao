@@ -36,6 +36,17 @@ export function dataHoraBr(iso: string | null | undefined): string {
   });
 }
 
+/** Tamanho de arquivo legivel (ex.: 1,4 MB). */
+export function tamanhoArquivo(bytes: number | null | undefined): string {
+  const n = Number(bytes || 0);
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
+}
+
+/** Limite do anexo de proposta, igual ao do backend. */
+export const LIMITE_ANEXO_MB = 20;
+
 export const TIPOS: { valor: TipoProjeto; rot: string }[] = [
   { valor: 'site', rot: 'Site' },
   { valor: 'erp', rot: 'ERP' },

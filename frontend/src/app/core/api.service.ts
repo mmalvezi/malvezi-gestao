@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
+  AnexoResumo,
   Cliente,
   ClienteInput,
   ColunaTarefa,
@@ -94,6 +95,25 @@ export class ApiService {
   }
   excluirOrcamento(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/orcamentos/${id}`);
+  }
+
+  /* Proposta em PDF anexada ao orcamento */
+  enviarAnexoOrcamento(id: number, arquivo: File): Observable<AnexoResumo> {
+    const dados = new FormData();
+    dados.append('arquivo', arquivo, arquivo.name);
+    return this.http.post<AnexoResumo>(
+      `${this.base}/orcamentos/${id}/anexo`,
+      dados,
+    );
+  }
+  /** Busca o PDF como blob (passa pelo interceptor, entao vai com o token). */
+  baixarAnexoOrcamento(id: number): Observable<Blob> {
+    return this.http.get(`${this.base}/orcamentos/${id}/anexo`, {
+      responseType: 'blob',
+    });
+  }
+  excluirAnexoOrcamento(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/orcamentos/${id}/anexo`);
   }
 
   /* Recorrencias */

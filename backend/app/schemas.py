@@ -159,6 +159,11 @@ class OrcamentoRead(BaseModel):
     criado: datetime
     cliente: Optional[ClienteRead] = None
     itens: list[OrcamentoItemRead] = []
+    # Proposta em PDF anexada (o front sabe sem outra chamada)
+    tem_anexo: bool = False
+    anexo_nome: Optional[str] = None
+    anexo_tamanho: Optional[int] = None
+    anexo_criado: Optional[datetime] = None
 
     @computed_field
     @property

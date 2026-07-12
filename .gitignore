@@ -13,6 +13,9 @@ venv/
 .env
 *.db
 
+# Anexos enviados (propostas em PDF): ficam em volume, nao no repositorio
+backend/uploads/
+
 # Sistema
 .DS_Store
 Thumbs.db

@@ -11,6 +11,7 @@ from ..schemas import (
     OrcamentoRead,
     StatusUpdate,
 )
+from .anexos import apagar_arquivo
 
 router = APIRouter(
     prefix="/orcamentos",
@@ -122,5 +123,8 @@ def excluir(orcamento_id: int, db: Session = Depends(get_db)):
     orcamento = db.get(Orcamento, orcamento_id)
     if not orcamento:
         raise HTTPException(status_code=404, detail="Orcamento nao encontrado")
+    # O cascade limpa o registro do anexo; o arquivo em disco sai junto
+    if orcamento.anexo:
+        apagar_arquivo(orcamento.anexo)
     db.delete(orcamento)
     db.commit()

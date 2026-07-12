@@ -6,6 +6,7 @@ from .config import settings
 from .database import Base, SessionLocal, engine
 from .routers import (
     alertas,
+    anexos,
     clientes,
     dashboard,
     documentos,
@@ -37,6 +38,7 @@ app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(clientes.router, prefix="/api")
 app.include_router(projetos.router, prefix="/api")
 app.include_router(orcamentos.router, prefix="/api")
+app.include_router(anexos.router, prefix="/api")
 app.include_router(recorrencias.router, prefix="/api")
 app.include_router(tarefas.router, prefix="/api")
 app.include_router(tarefas_projeto.router, prefix="/api")

@@ -28,7 +28,22 @@
       <tbody>
         @for (o of filtrados(); track o.id) {
           <tr>
-            <td class="bold" data-label="Número">{{ o.numero }}</td>
+            <td class="bold" data-label="Número">
+              <span class="items-center gap-6">
+                {{ o.numero }}
+                @if (o.tem_anexo) {
+                  <span
+                    class="clipe"
+                    title="Proposta em PDF anexada"
+                    aria-label="Proposta em PDF anexada"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.4 11.05 12.25 20.2a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 1 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                }
+              </span>
+            </td>
             <td data-label="Título">
               <a (click)="abrirEditar(o)" style="cursor:pointer">{{ o.titulo }}</a>
               <div class="mut tiny">{{ tipoLabel[o.tipo] }}</div>
@@ -50,6 +65,17 @@
                 <button class="icon-btn" (click)="emitir(o)" aria-label="Ver documento" title="Ver documento">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <button
+                  class="icon-btn"
+                  [class.tem]="o.tem_anexo"
+                  (click)="abrirProposta(o)"
+                  aria-label="Proposta em PDF"
+                  title="Proposta em PDF"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.4 11.05 12.25 20.2a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 1 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </button>
                 <button class="icon-btn" (click)="duplicar(o)" aria-label="Duplicar" title="Duplicar">
@@ -89,4 +115,18 @@
     (atualizado)="atualizarDoc($event)"
     (fechar)="fecharDoc()"
   ></app-orcamento-viewer>
+}
+
+<!-- Proposta em PDF direto da lista -->
+@if (propostaOrc) {
+  <app-dialog
+    [titulo]="'Proposta do orçamento ' + propostaOrc.numero"
+    [largura]="560"
+    (fechar)="propostaOrc = null"
+  >
+    <app-proposta-anexo [orc]="propostaOrc" (mudou)="aoMudarAnexo($event)"></app-proposta-anexo>
+    <div foot class="items-center">
+      <button class="btn ghost" (click)="propostaOrc = null">Fechar</button>
+    </div>
+  </app-dialog>
 }

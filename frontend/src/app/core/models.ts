@@ -83,6 +83,17 @@ export interface Orcamento {
   cliente?: Cliente | null;
   itens: OrcamentoItem[];
   total: number;
+  /* Proposta em PDF anexada (quando existe, e o documento padrao) */
+  tem_anexo?: boolean;
+  anexo_nome?: string | null;
+  anexo_tamanho?: number | null;
+  anexo_criado?: string | null;
+}
+
+export interface AnexoResumo {
+  nome: string;
+  tamanho: number;
+  criado: string;
 }
 
 export interface Recorrencia {
