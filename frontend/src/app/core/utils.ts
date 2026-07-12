@@ -3,7 +3,9 @@ import {
   ColunaTarefa,
   PrioridadeTarefa,
   StageProjeto,
+  StatusCobranca,
   StatusOrcamento,
+  StatusRecorrencia,
   TipoProjeto,
 } from './models';
 
@@ -82,7 +84,73 @@ export const STAGE_LABEL: Record<StageProjeto, string> = {
   aprovado: 'Aprovado',
   desenvolvimento: 'Em produção',
   entregue: 'Entregue',
+  recusado: 'Recusado',
 };
+
+/* ---------- Mensalidades e cobrancas ---------- */
+
+export const STATUS_REC: { valor: StatusRecorrencia; rot: string }[] = [
+  { valor: 'previsto', rot: 'Prevista' },
+  { valor: 'ativo', rot: 'Ativa' },
+  { valor: 'pausado', rot: 'Pausada' },
+];
+
+export const STATUS_REC_LABEL: Record<StatusRecorrencia, string> = {
+  previsto: 'Prevista',
+  ativo: 'Ativa',
+  pausado: 'Pausada',
+};
+
+export const STATUS_REC_CLASSE: Record<StatusRecorrencia, string> = {
+  previsto: 'info',
+  ativo: 'ok',
+  pausado: 'warn',
+};
+
+export const STATUS_COB_LABEL: Record<StatusCobranca, string> = {
+  aberta: 'Em aberto',
+  paga: 'Paga',
+  cancelada: 'Cancelada',
+};
+
+/** Dias 1 a 28 (evita problema com meses curtos). */
+export const DIAS_VENCIMENTO: { valor: number; rot: string }[] = Array.from(
+  { length: 28 },
+  (_, i) => ({ valor: i + 1, rot: `Dia ${i + 1}` }),
+);
+
+const MESES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
+
+/** "2026-07" vira "julho de 2026". */
+export function competenciaBr(competencia: string): string {
+  const [ano, mes] = (competencia || '').split('-');
+  const i = Number(mes) - 1;
+  if (!ano || i < 0 || i > 11) return competencia || '';
+  return `${MESES[i]} de ${ano}`;
+}
+
+/** Dias entre hoje e a data (negativo quer dizer vencida). */
+export function diasAte(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  const alvo = new Date(iso.length <= 10 ? iso + 'T00:00:00' : iso);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  alvo.setHours(0, 0, 0, 0);
+  return Math.round((alvo.getTime() - hoje.getTime()) / 86400000);
+}
 
 export const STATUS_ORC: { valor: StatusOrcamento; rot: string }[] = [
   { valor: 'rascunho', rot: 'Rascunho' },

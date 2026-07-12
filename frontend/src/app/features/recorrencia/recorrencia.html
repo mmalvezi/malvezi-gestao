@@ -1,119 +1,320 @@
-<div class="grid grid-4 mb-16">
-  <div class="kpi grad">
-    <span class="rot">MRR (recorrente por mês)</span>
-    <span class="val">{{ money(mrr()) }}</span>
-  </div>
-  <div class="kpi">
-    <span class="rot">Mensalidades ativas</span>
-    <span class="val">{{ contarAtivas() }}</span>
-  </div>
-</div>
-
-<div class="between wrap mb-16">
-  <div class="mut small">{{ itens.length }} mensalidade(s)</div>
-  <button class="btn primary" (click)="abrirNovo()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
-    </svg>
-    Nova mensalidade
-  </button>
+<!-- Abas -->
+<div class="abas" role="tablist">
+  @for (a of abas; track a.valor) {
+    <button
+      role="tab"
+      class="aba"
+      [class.on]="aba === a.valor"
+      [attr.aria-selected]="aba === a.valor"
+      (click)="aba = a.valor"
+    >
+      {{ a.rot }}
+    </button>
+  }
 </div>
 
 @if (carregando) {
-  <div class="loading"><span class="spin"></span> Carregando mensalidades...</div>
-} @else if (!itens.length) {
-  <div class="card card-pad empty">Nenhuma mensalidade cadastrada.</div>
-} @else {
-  <div class="card table-wrap">
-    <table class="tabela tabela-cards">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>O que inclui</th>
-          <th style="text-align:right">Valor / mês</th>
-          <th>Situação</th>
-          <th style="text-align:right">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of itens; track r.id) {
-          <tr>
-            <td class="bold" data-label="Cliente">{{ r.cliente?.nome || '-' }}</td>
-            <td data-label="Inclui">{{ r.plano }}</td>
-            <td style="text-align:right" class="bold" data-label="Valor / mês">{{ money(r.valor) }}</td>
-            <td data-label="Situação">
-              <button
-                class="badge"
-                [class.ok]="r.status === 'ativo'"
-                [class.warn]="r.status === 'pausado'"
-                (click)="alternarStatus(r)"
-                style="cursor:pointer;border:none"
-                [attr.aria-label]="'Alternar situação (' + r.status + ')'"
-              >
-                <span class="dot"></span>
-                {{ r.status === 'ativo' ? 'Ativo' : 'Pausado' }}
-              </button>
-            </td>
-            <td class="acoes-cel">
-              <div class="items-center" style="justify-content:flex-end">
-                <button class="icon-btn" (click)="abrirEditar(r)" aria-label="Editar">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </button>
-                <button class="icon-btn" (click)="excluir(r)" aria-label="Excluir">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+  <div class="loading"><span class="spin"></span> Carregando...</div>
+} @else if (aba === 'mensalidades') {
+  <!-- ============ MENSALIDADES ============ -->
+  <div class="grid grid-4 mb-16">
+    <div class="kpi grad">
+      <span class="rot">MRR (mensalidades ativas)</span>
+      <span class="val">{{ money(mrr()) }}</span>
+      <span class="legenda">{{ contar('ativo') }} ativa(s)</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Previstas</span>
+      <span class="val">{{ money(previsto()) }}</span>
+      <span class="legenda mut">Começam quando o projeto for entregue</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Pausadas</span>
+      <span class="val">{{ contar('pausado') }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Total cadastrado</span>
+      <span class="val">{{ itens.length }}</span>
+    </div>
   </div>
+
+  <div class="between wrap mb-16">
+    <div class="chips">
+      <button class="chip" [class.active]="filtro === 'todas'" (click)="filtro = 'todas'">
+        Todas
+      </button>
+      @for (s of statusOpc; track s.valor) {
+        <button class="chip" [class.active]="filtro === s.valor" (click)="filtro = s.valor">
+          {{ s.rot }} ({{ contar(s.valor) }})
+        </button>
+      }
+    </div>
+    <button class="btn primary" (click)="abrirNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+      </svg>
+      Nova mensalidade
+    </button>
+  </div>
+
+  @if (!filtradas().length) {
+    <div class="card card-pad empty">Nenhuma mensalidade nesta situação.</div>
+  } @else {
+    <div class="card table-wrap">
+      <table class="tabela tabela-cards">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>O que inclui</th>
+            <th>Projeto de origem</th>
+            <th>Vencimento</th>
+            <th style="text-align:right">Valor / mês</th>
+            <th>Situação</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtradas(); track r.id) {
+            <tr>
+              <td class="bold" data-label="Cliente">{{ r.cliente?.nome || '-' }}</td>
+              <td data-label="Inclui">{{ r.plano }}</td>
+              <td data-label="Projeto">
+                @if (projetoDe(r); as p) {
+                  <a [routerLink]="['/projetos', p.id]">{{ tipoDoProjeto(p) }}</a>
+                } @else {
+                  <span class="mut">Avulsa</span>
+                }
+              </td>
+              <td data-label="Vencimento">Todo dia {{ r.dia_vencimento }}</td>
+              <td style="text-align:right" class="bold" data-label="Valor / mês">
+                {{ money(r.valor) }}
+              </td>
+              <td data-label="Situação">
+                <span class="badge" [class]="'badge ' + statusClasse[r.status]">
+                  <span class="dot"></span>
+                  {{ statusLabel[r.status] }}
+                </span>
+              </td>
+              <td class="acoes-cel">
+                <div class="items-center" style="justify-content:flex-end">
+                  @if (r.status === 'ativo') {
+                    <button class="btn sm" (click)="trocarStatus(r, 'pausado')">Pausar</button>
+                  } @else {
+                    <button class="btn sm" (click)="trocarStatus(r, 'ativo')">Ativar</button>
+                  }
+                  <button class="icon-btn" (click)="abrirEditar(r)" aria-label="Editar mensalidade">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button class="icon-btn" (click)="excluir(r)" aria-label="Excluir mensalidade">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else {
+  <!-- ============ COBRANCAS DO MES ============ -->
+  <div class="grid grid-4 mb-16">
+    <div class="kpi grad">
+      <span class="rot">Recebido no mês</span>
+      <span class="val">{{ money(recebidoMes()) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Em aberto no mês</span>
+      <span class="val">{{ money(emAbertoMes()) }}</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Vencido</span>
+      <span class="val" [style.color]="vencidoTotal() ? 'var(--bad)' : null">
+        {{ money(vencidoTotal()) }}
+      </span>
+      <span class="legenda mut">Em aberto e fora do prazo</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Cobranças</span>
+      <span class="val">{{ cobrancas.length }}</span>
+    </div>
+  </div>
+
+  @if (!cobrancas.length) {
+    <div class="card card-pad empty">
+      Nenhuma cobrança ainda. Elas são geradas sozinhas para as mensalidades
+      ativas, no dia de vencimento de cada uma.
+    </div>
+  } @else {
+    <div class="card table-wrap">
+      <table class="tabela tabela-cards">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Competência</th>
+            <th>Vencimento</th>
+            <th style="text-align:right">Valor</th>
+            <th>Situação</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of cobrancas; track c.id) {
+            <tr [class.cob-vencida]="vencida(c)" [class.cob-a-vencer]="aVencer(c)">
+              <td class="bold" data-label="Cliente">
+                {{ c.cliente || '-' }}
+                <div class="mut tiny">{{ c.plano }}</div>
+              </td>
+              <td data-label="Competência">{{ competencia(c.competencia) }}</td>
+              <td data-label="Vencimento">
+                <span class="venc">
+                  <span>{{ data(c.vencimento) }}</span>
+                  @if (vencida(c)) {
+                    <span class="aviso bad">Vencida</span>
+                  } @else if (aVencer(c)) {
+                    <span class="aviso warn">Vence em breve</span>
+                  }
+                </span>
+              </td>
+              <td style="text-align:right" class="bold" data-label="Valor">{{ money(c.valor) }}</td>
+              <td data-label="Situação">
+                <span
+                  class="badge"
+                  [class.ok]="c.status === 'paga'"
+                  [class.bad]="vencida(c)"
+                  [class.warn]="aVencer(c)"
+                >
+                  {{ cobLabel[c.status] }}
+                </span>
+              </td>
+              <td class="acoes-cel">
+                <div class="items-center wrap" style="justify-content:flex-end">
+                  @if (copiada === c.id) {
+                    <span class="copiado">Mensagem copiada</span>
+                  }
+                  <button
+                    class="icon-btn"
+                    (click)="copiarMensagem(c)"
+                    aria-label="Copiar mensagem de cobrança"
+                    title="Copiar mensagem de cobrança"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="12" height="12" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                  @if (c.status === 'aberta') {
+                    <button class="btn sm" (click)="pagar(c)">Marcar paga</button>
+                    <button class="icon-btn" (click)="cancelar(c)" aria-label="Cancelar cobrança" title="Cancelar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
+                      </svg>
+                    </button>
+                  } @else {
+                    <button class="btn sm ghost" (click)="reabrir(c)">Reabrir</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 }
 
+<!-- Editor da mensalidade -->
 @if (editorAberto) {
   <app-dialog
     [titulo]="editId ? 'Editar mensalidade' : 'Nova mensalidade'"
-    [largura]="520"
+    [largura]="560"
     (fechar)="fecharEditor()"
   >
-    <div class="field">
-      <label>Cliente</label>
-      <app-select
-        [opcoes]="clientesOpc()"
-        placeholder="Selecione o cliente"
-        ariaLabel="Cliente"
-        [(ngModel)]="form.cliente_id"
-        name="cliente_id"
-      ></app-select>
-    </div>
-    <div class="field">
-      <label>O que inclui (plano)</label>
-      <input class="input" [(ngModel)]="form.plano" name="plano" placeholder="Ex.: Hospedagem e suporte" />
-    </div>
     <div class="row-2">
       <div class="field">
-        <label>Valor por mês (R$)</label>
-        <input class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
+        <label>Cliente</label>
+        <app-select
+          [opcoes]="clientesOpc()"
+          placeholder="Selecione o cliente"
+          ariaLabel="Cliente"
+          [(ngModel)]="form.cliente_id"
+          name="cliente_id"
+        ></app-select>
       </div>
       <div class="field">
-        <label>Situação</label>
-        <app-select [opcoes]="situacaoOpc" ariaLabel="Situação" [(ngModel)]="form.status" name="status"></app-select>
+        <label>Projeto de origem</label>
+        <app-select
+          [opcoes]="projetosOpc()"
+          placeholder="Sem projeto vinculado"
+          ariaLabel="Projeto de origem"
+          [(ngModel)]="form.projeto_id"
+          name="projeto_id"
+        ></app-select>
       </div>
     </div>
 
-    <div foot class="between" style="width:100%">
-      <span></span>
-      <span class="items-center">
-        <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
-        <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id || !form.plano.trim()">
-          {{ salvando ? 'Salvando...' : 'Salvar' }}
-        </button>
-      </span>
+    <div class="field">
+      <label for="plano">O que inclui (plano)</label>
+      <input
+        id="plano"
+        class="input"
+        [(ngModel)]="form.plano"
+        name="plano"
+        placeholder="Ex.: Hospedagem, suporte e pequenas evoluções"
+      />
+    </div>
+
+    <div class="row-3">
+      <div class="field">
+        <label for="valor">Valor por mês (R$)</label>
+        <input id="valor" class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
+      </div>
+      <div class="field">
+        <label>Dia do vencimento</label>
+        <app-select
+          [opcoes]="dias"
+          ariaLabel="Dia do vencimento"
+          [(ngModel)]="form.dia_vencimento"
+          name="dia_vencimento"
+        ></app-select>
+      </div>
+      <div class="field">
+        <label>Situação</label>
+        <app-select [opcoes]="statusOpc" ariaLabel="Situação" [(ngModel)]="form.status" name="status"></app-select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="contato">Contato da cobrança</label>
+      <input
+        id="contato"
+        class="input"
+        [(ngModel)]="form.contato"
+        name="contato"
+        placeholder="WhatsApp ou e-mail do cliente"
+      />
+    </div>
+
+    @if (form.status === 'previsto') {
+      <p class="mut tiny">
+        Prevista: começa a valer quando o projeto vinculado for entregue. Não
+        entra no MRR nem gera cobrança até lá.
+      </p>
+    }
+
+    <div foot class="items-center">
+      <button class="btn ghost" (click)="fecharEditor()">Cancelar</button>
+      <button
+        class="btn primary"
+        (click)="salvar()"
+        [disabled]="salvando || !form.cliente_id || !form.plano.trim()"
+      >
+        {{ salvando ? 'Salvando...' : 'Salvar' }}
+      </button>
     </div>
   </app-dialog>
 }

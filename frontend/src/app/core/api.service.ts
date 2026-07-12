@@ -7,8 +7,12 @@ import {
   AnexoResumo,
   Cliente,
   ClienteInput,
+  Cobranca,
   ColunaTarefa,
   Dashboard,
+  ParcelaInput,
+  ParcelaProjeto,
+  StatusCobranca,
   Documento,
   DocumentoInput,
   ModeloDocumento,
@@ -67,6 +71,34 @@ export class ApiService {
   }
   excluirProjeto(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/projetos/${id}`);
+  }
+
+  /* Parcelas do projeto (o recebido vem daqui) */
+  getParcelas(projetoId: number): Observable<ParcelaProjeto[]> {
+    return this.http.get<ParcelaProjeto[]>(
+      `${this.base}/projetos/${projetoId}/parcelas`,
+    );
+  }
+  criarParcela(
+    projetoId: number,
+    dados: ParcelaInput,
+  ): Observable<ParcelaProjeto> {
+    return this.http.post<ParcelaProjeto>(
+      `${this.base}/projetos/${projetoId}/parcelas`,
+      dados,
+    );
+  }
+  atualizarParcela(id: number, dados: ParcelaInput): Observable<ParcelaProjeto> {
+    return this.http.put<ParcelaProjeto>(`${this.base}/parcelas/${id}`, dados);
+  }
+  pagarParcela(id: number): Observable<ParcelaProjeto> {
+    return this.http.patch<ParcelaProjeto>(
+      `${this.base}/parcelas/${id}/pagar`,
+      {},
+    );
+  }
+  excluirParcela(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/parcelas/${id}`);
   }
 
   /* Orcamentos */
@@ -138,8 +170,43 @@ export class ApiService {
       { status },
     );
   }
+  getRecorrenciasDoProjeto(projetoId: number): Observable<Recorrencia[]> {
+    return this.http.get<Recorrencia[]>(
+      `${this.base}/recorrencias/projeto/${projetoId}`,
+    );
+  }
   excluirRecorrencia(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/recorrencias/${id}`);
+  }
+
+  /* Cobrancas das mensalidades */
+  getCobrancas(filtro?: {
+    status?: StatusCobranca;
+    ate?: string;
+  }): Observable<Cobranca[]> {
+    const partes: string[] = [];
+    if (filtro?.status) partes.push(`status=${filtro.status}`);
+    if (filtro?.ate) partes.push(`ate=${filtro.ate}`);
+    const query = partes.length ? `?${partes.join('&')}` : '';
+    return this.http.get<Cobranca[]>(`${this.base}/cobrancas${query}`);
+  }
+  gerarCobrancas(): Observable<{ criadas: number }> {
+    return this.http.post<{ criadas: number }>(
+      `${this.base}/cobrancas/gerar`,
+      {},
+    );
+  }
+  pagarCobranca(id: number): Observable<Cobranca> {
+    return this.http.patch<Cobranca>(`${this.base}/cobrancas/${id}/pagar`, {});
+  }
+  cancelarCobranca(id: number): Observable<Cobranca> {
+    return this.http.patch<Cobranca>(
+      `${this.base}/cobrancas/${id}/cancelar`,
+      {},
+    );
+  }
+  reabrirCobranca(id: number): Observable<Cobranca> {
+    return this.http.patch<Cobranca>(`${this.base}/cobrancas/${id}/reabrir`, {});
   }
 
   /* Tarefas */

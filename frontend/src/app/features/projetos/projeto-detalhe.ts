@@ -7,8 +7,10 @@ import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
 import {
   Cliente,
+  ParcelaProjeto,
   Projeto,
   ProjetoInput,
+  Recorrencia,
   TarefaProjeto,
 } from '../../core/models';
 import {
@@ -24,11 +26,13 @@ import {
 import { DocumentosArea } from '../../shared/documentos/documentos-area';
 import { NotasProjeto } from '../../shared/notas-projeto';
 import { QuadroTarefas } from '../../shared/quadro-tarefas';
+import { ParcelasProjeto } from '../../shared/parcelas-projeto';
+import { MensalidadeProjeto } from '../../shared/mensalidade-projeto';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
 import { AppDatepicker } from '../../shared/ui/app-datepicker';
 
-type Aba = 'dados' | 'tarefas' | 'notas' | 'documentos';
+type Aba = 'dados' | 'recebimentos' | 'tarefas' | 'notas' | 'documentos';
 
 @Component({
   selector: 'app-projeto-detalhe',
@@ -39,6 +43,8 @@ type Aba = 'dados' | 'tarefas' | 'notas' | 'documentos';
     DocumentosArea,
     NotasProjeto,
     QuadroTarefas,
+    ParcelasProjeto,
+    MensalidadeProjeto,
     AppSelect,
     AppDatepicker,
   ],
@@ -60,6 +66,7 @@ export class ProjetoDetalhe implements OnInit {
   aba: Aba = 'dados';
   abas: { valor: Aba; rot: string }[] = [
     { valor: 'dados', rot: 'Dados' },
+    { valor: 'recebimentos', rot: 'Recebimentos' },
     { valor: 'tarefas', rot: 'Tarefas' },
     { valor: 'notas', rot: 'Notas' },
     { valor: 'documentos', rot: 'Documentos' },
@@ -82,7 +89,6 @@ export class ProjetoDetalhe implements OnInit {
     cliente_id: 0,
     tipo: 'site',
     valor: 0,
-    pago: 0,
     stage: 'lead',
     entrega: null,
     escopo: '',
@@ -91,6 +97,15 @@ export class ProjetoDetalhe implements OnInit {
   /* Progresso das tarefas (atualizado pelo quadro sem recarregar a pagina) */
   totalTarefas = 0;
   feitasTarefas = 0;
+
+  /* Recebimentos (atualizados pela aba de parcelas) */
+  recebido = 0;
+  saldo = 0;
+  mensalidade: Recorrencia | null = null;
+
+  get recusado(): boolean {
+    return this.projeto?.stage === 'recusado';
+  }
 
   get id(): number {
     return Number(this.rota.snapshot.paramMap.get('id'));
@@ -115,16 +130,54 @@ export class ProjetoDetalhe implements OnInit {
     this.projeto = p;
     this.totalTarefas = p.tarefas_total || 0;
     this.feitasTarefas = p.tarefas_feitas || 0;
+    this.recebido = p.pago || 0;
+    this.saldo = p.saldo ?? p.valor;
     this.form = {
       cliente_id: p.cliente_id,
       tipo: p.tipo,
       valor: p.valor,
-      pago: p.pago,
       stage: p.stage,
       entrega: p.entrega || null,
       escopo: p.escopo || '',
     };
     this.ui.setTitulo(p.cliente?.nome || 'Projeto');
+  }
+
+  /* Recebimentos */
+  aoMudarParcelas(parcelas: ParcelaProjeto[]) {
+    this.recebido = parcelas
+      .filter((x) => x.pago)
+      .reduce((s, x) => s + Number(x.valor || 0), 0);
+    this.saldo = Math.max(Number(this.projeto?.valor || 0) - this.recebido, 0);
+    if (this.projeto) {
+      this.projeto.pago = this.recebido;
+      this.projeto.saldo = this.saldo;
+    }
+  }
+
+  aoMudarMensalidade(r: Recorrencia | null) {
+    this.mensalidade = r;
+  }
+
+  /* Recusar e reabrir */
+  async recusar() {
+    const p = this.projeto;
+    if (!p) return;
+    const ok = await this.confirm.ask({
+      title: 'Marcar como recusado',
+      message:
+        'Marcar este projeto como recusado? Ele sai das listas e dos números ativos, mas continua no filtro Recusados.',
+      confirmText: 'Marcar como recusado',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    this.api.patchStage(p.id, 'recusado').subscribe((atual) => this.aplicar(atual));
+  }
+
+  reabrir() {
+    const p = this.projeto;
+    if (!p) return;
+    this.api.patchStage(p.id, 'orcamento').subscribe((atual) => this.aplicar(atual));
   }
 
   clientesOpc(): OpcaoSelect[] {

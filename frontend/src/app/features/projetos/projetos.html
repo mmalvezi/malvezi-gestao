@@ -9,6 +9,15 @@
         {{ s.rot }}
       </button>
     }
+    @if (contarRecusados()) {
+      <button
+        class="chip"
+        [class.active]="filtro === 'recusado'"
+        (click)="filtro = 'recusado'"
+      >
+        Recusados ({{ contarRecusados() }})
+      </button>
+    }
   </div>
   <div class="items-center">
     <div class="toggle">
@@ -33,16 +42,53 @@
   @if (vista === 'cartoes') {
     <div class="grid grid-auto">
       @for (p of filtrados(); track p.id) {
-        <div class="card projeto" (click)="abrirProjeto(p)">
+        <div class="card projeto" [class.recusado]="recusado(p)" (click)="abrirProjeto(p)">
           <div class="topo">
             <div class="avatar">{{ tipoSigla[p.tipo] }}</div>
             <div class="min0">
               <div class="bold trunc">{{ p.cliente?.nome || 'Cliente' }}</div>
               <div class="mut small">{{ tipoLabel[p.tipo] }}</div>
             </div>
+
+            @if (recusado(p)) {
+              <span class="badge bad">Recusado</span>
+            }
+
+            <!-- Menu de acoes -->
+            <div class="menu-wrap" (click)="$event.stopPropagation()">
+              <button
+                class="icon-btn sm"
+                (click)="alternarMenu($event, p)"
+                [attr.aria-label]="'Ações do projeto de ' + (p.cliente?.nome || 'cliente')"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.6" />
+                  <circle cx="12" cy="12" r="1.6" />
+                  <circle cx="12" cy="19" r="1.6" />
+                </svg>
+              </button>
+
+              @if (menu === p.id) {
+                <div class="menu-bd" (click)="fecharMenu()"></div>
+                <div class="menu" role="menu">
+                  <button role="menuitem" (click)="fecharMenu(); abrirProjeto(p)">
+                    Abrir projeto
+                  </button>
+                  @if (recusado(p)) {
+                    <button role="menuitem" (click)="reabrir(p)">
+                      Reabrir (volta para Orçamento)
+                    </button>
+                  } @else {
+                    <button role="menuitem" class="perigo" (click)="recusar(p)">
+                      Marcar como recusado
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
 
-          <div class="stepper" (click)="$event.stopPropagation()">
+          <div class="stepper" [class.inativo]="recusado(p)" (click)="$event.stopPropagation()">
             @for (s of stages; track s.valor; let i = $index) {
               @if (i > 0) {
                 <span class="liga" [class.on]="stepDone(p, i)"></span>
@@ -52,6 +98,7 @@
                 class="step"
                 [class.done]="stepDone(p, i)"
                 [class.atual]="stepAtual(p, i)"
+                [disabled]="recusado(p)"
                 (click)="clicarEstagio(p, i)"
                 [attr.aria-label]="'Mudar para ' + s.rot"
                 [title]="s.rot"
@@ -90,9 +137,19 @@
             </div>
             <div>
               <div class="mut tiny">Recebido</div>
-              <div class="bold">{{ money(p.pago) }}</div>
+              <div class="bold" style="color:var(--ok)">{{ money(p.pago) }}</div>
+            </div>
+            <div>
+              <div class="mut tiny">Saldo</div>
+              <div class="bold">{{ money(saldo(p)) }}</div>
             </div>
           </div>
+
+          @if (p.parcelas_total) {
+            <div class="mut tiny">
+              {{ p.parcelas_pagas }} de {{ p.parcelas_total }} parcelas recebidas
+            </div>
+          }
         </div>
       }
     </div>

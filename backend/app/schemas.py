@@ -1,13 +1,16 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 # Tipos com valores fixos
 TipoProjeto = Literal["site", "erp", "automacao", "portal"]
-StageProjeto = Literal["lead", "orcamento", "aprovado", "desenvolvimento", "entregue"]
+StageProjeto = Literal[
+    "lead", "orcamento", "aprovado", "desenvolvimento", "entregue", "recusado"
+]
 StatusOrcamento = Literal["rascunho", "enviado", "aprovado", "recusado"]
-StatusRecorrencia = Literal["ativo", "pausado"]
+StatusRecorrencia = Literal["previsto", "ativo", "pausado"]
+StatusCobranca = Literal["aberta", "paga", "cancelada"]
 ColunaTarefa = Literal["afazer", "fazendo", "validacao", "concluido"]
 PrioridadeTarefa = Literal["baixa", "media", "alta"]
 AreaTarefa = Literal["dev", "design", "produto", "cliente"]
@@ -48,7 +51,6 @@ class ProjetoCreate(BaseModel):
     cliente_id: int
     tipo: TipoProjeto
     valor: float = 0
-    pago: float = 0
     stage: StageProjeto = "lead"
     entrega: Optional[date] = None
     escopo: str = ""
@@ -61,15 +63,41 @@ class ProjetoRead(BaseModel):
     cliente_id: int
     tipo: TipoProjeto
     valor: float
-    pago: float
     stage: StageProjeto
     entrega: Optional[date] = None
     escopo: str = ""
     criado: datetime
     cliente: Optional[ClienteRead] = None
+    # Recebimentos: derivados das parcelas
+    pago: float = 0
+    saldo: float = 0
+    parcelas_total: int = 0
+    parcelas_pagas: int = 0
     # Progresso do quadro de tarefas do projeto
     tarefas_total: int = 0
     tarefas_feitas: int = 0
+
+
+# ---------- Parcelas do projeto ----------
+class ParcelaCreate(BaseModel):
+    descricao: str = ""
+    valor: float = 0
+    vencimento: Optional[date] = None
+    pago: bool = False
+    pago_em: Optional[date] = None
+
+
+class ParcelaRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    projeto_id: int
+    descricao: str = ""
+    valor: float
+    vencimento: Optional[date] = None
+    pago: bool
+    pago_em: Optional[date] = None
+    ordem: int
 
 
 # ---------- Tarefa do projeto (quadro kanban interno) ----------
@@ -172,12 +200,16 @@ class OrcamentoRead(BaseModel):
         return max(soma - self.desconto, 0)
 
 
-# ---------- Recorrencia ----------
+# ---------- Recorrencia (mensalidade) ----------
 class RecorrenciaCreate(BaseModel):
     cliente_id: int
+    projeto_id: Optional[int] = None
     plano: str
     valor: float = 0
     status: StatusRecorrencia = "ativo"
+    dia_vencimento: int = Field(10, ge=1, le=28)
+    inicio: Optional[date] = None
+    contato: Optional[str] = None
 
 
 class RecorrenciaRead(BaseModel):
@@ -185,11 +217,46 @@ class RecorrenciaRead(BaseModel):
 
     id: int
     cliente_id: int
+    projeto_id: Optional[int] = None
     plano: str
     valor: float
     status: StatusRecorrencia
+    dia_vencimento: int = 10
+    inicio: Optional[date] = None
+    contato: Optional[str] = None
     criado: datetime
     cliente: Optional[ClienteRead] = None
+
+
+# ---------- Cobrancas da mensalidade ----------
+class CobrancaRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    recorrencia_id: int
+    competencia: str
+    vencimento: date
+    valor: float
+    status: StatusCobranca
+    pago_em: Optional[date] = None
+    notificado_em: Optional[datetime] = None
+    # Dados de apoio para a tela, sem outra chamada
+    cliente: Optional[str] = None
+    plano: Optional[str] = None
+    contato: Optional[str] = None
+
+
+class CobrancaAutomacao(BaseModel):
+    """Payload enxuto para o n8n: so o necessario para cobrar."""
+
+    id: int
+    cliente: str
+    contato: Optional[str] = None
+    valor: float
+    vencimento: date
+    competencia: str
+    plano: str
+    notificado_em: Optional[datetime] = None
 
 
 # ---------- Tarefa ----------

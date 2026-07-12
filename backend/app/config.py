@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./malvezi.db"
     secret_key: str = "dev-secret-troque"
     app_password: str = "malvezi"
+    # Chave da automacao (n8n). Libera SOMENTE /api/automacao.
+    api_key: str = "troque-esta-chave-de-automacao"
     token_hours: int = 720
     cors_origins: list[str] = ["http://localhost:4200"]
     # Pasta dos anexos (PDF das propostas). No Docker: /app/uploads, em volume.

@@ -1,0 +1,87 @@
+/* Abas (mesmo padrao do detalhe do projeto) */
+.abas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--soft);
+  border-radius: 999px;
+}
+.aba {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink2);
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+}
+.aba.on {
+  background: var(--grad);
+  color: #fff;
+}
+
+.kpi .legenda {
+  font-size: 11px;
+  font-weight: 600;
+}
+.kpi.grad .legenda {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.min0 {
+  min-width: 0;
+}
+.trunc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Linhas de cobranca com destaque por situacao */
+.cob-vencida td {
+  background: var(--bad-bg);
+}
+.cob-a-vencer td {
+  background: var(--warn-bg);
+}
+.venc {
+  display: inline-flex;
+  flex-direction: column;
+}
+.venc .aviso {
+  font-size: 11px;
+  font-weight: 700;
+}
+.venc .aviso.bad {
+  color: var(--bad);
+}
+.venc .aviso.warn {
+  color: var(--warn);
+}
+
+.copiado {
+  color: var(--ok);
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  /* Nas tabelas em modo cartao o fundo colorido vai para a linha inteira */
+  .tabela-cards tr.cob-vencida {
+    border-color: var(--bad);
+  }
+  .tabela-cards tr.cob-a-vencer {
+    border-color: var(--warn);
+  }
+  .tabela-cards tr.cob-vencida td,
+  .tabela-cards tr.cob-a-vencer td {
+    background: transparent;
+  }
+}

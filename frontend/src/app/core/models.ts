@@ -1,12 +1,15 @@
 export type TipoProjeto = 'site' | 'erp' | 'automacao' | 'portal';
+/** A trilha tem 5 estagios. "recusado" e terminal e fica fora dela. */
 export type StageProjeto =
   | 'lead'
   | 'orcamento'
   | 'aprovado'
   | 'desenvolvimento'
-  | 'entregue';
+  | 'entregue'
+  | 'recusado';
 export type StatusOrcamento = 'rascunho' | 'enviado' | 'aprovado' | 'recusado';
-export type StatusRecorrencia = 'ativo' | 'pausado';
+export type StatusRecorrencia = 'previsto' | 'ativo' | 'pausado';
+export type StatusCobranca = 'aberta' | 'paga' | 'cancelada';
 
 export interface Cliente {
   id: number;
@@ -21,14 +24,37 @@ export interface Projeto {
   cliente_id: number;
   tipo: TipoProjeto;
   valor: number;
-  pago: number;
   stage: StageProjeto;
   entrega?: string | null;
   escopo: string;
   criado?: string;
   cliente?: Cliente | null;
+  /* Recebimentos: derivados das parcelas, calculados no backend */
+  pago?: number;
+  saldo?: number;
+  parcelas_total?: number;
+  parcelas_pagas?: number;
   tarefas_total?: number;
   tarefas_feitas?: number;
+}
+
+/** Parcela de recebimento do projeto (sempre cadastrada a mao). */
+export interface ParcelaProjeto {
+  id: number;
+  projeto_id: number;
+  descricao: string;
+  valor: number;
+  vencimento?: string | null;
+  pago: boolean;
+  pago_em?: string | null;
+  ordem: number;
+}
+
+export interface ParcelaInput {
+  descricao: string;
+  valor: number;
+  vencimento?: string | null;
+  pago: boolean;
 }
 
 /* Quadro de tarefas dentro do projeto */
@@ -99,11 +125,30 @@ export interface AnexoResumo {
 export interface Recorrencia {
   id: number;
   cliente_id: number;
+  projeto_id?: number | null;
   plano: string;
   valor: number;
   status: StatusRecorrencia;
+  dia_vencimento: number;
+  inicio?: string | null;
+  contato?: string | null;
   criado?: string;
   cliente?: Cliente | null;
+}
+
+/** Cobranca de um mes de uma mensalidade. */
+export interface Cobranca {
+  id: number;
+  recorrencia_id: number;
+  competencia: string; // AAAA-MM
+  vencimento: string;
+  valor: number;
+  status: StatusCobranca;
+  pago_em?: string | null;
+  notificado_em?: string | null;
+  cliente?: string | null;
+  plano?: string | null;
+  contato?: string | null;
 }
 
 export interface Tarefa {
@@ -134,10 +179,21 @@ export interface Pendencia {
 }
 
 export interface Dashboard {
+  /** MRR: so as mensalidades ativas. */
   recorrente_mes: number;
+  /** Mensalidades previstas (comecam a valer quando o projeto for entregue). */
+  recorrente_previsto: number;
+  /** Propostas em aberto (lead e orcamento): expectativa, nao caixa. */
+  em_negociacao: number;
+  em_negociacao_qtd: number;
+  /** Fechado e nao pago, incluindo os entregues com saldo. */
   a_receber: number;
+  ja_recebido: number;
+  carteira_total: number;
   projetos_ativos: number;
   em_producao: number;
+  recusados_qtd: number;
+  taxa_aprovacao: number;
   funil: FunilItem[];
   proximas_entregas: ProximaEntrega[];
   pendencias: Pendencia[];

@@ -13,10 +13,20 @@
     <div class="kpi">
       <span class="rot">A receber</span>
       <span class="val">{{ money(aReceber) }}</span>
+      <span class="mut tiny bold">Fechado e não pago</span>
     </div>
+    <div class="kpi">
+      <span class="rot">Em negociação</span>
+      <span class="val">{{ money(emNegociacao) }}</span>
+      <span class="mut tiny bold">Propostas em aberto</span>
+    </div>
+  </div>
+
+  <div class="grid grid-4 mb-16">
     <div class="kpi">
       <span class="rot">Carteira total</span>
       <span class="val">{{ money(carteira) }}</span>
+      <span class="mut tiny bold">Tudo que foi fechado</span>
     </div>
   </div>
 

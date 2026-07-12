@@ -1,7 +1,10 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..auth import get_current_user
+from ..cobrancas import garantir_cobrancas
 from ..database import get_db
 from ..models import Cliente, Projeto
 from ..schemas import ProjetoCreate, ProjetoRead, StageUpdate
@@ -16,6 +19,20 @@ router = APIRouter(
 def _validar_cliente(cliente_id: int, db: Session):
     if not db.get(Cliente, cliente_id):
         raise HTTPException(status_code=400, detail="Cliente inexistente")
+
+
+def _ativar_mensalidades(projeto: Projeto, db: Session) -> None:
+    """Projeto entregue: as mensalidades previstas dele passam a valer hoje.
+
+    Sair de entregue nao desativa nada: uma vez ativa, so a mao pausa.
+    """
+    if projeto.stage != "entregue":
+        return
+    hoje = date.today()
+    for r in projeto.recorrencias:
+        if r.status == "previsto":
+            r.status = "ativo"
+            r.inicio = r.inicio or hoje
 
 
 @router.get("", response_model=list[ProjetoRead])
@@ -49,6 +66,7 @@ def atualizar(projeto_id: int, dados: ProjetoCreate, db: Session = Depends(get_d
     _validar_cliente(dados.cliente_id, db)
     for campo, valor in dados.model_dump().items():
         setattr(projeto, campo, valor)
+    _ativar_mensalidades(projeto, db)
     db.commit()
     db.refresh(projeto)
     return projeto
@@ -60,7 +78,11 @@ def trocar_stage(projeto_id: int, dados: StageUpdate, db: Session = Depends(get_
     if not projeto:
         raise HTTPException(status_code=404, detail="Projeto nao encontrado")
     projeto.stage = dados.stage
+    _ativar_mensalidades(projeto, db)
     db.commit()
+    db.refresh(projeto)
+    # A entrega pode ter ativado mensalidades: ja deixa as cobrancas em dia
+    garantir_cobrancas(db)
     db.refresh(projeto)
     return projeto
 

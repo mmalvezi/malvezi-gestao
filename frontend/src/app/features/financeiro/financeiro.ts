@@ -37,7 +37,13 @@ export class Financeiro implements OnInit {
   recebido = 0;
   aReceber = 0;
   carteira = 0;
+  emNegociacao = 0;
   barras: Barra[] = [];
+
+  /** Propostas em aberto: expectativa, nao caixa. */
+  private readonly EM_NEGOCIACAO = ['lead', 'orcamento'];
+  /** Fechados: viraram compromisso de pagamento. */
+  private readonly FECHADOS = ['aprovado', 'desenvolvimento', 'entregue'];
 
   ngOnInit() {
     this.ui.setTitulo('Financeiro');
@@ -58,15 +64,29 @@ export class Financeiro implements OnInit {
   }
 
   calcular() {
+    // Recusados ficam fora de todos os numeros de dinheiro ativo
+    const vivos = this.projetos.filter((p) => p.stage !== 'recusado');
+    const fechados = vivos.filter((p) => this.FECHADOS.includes(p.stage));
+
     this.recorrenteMes = this.recorrencias
       .filter((r) => r.status === 'ativo')
       .reduce((s, r) => s + Number(r.valor || 0), 0);
-    this.recebido = this.projetos.reduce((s, p) => s + Number(p.pago || 0), 0);
-    this.aReceber = this.projetos.reduce(
-      (s, p) => s + Math.max(Number(p.valor || 0) - Number(p.pago || 0), 0),
+
+    this.recebido = vivos.reduce((s, p) => s + Number(p.pago || 0), 0);
+
+    // A receber: so o que ja foi fechado e ainda tem saldo, incluindo os
+    // entregues que nao foram pagos
+    this.aReceber = fechados.reduce(
+      (s, p) => s + Number(p.saldo ?? p.valor ?? 0),
       0,
     );
-    this.carteira = this.projetos.reduce((s, p) => s + Number(p.valor || 0), 0);
+
+    // Propostas em aberto: expectativa, contabilizada a parte
+    this.emNegociacao = vivos
+      .filter((p) => this.EM_NEGOCIACAO.includes(p.stage))
+      .reduce((s, p) => s + Number(p.valor || 0), 0);
+
+    this.carteira = fechados.reduce((s, p) => s + Number(p.valor || 0), 0);
     this.montarGrafico();
   }
 

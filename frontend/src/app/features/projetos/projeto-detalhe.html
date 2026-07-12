@@ -2,7 +2,7 @@
   <div class="loading"><span class="spin"></span> Carregando projeto...</div>
 } @else if (projeto) {
   <!-- Cabecalho do projeto -->
-  <div class="card card-pad cabecalho">
+  <div class="card card-pad cabecalho" [class.recusado]="recusado">
     <div class="linha-topo">
       <button class="icon-btn" (click)="voltar()" aria-label="Voltar para a lista de projetos">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -14,10 +14,15 @@
         <h3 class="trunc">{{ projeto.cliente?.nome || 'Cliente' }}</h3>
         <div class="mut small">{{ tipoLabel[projeto.tipo] }} · {{ money(projeto.valor) }}</div>
       </div>
-      <span class="badge info">{{ stageLabel[projeto.stage] }}</span>
+      @if (recusado) {
+        <span class="badge bad">Recusado</span>
+        <button class="btn sm" (click)="reabrir()">Reabrir</button>
+      } @else {
+        <span class="badge info">{{ stageLabel[projeto.stage] }}</span>
+      }
     </div>
 
-    <div class="stepper">
+    <div class="stepper" [class.inativo]="recusado">
       @for (s of stages; track s.valor; let i = $index) {
         @if (i > 0) {
           <span class="liga" [class.on]="stepDone(i)"></span>
@@ -27,6 +32,7 @@
           class="step"
           [class.done]="stepDone(i)"
           [class.atual]="stepAtual(i)"
+          [disabled]="recusado"
           (click)="clicarEstagio(i)"
           [attr.aria-label]="'Mudar para ' + s.rot"
           [title]="s.rot"
@@ -45,9 +51,30 @@
       }
     </div>
 
-    <!-- Progresso das tarefas -->
+    <!-- Recebimentos e tarefas -->
     <div class="progresso">
-      <div class="between mb-8">
+      <div class="valores">
+        <div>
+          <div class="mut tiny">Recebido</div>
+          <div class="bold" style="color:var(--ok)">{{ money(recebido) }}</div>
+        </div>
+        <div>
+          <div class="mut tiny">Saldo em aberto</div>
+          <div class="bold">{{ money(saldo) }}</div>
+        </div>
+        <div>
+          <div class="mut tiny">Mensalidade</div>
+          <div class="bold">
+            @if (mensalidade) {
+              {{ money(mensalidade.valor) }} / mês
+            } @else {
+              Sem mensalidade
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="between mb-8 mt-16">
         <span class="mut tiny">Tarefas do projeto</span>
         <span class="bold small">
           @if (totalTarefas) {
@@ -100,20 +127,20 @@
         </div>
       </div>
 
-      <div class="row-3">
+      <div class="row-2">
         <div class="field">
           <label for="valor">Valor (R$)</label>
           <input id="valor" class="input" type="number" min="0" [(ngModel)]="form.valor" name="valor" />
-        </div>
-        <div class="field">
-          <label for="pago">Recebido (R$)</label>
-          <input id="pago" class="input" type="number" min="0" [(ngModel)]="form.pago" name="pago" />
         </div>
         <div class="field">
           <label>Entrega</label>
           <app-datepicker ariaLabel="Data de entrega" [(ngModel)]="form.entrega" name="entrega"></app-datepicker>
         </div>
       </div>
+      <p class="mut tiny" style="margin-top:-6px">
+        O recebido não é digitado aqui: ele é a soma das parcelas pagas, na aba
+        Recebimentos.
+      </p>
 
       <div class="field">
         <label for="escopo">Escopo</label>
@@ -126,12 +153,32 @@
         ></textarea>
       </div>
 
-      <div class="between">
-        <button class="btn danger" (click)="excluir()">Excluir projeto</button>
+      <div class="between wrap">
+        <span class="items-center wrap">
+          <button class="btn danger" (click)="excluir()">Excluir projeto</button>
+          @if (recusado) {
+            <button class="btn" (click)="reabrir()">Reabrir projeto</button>
+          } @else {
+            <button class="btn" (click)="recusar()">Marcar como recusado</button>
+          }
+        </span>
         <button class="btn primary" (click)="salvar()" [disabled]="salvando || !form.cliente_id">
           {{ salvando ? 'Salvando...' : 'Salvar' }}
         </button>
       </div>
+    </div>
+  } @else if (aba === 'recebimentos') {
+    <div class="card card-pad mb-16">
+      <app-parcelas-projeto
+        [projeto]="projeto"
+        (mudou)="aoMudarParcelas($event)"
+      ></app-parcelas-projeto>
+    </div>
+    <div class="card card-pad">
+      <app-mensalidade-projeto
+        [projeto]="projeto"
+        (mudou)="aoMudarMensalidade($event)"
+      ></app-mensalidade-projeto>
     </div>
   } @else if (aba === 'tarefas') {
     <div class="card card-pad">

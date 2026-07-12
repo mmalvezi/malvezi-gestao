@@ -43,8 +43,12 @@ export class Projetos implements OnInit {
   clientes: Cliente[] = [];
   carregando = true;
 
+  /** "todos" nao inclui os recusados: eles so aparecem no filtro Recusados. */
   filtro: StageProjeto | 'todos' = 'todos';
   vista: 'cartoes' | 'quadro' = 'cartoes';
+
+  /** Menu de acoes do cartao. */
+  menu: number | null = null;
 
   stages = STAGES;
   tipos = TIPOS;
@@ -80,7 +84,6 @@ export class Projetos implements OnInit {
       cliente_id: 0,
       tipo: 'site',
       valor: 0,
-      pago: 0,
       stage: 'lead',
       entrega: null,
       escopo: '',
@@ -94,7 +97,11 @@ export class Projetos implements OnInit {
   filtrados(): Projeto[] {
     const busca = this.ui.busca().toLowerCase().trim();
     return this.projetos.filter((p) => {
-      const okStage = this.filtro === 'todos' || p.stage === this.filtro;
+      // Recusado e terminal: so aparece quando o filtro pede por ele
+      const okStage =
+        this.filtro === 'todos'
+          ? p.stage !== 'recusado'
+          : p.stage === this.filtro;
       const okBusca =
         !busca ||
         (p.cliente?.nome || '').toLowerCase().includes(busca) ||
@@ -103,6 +110,7 @@ export class Projetos implements OnInit {
     });
   }
 
+  /** Colunas do quadro: os recusados nunca entram. */
   porEstagio(stage: StageProjeto): Projeto[] {
     const busca = this.ui.busca().toLowerCase().trim();
     return this.projetos.filter(
@@ -110,6 +118,49 @@ export class Projetos implements OnInit {
         p.stage === stage &&
         (!busca || (p.cliente?.nome || '').toLowerCase().includes(busca)),
     );
+  }
+
+  contarRecusados(): number {
+    return this.projetos.filter((p) => p.stage === 'recusado').length;
+  }
+
+  recusado(p: Projeto): boolean {
+    return p.stage === 'recusado';
+  }
+
+  saldo(p: Projeto): number {
+    return p.saldo ?? Number(p.valor || 0);
+  }
+
+  /* Menu do cartao */
+  alternarMenu(ev: MouseEvent, p: Projeto) {
+    ev.stopPropagation();
+    this.menu = this.menu === p.id ? null : p.id;
+  }
+
+  fecharMenu() {
+    this.menu = null;
+  }
+
+  async recusar(p: Projeto) {
+    this.fecharMenu();
+    const ok = await this.confirm.ask({
+      title: 'Marcar como recusado',
+      message: `Marcar o projeto de ${p.cliente?.nome || 'cliente'} como recusado? Ele sai das listas e dos números ativos.`,
+      confirmText: 'Marcar como recusado',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    this.api
+      .patchStage(p.id, 'recusado')
+      .subscribe((atual) => (p.stage = atual.stage));
+  }
+
+  reabrir(p: Projeto) {
+    this.fecharMenu();
+    this.api
+      .patchStage(p.id, 'orcamento')
+      .subscribe((atual) => (p.stage = atual.stage));
   }
 
   stepDone(p: Projeto, i: number): boolean {
@@ -171,7 +222,6 @@ export class Projetos implements OnInit {
     const payload: ProjetoInput = {
       ...this.form,
       valor: Number(this.form.valor) || 0,
-      pago: Number(this.form.pago) || 0,
       entrega: this.form.entrega || null,
     };
     this.api.criarProjeto(payload).subscribe({

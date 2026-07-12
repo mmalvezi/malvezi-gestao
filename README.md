@@ -58,3 +58,56 @@ docker compose logs -f api      # logs do backend
 docker compose down             # para tudo, mantém os dados
 docker compose down -v          # para tudo e apaga o volume do banco
 ```
+
+Os anexos de proposta em PDF ficam no volume `uploads`, também preservado entre
+deploys.
+
+## Automação (n8n)
+
+As cobranças mensais das mensalidades ativas são geradas sozinhas (competência,
+vencimento e valor congelado). Para um robô cobrar por WhatsApp ou e-mail, a API
+expõe um punhado de endpoints protegidos por **chave de API**, separados do
+login por senha do painel.
+
+### Configurar a chave
+
+Defina `API_KEY` no `.env` (o `docker-compose.yml` já repassa a variável para o
+container `api`):
+
+```
+API_KEY=chave-longa-e-aleatoria-para-o-n8n
+```
+
+A chave vai no header `X-API-Key` e libera **somente** as rotas
+`/api/automacao/*`. Ela não dá acesso a nenhum outro endpoint do sistema. Sem a
+chave correta, a resposta é `401`.
+
+### Endpoints
+
+| Método | Rota | Para que serve |
+|---|---|---|
+| GET | `/api/automacao/health` | Testar se a chave está valendo |
+| GET | `/api/automacao/cobrancas-a-vencer?dias=3` | Cobranças em aberto que vencem nos próximos N dias (padrão 3) |
+| GET | `/api/automacao/cobrancas-vencidas` | Cobranças em aberto já fora do prazo |
+| POST | `/api/automacao/cobrancas/{id}/notificado` | Marca `notificado_em` para não avisar duas vezes |
+
+As listas devolvem só o necessário para cobrar: `id`, `cliente`, `contato`,
+`valor`, `vencimento`, `competencia`, `plano` e `notificado_em`.
+
+```bash
+curl -H "X-API-Key: $API_KEY" \
+  "http://localhost:8000/api/automacao/cobrancas-a-vencer?dias=3"
+```
+
+### Exemplo de fluxo no n8n
+
+1. **Schedule Trigger**: todo dia às 9h.
+2. **HTTP Request**: `GET /api/automacao/cobrancas-a-vencer?dias=3` com o header
+   `X-API-Key`.
+3. **Filter**: descarta os itens que já têm `notificado_em` preenchido.
+4. **Envio**: monta a mensagem com `cliente`, `valor`, `vencimento` e dispara
+   para o `contato` (WhatsApp ou e-mail).
+5. **HTTP Request**: `POST /api/automacao/cobrancas/{{ $json.id }}/notificado`,
+   para o mesmo cliente não ser cobrado de novo no dia seguinte.
+
+Um segundo fluxo igual, apontando para `cobrancas-vencidas`, cobre os atrasados.

@@ -1,20 +1,43 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
-import { Cliente, Recorrencia as Rec, RecorrenciaInput } from '../../core/models';
-import { moeda } from '../../core/utils';
+import {
+  Cliente,
+  Cobranca,
+  Projeto,
+  Recorrencia as Rec,
+  RecorrenciaInput,
+  StatusRecorrencia,
+} from '../../core/models';
+import {
+  competenciaBr,
+  dataBr,
+  diasAte,
+  DIAS_VENCIMENTO,
+  moeda,
+  STATUS_COB_LABEL,
+  STATUS_REC,
+  STATUS_REC_CLASSE,
+  STATUS_REC_LABEL,
+  TIPO_LABEL,
+} from '../../core/utils';
 import { Dialog } from '../../shared/dialog';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
 
+type Aba = 'mensalidades' | 'cobrancas';
+
 @Component({
   selector: 'app-recorrencia',
   standalone: true,
-  imports: [CommonModule, FormsModule, Dialog, AppSelect],
+  imports: [CommonModule, FormsModule, RouterLink, Dialog, AppSelect],
   templateUrl: './recorrencia.html',
+  styleUrl: './recorrencia.scss',
 })
 export class Recorrencia implements OnInit {
   private api = inject(ApiService);
@@ -23,23 +46,34 @@ export class Recorrencia implements OnInit {
 
   itens: Rec[] = [];
   clientes: Cliente[] = [];
+  projetos: Projeto[] = [];
+  cobrancas: Cobranca[] = [];
   carregando = true;
 
-  money = moeda;
-
-  situacaoOpc: OpcaoSelect[] = [
-    { valor: 'ativo', rot: 'Ativo' },
-    { valor: 'pausado', rot: 'Pausado' },
+  aba: Aba = 'mensalidades';
+  abas: { valor: Aba; rot: string }[] = [
+    { valor: 'mensalidades', rot: 'Mensalidades' },
+    { valor: 'cobrancas', rot: 'Cobranças do mês' },
   ];
+
+  /** Filtro por situação na lista de mensalidades. */
+  filtro: StatusRecorrencia | 'todas' = 'todas';
+
+  money = moeda;
+  data = dataBr;
+  competencia = competenciaBr;
+  statusOpc = STATUS_REC;
+  statusLabel = STATUS_REC_LABEL;
+  statusClasse = STATUS_REC_CLASSE;
+  cobLabel = STATUS_COB_LABEL;
+  dias = DIAS_VENCIMENTO;
 
   editorAberto = false;
   editId: number | null = null;
   form: RecorrenciaInput = this.novoForm();
   salvando = false;
 
-  clientesOpc(): OpcaoSelect[] {
-    return this.clientes.map((c) => ({ valor: c.id, rot: c.nome }));
-  }
+  copiada: number | null = null;
 
   ngOnInit() {
     this.ui.setTitulo('Mensalidades');
@@ -49,27 +83,77 @@ export class Recorrencia implements OnInit {
   carregar() {
     this.carregando = true;
     this.api.getClientes().subscribe((c) => (this.clientes = c));
-    this.api.getRecorrencias().subscribe({
-      next: (r) => {
-        this.itens = r;
+    this.api.getProjetos().subscribe((p) => (this.projetos = p));
+    forkJoin({
+      recorrencias: this.api.getRecorrencias(),
+      cobrancas: this.api.getCobrancas(),
+    }).subscribe({
+      next: ({ recorrencias, cobrancas }) => {
+        this.itens = recorrencias;
+        this.cobrancas = cobrancas;
         this.carregando = false;
       },
       error: () => (this.carregando = false),
     });
   }
 
+  clientesOpc(): OpcaoSelect[] {
+    return this.clientes.map((c) => ({ valor: c.id, rot: c.nome }));
+  }
+
+  projetosOpc(): OpcaoSelect[] {
+    return [
+      { valor: null, rot: 'Sem projeto vinculado' },
+      ...this.projetos.map((p) => ({
+        valor: p.id,
+        rot: `${p.cliente?.nome || 'Cliente'} (${p.tipo})`,
+      })),
+    ];
+  }
+
+  /* ---------- Mensalidades ---------- */
+  filtradas(): Rec[] {
+    if (this.filtro === 'todas') return this.itens;
+    return this.itens.filter((r) => r.status === this.filtro);
+  }
+
+  contar(status: StatusRecorrencia): number {
+    return this.itens.filter((r) => r.status === status).length;
+  }
+
+  /** MRR: so as ativas contam. */
   mrr(): number {
     return this.itens
       .filter((r) => r.status === 'ativo')
       .reduce((s, r) => s + Number(r.valor || 0), 0);
   }
 
-  contarAtivas(): number {
-    return this.itens.filter((r) => r.status === 'ativo').length;
+  /** Previstas: comecam a valer quando o projeto for entregue. */
+  previsto(): number {
+    return this.itens
+      .filter((r) => r.status === 'previsto')
+      .reduce((s, r) => s + Number(r.valor || 0), 0);
+  }
+
+  projetoDe(r: Rec): Projeto | undefined {
+    return this.projetos.find((p) => p.id === r.projeto_id);
+  }
+
+  tipoDoProjeto(p: Projeto): string {
+    return TIPO_LABEL[p.tipo];
   }
 
   novoForm(): RecorrenciaInput {
-    return { cliente_id: 0, plano: '', valor: 0, status: 'ativo' };
+    return {
+      cliente_id: 0,
+      projeto_id: null,
+      plano: '',
+      valor: 0,
+      status: 'ativo',
+      dia_vencimento: 10,
+      inicio: null,
+      contato: null,
+    };
   }
 
   abrirNovo() {
@@ -83,9 +167,13 @@ export class Recorrencia implements OnInit {
     this.editId = r.id;
     this.form = {
       cliente_id: r.cliente_id,
+      projeto_id: r.projeto_id ?? null,
       plano: r.plano,
       valor: r.valor,
       status: r.status,
+      dia_vencimento: r.dia_vencimento,
+      inicio: r.inicio || null,
+      contato: r.contato || null,
     };
     this.editorAberto = true;
   }
@@ -100,6 +188,7 @@ export class Recorrencia implements OnInit {
     const payload: RecorrenciaInput = {
       ...this.form,
       valor: Number(this.form.valor) || 0,
+      dia_vencimento: Number(this.form.dia_vencimento) || 10,
     };
     const req = this.editId
       ? this.api.atualizarRecorrencia(this.editId, payload)
@@ -114,21 +203,78 @@ export class Recorrencia implements OnInit {
     });
   }
 
-  alternarStatus(r: Rec) {
-    const novo = r.status === 'ativo' ? 'pausado' : 'ativo';
-    this.api
-      .patchStatusRecorrencia(r.id, novo)
-      .subscribe((atual) => (r.status = atual.status));
+  trocarStatus(r: Rec, status: StatusRecorrencia) {
+    this.api.patchStatusRecorrencia(r.id, status).subscribe(() => this.carregar());
   }
 
   async excluir(r: Rec) {
     const ok = await this.confirm.ask({
       title: 'Excluir mensalidade',
-      message: 'Excluir esta mensalidade?',
+      message: 'Excluir esta mensalidade? As cobranças geradas também saem.',
       confirmText: 'Excluir',
       tone: 'danger',
     });
     if (!ok) return;
     this.api.excluirRecorrencia(r.id).subscribe(() => this.carregar());
+  }
+
+  /* ---------- Cobrancas do mes ---------- */
+  vencida(c: Cobranca): boolean {
+    return c.status === 'aberta' && diasAte(c.vencimento) < 0;
+  }
+  aVencer(c: Cobranca): boolean {
+    const d = diasAte(c.vencimento);
+    return c.status === 'aberta' && d >= 0 && d <= 3;
+  }
+
+  /** Recebido no mes corrente (cobrancas pagas da competencia atual). */
+  recebidoMes(): number {
+    return this.cobrancas
+      .filter((c) => c.status === 'paga' && c.competencia === this.mesAtual())
+      .reduce((s, c) => s + Number(c.valor || 0), 0);
+  }
+  emAbertoMes(): number {
+    return this.cobrancas
+      .filter((c) => c.status === 'aberta' && c.competencia === this.mesAtual())
+      .reduce((s, c) => s + Number(c.valor || 0), 0);
+  }
+  vencidoTotal(): number {
+    return this.cobrancas
+      .filter((c) => this.vencida(c))
+      .reduce((s, c) => s + Number(c.valor || 0), 0);
+  }
+
+  mesAtual(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  pagar(c: Cobranca) {
+    this.api.pagarCobranca(c.id).subscribe((atual) => this.trocarCobranca(atual));
+  }
+  cancelar(c: Cobranca) {
+    this.api.cancelarCobranca(c.id).subscribe((atual) => this.trocarCobranca(atual));
+  }
+  reabrir(c: Cobranca) {
+    this.api.reabrirCobranca(c.id).subscribe((atual) => this.trocarCobranca(atual));
+  }
+
+  private trocarCobranca(c: Cobranca) {
+    this.cobrancas = this.cobrancas.map((x) => (x.id === c.id ? c : x));
+  }
+
+  /** Texto pronto para colar no WhatsApp. Só copia, sem integração. */
+  copiarMensagem(c: Cobranca) {
+    const texto =
+      `Olá ${c.cliente || ''}, tudo bem? Passando para lembrar da mensalidade ` +
+      `de ${competenciaBr(c.competencia)}, no valor de ${moeda(c.valor)}, ` +
+      `com vencimento em ${dataBr(c.vencimento)}. Qualquer dúvida é só chamar.`;
+    navigator.clipboard?.writeText(texto).then(
+      () => {
+        this.copiada = c.id;
+        setTimeout(() => (this.copiada = null), 2500);
+      },
+      () => {},
+    );
   }
 }

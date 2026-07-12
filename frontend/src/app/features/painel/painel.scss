@@ -1,3 +1,13 @@
+/* Legenda do KPI: diz o que o numero significa */
+.kpi .legenda {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.kpi.grad .legenda {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .entrega {
   display: flex;
   align-items: center;

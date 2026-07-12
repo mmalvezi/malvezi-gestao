@@ -10,6 +10,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -47,14 +48,23 @@ class Projeto(Base):
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
     tipo = Column(String, nullable=False)  # site | erp | automacao | portal
     valor = Column(Float, default=0)
-    pago = Column(Float, default=0)
-    # lead | orcamento | aprovado | desenvolvimento | entregue
+    # Coluna antiga do valor recebido. O recebido agora vem das parcelas; este
+    # campo so existe para migrar os projetos antigos (ver migracoes.py).
+    pago_legado = Column("pago", Float, default=0)
+    # lead | orcamento | aprovado | desenvolvimento | entregue | recusado
     stage = Column(String, default="lead")
     entrega = Column(Date, nullable=True)
     escopo = Column(Text, default="")
     criado = Column(DateTime, default=agora)
 
     cliente = relationship("Cliente", back_populates="projetos")
+    parcelas = relationship(
+        "ParcelaProjeto",
+        back_populates="projeto",
+        cascade="all, delete-orphan",
+        order_by="ParcelaProjeto.ordem",
+    )
+    recorrencias = relationship("Recorrencia", back_populates="projeto")
     tarefas = relationship(
         "TarefaProjeto",
         back_populates="projeto",
@@ -69,6 +79,45 @@ class Projeto(Base):
     @property
     def tarefas_feitas(self) -> int:
         return sum(1 for t in self.tarefas if t.coluna == "concluido")
+
+    # ----- Recebimentos (derivados das parcelas) -----
+    @property
+    def pago(self) -> float:
+        """Recebido de verdade: soma das parcelas marcadas como pagas."""
+        return sum(p.valor or 0 for p in self.parcelas if p.pago)
+
+    @property
+    def saldo(self) -> float:
+        """Quanto falta receber. Sem parcelas cadastradas, e o valor cheio."""
+        return max((self.valor or 0) - self.pago, 0)
+
+    @property
+    def parcelas_total(self) -> int:
+        return len(self.parcelas)
+
+    @property
+    def parcelas_pagas(self) -> int:
+        return sum(1 for p in self.parcelas if p.pago)
+
+
+class ParcelaProjeto(Base):
+    """Parcela de recebimento de um projeto. Sempre cadastrada a mao."""
+
+    __tablename__ = "parcelas_projeto"
+
+    id = Column(Integer, primary_key=True, index=True)
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=False
+    )
+    descricao = Column(String, nullable=False, default="")
+    valor = Column(Float, default=0)
+    vencimento = Column(Date, nullable=True)
+    pago = Column(Boolean, default=False)
+    pago_em = Column(Date, nullable=True)
+    ordem = Column(Integer, default=0)
+    criado = Column(DateTime, default=agora)
+
+    projeto = relationship("Projeto", back_populates="parcelas")
 
 
 class TarefaProjeto(Base):
@@ -179,16 +228,61 @@ class OrcamentoItem(Base):
 
 
 class Recorrencia(Base):
+    """Mensalidade. Pode nascer vinculada a um projeto e so passa a valer
+    (status ativo) quando aquele projeto e entregue."""
+
     __tablename__ = "recorrencias"
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False)
+    projeto_id = Column(
+        Integer, ForeignKey("projetos.id", ondelete="SET NULL"), nullable=True
+    )
     plano = Column(String, nullable=False)
     valor = Column(Float, default=0)
-    status = Column(String, default="ativo")  # ativo | pausado
+    status = Column(String, default="ativo")  # previsto | ativo | pausado
+    dia_vencimento = Column(Integer, default=10)  # 1 a 28
+    inicio = Column(Date, nullable=True)
+    contato = Column(String, nullable=True)  # WhatsApp ou e-mail da cobranca
     criado = Column(DateTime, default=agora)
 
     cliente = relationship("Cliente", back_populates="recorrencias")
+    projeto = relationship("Projeto", back_populates="recorrencias")
+    cobrancas = relationship(
+        "CobrancaMensalidade",
+        back_populates="recorrencia",
+        cascade="all, delete-orphan",
+        order_by="CobrancaMensalidade.vencimento",
+    )
+
+
+class CobrancaMensalidade(Base):
+    """Cobranca de um mes (competencia) de uma mensalidade.
+
+    O valor e copiado da mensalidade no momento da geracao: se o valor mudar
+    depois, as cobrancas ja geradas mantem o que foi cobrado.
+    """
+
+    __tablename__ = "cobrancas_mensalidade"
+    __table_args__ = (
+        UniqueConstraint(
+            "recorrencia_id", "competencia", name="uq_cobranca_recorrencia_competencia"
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    recorrencia_id = Column(
+        Integer, ForeignKey("recorrencias.id", ondelete="CASCADE"), nullable=False
+    )
+    competencia = Column(String, nullable=False)  # AAAA-MM
+    vencimento = Column(Date, nullable=False)
+    valor = Column(Float, default=0)
+    status = Column(String, nullable=False, default="aberta")  # aberta|paga|cancelada
+    pago_em = Column(Date, nullable=True)
+    notificado_em = Column(DateTime, nullable=True)  # a automacao marca aqui
+    criado = Column(DateTime, default=agora)
+
+    recorrencia = relationship("Recorrencia", back_populates="cobrancas")
 
 
 class Tarefa(Base):

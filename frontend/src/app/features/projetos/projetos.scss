@@ -57,6 +57,63 @@
   border-top: 1px solid var(--borda);
   padding-top: 12px;
 }
+
+/* Projeto recusado: atenuado e trilha inativa */
+.projeto.recusado {
+  background: var(--soft);
+  opacity: 0.75;
+}
+.projeto.recusado .avatar {
+  background: var(--mut);
+}
+.stepper.inativo {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Menu de acoes do cartao */
+.menu-wrap {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.menu-bd {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  z-index: 41;
+  width: 220px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+}
+.menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--tinta);
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.menu button:hover {
+  background: var(--soft);
+}
+.menu button.perigo {
+  color: var(--bad);
+}
 .select.sm {
   padding: 7px 10px;
   font-size: 13px;

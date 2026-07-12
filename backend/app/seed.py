@@ -36,32 +36,32 @@ def run_seed(db: Session):
 
     projetos = [
         Projeto(
-            cliente_id=otica.id, tipo="site", valor=4500, pago=4500,
+            cliente_id=otica.id, tipo="site", valor=4500, pago_legado=4500,
             stage="entregue", entrega=hoje - timedelta(days=20),
             escopo="Site institucional com catálogo de armações.",
         ),
         Projeto(
-            cliente_id=mercado.id, tipo="automacao", valor=6800, pago=3400,
+            cliente_id=mercado.id, tipo="automacao", valor=6800, pago_legado=3400,
             stage="desenvolvimento", entrega=hoje + timedelta(days=10),
             escopo="Automação de pedidos e controle de estoque.",
         ),
         Projeto(
-            cliente_id=autopecas.id, tipo="erp", valor=12000, pago=0,
+            cliente_id=autopecas.id, tipo="erp", valor=12000, pago_legado=0,
             stage="aprovado", entrega=hoje + timedelta(days=30),
             escopo="ERP de peças com integração fiscal.",
         ),
         Projeto(
-            cliente_id=clinica.id, tipo="portal", valor=8200, pago=2000,
+            cliente_id=clinica.id, tipo="portal", valor=8200, pago_legado=2000,
             stage="desenvolvimento", entrega=hoje + timedelta(days=5),
             escopo="Portal de agendamento de consultas.",
         ),
         Projeto(
-            cliente_id=pousada.id, tipo="site", valor=5200, pago=0,
+            cliente_id=pousada.id, tipo="site", valor=5200, pago_legado=0,
             stage="orcamento", entrega=None,
             escopo="Site com reservas e galeria de fotos.",
         ),
         Projeto(
-            cliente_id=transportadora.id, tipo="automacao", valor=9500, pago=0,
+            cliente_id=transportadora.id, tipo="automacao", valor=9500, pago_legado=0,
             stage="lead", entrega=None,
             escopo="Rastreamento de cargas e relatórios.",
         ),
@@ -95,11 +95,25 @@ def run_seed(db: Session):
     ]
     db.add_all(orcamentos)
 
+    inicio = hoje - timedelta(days=60)
     recorrencias = [
-        Recorrencia(cliente_id=otica.id, plano="Suporte e manutenção do sistema", valor=350, status="ativo"),
-        Recorrencia(cliente_id=clinica.id, plano="Hospedagem, suporte e pequenas evoluções", valor=280, status="ativo"),
-        Recorrencia(cliente_id=mercado.id, plano="Suporte técnico", valor=420, status="ativo"),
-        Recorrencia(cliente_id=autopecas.id, plano="Manutenção do ERP", valor=600, status="pausado"),
+        Recorrencia(
+            cliente_id=otica.id, plano="Suporte e manutenção do sistema", valor=350,
+            status="ativo", dia_vencimento=10, inicio=inicio, contato=otica.contato,
+        ),
+        Recorrencia(
+            cliente_id=clinica.id, plano="Hospedagem, suporte e pequenas evoluções",
+            valor=280, status="ativo", dia_vencimento=5, inicio=inicio,
+            contato=clinica.contato,
+        ),
+        Recorrencia(
+            cliente_id=mercado.id, plano="Suporte técnico", valor=420,
+            status="ativo", dia_vencimento=20, inicio=inicio, contato=mercado.contato,
+        ),
+        Recorrencia(
+            cliente_id=autopecas.id, plano="Manutenção do ERP", valor=600,
+            status="pausado", dia_vencimento=15, contato=autopecas.contato,
+        ),
     ]
     db.add_all(recorrencias)
 
