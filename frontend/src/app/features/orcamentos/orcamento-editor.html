@@ -1,0 +1,264 @@
+@if (carregando) {
+  <div class="loading"><span class="spin"></span> Carregando orçamento...</div>
+} @else {
+  <!-- 1. Cliente e projeto -->
+  <div class="card card-pad secao">
+    <div class="section-title">1. Cliente e projeto</div>
+    <div class="row-2">
+      <div class="field">
+        <label>Cliente</label>
+        <app-select
+          [opcoes]="clientesOpc()"
+          placeholder="Selecione o cliente"
+          ariaLabel="Cliente"
+          [(ngModel)]="form.cliente_id"
+          name="cliente_id"
+        ></app-select>
+      </div>
+      <div class="field">
+        <label>Projeto vinculado (gera as parcelas na aprovação)</label>
+        <app-select
+          [opcoes]="projetosOpc()"
+          placeholder="Sem projeto vinculado"
+          ariaLabel="Projeto vinculado"
+          [(ngModel)]="form.projeto_id"
+          name="projeto_id"
+        ></app-select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label for="titulo">Título</label>
+        <input
+          id="titulo"
+          class="input"
+          [(ngModel)]="form.titulo"
+          name="titulo"
+          placeholder="Ex.: Site institucional"
+        />
+      </div>
+      <div class="field">
+        <label>Tipo (modelo de escopo)</label>
+        <div class="items-center">
+          <app-select
+            style="flex:1"
+            [opcoes]="tipos"
+            ariaLabel="Tipo"
+            [(ngModel)]="form.tipo"
+            name="tipo"
+          ></app-select>
+          <button class="btn sm ghost" type="button" (click)="aplicarModelo()">Aplicar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Itens -->
+  <div class="card card-pad secao">
+    <div class="between mb-8">
+      <div class="section-title" style="margin:0">2. Itens (o que será entregue)</div>
+      <button class="btn sm ghost" type="button" (click)="addItem()">+ Adicionar item</button>
+    </div>
+
+    @for (item of form.itens; track $index) {
+      <div class="item">
+        <input class="input" [(ngModel)]="item.titulo" [name]="'it-tit-' + $index" placeholder="Título" />
+        <input class="input" [(ngModel)]="item.descricao" [name]="'it-desc-' + $index" placeholder="Descrição" />
+        <input
+          class="input valor"
+          type="number"
+          min="0"
+          [(ngModel)]="item.valor"
+          [name]="'it-val-' + $index"
+          placeholder="Valor"
+          aria-label="Valor do item"
+        />
+        <button class="icon-btn" type="button" (click)="removerItem(item)" aria-label="Remover item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    }
+    @if (!form.itens.length) {
+      <div class="mut tiny">Sem itens. Use Aplicar para carregar o modelo do tipo ou + Adicionar item.</div>
+    }
+
+    <div class="resumo mt-16">
+      <div class="items-center wrap">
+        <span class="mut small">Subtotal {{ money(subtotal()) }}</span>
+        <span class="field-desc">
+          <label for="desconto" class="mut small">Desconto (R$)</label>
+          <input
+            id="desconto"
+            class="input sm-num"
+            type="number"
+            min="0"
+            [(ngModel)]="form.desconto"
+            name="desconto"
+          />
+        </span>
+      </div>
+      <span class="total">Total {{ money(totalForm()) }}</span>
+    </div>
+  </div>
+
+  <!-- 3. Forma de pagamento -->
+  <div class="card card-pad secao" id="secao-pagamento">
+    <div class="between mb-8 wrap">
+      <div class="section-title" style="margin:0">3. Forma de pagamento</div>
+      <span class="items-center gap-6">
+        <button class="btn sm ghost" type="button" (click)="parcelaUnica()">Parcela única</button>
+        <button class="btn sm ghost" type="button" (click)="addParcela()">+ Adicionar parcela</button>
+      </span>
+    </div>
+    <p class="mut tiny">
+      As parcelas são a forma de pagamento do orçamento: aparecem no PDF para o
+      cliente e viram os recebimentos do projeto na aprovação.
+    </p>
+
+    @for (p of plano; track $index) {
+      <div class="parc">
+        <input
+          class="input"
+          [(ngModel)]="p.descricao"
+          [name]="'pl-desc-' + $index"
+          placeholder="Ex.: Entrada, 2a parcela, Na entrega"
+        />
+        <app-select
+          [opcoes]="tiposValor"
+          [compacto]="true"
+          ariaLabel="Tipo de valor"
+          [(ngModel)]="p.tipo_valor"
+          [name]="'pl-tv-' + $index"
+        ></app-select>
+        @if (p.tipo_valor === 'percentual') {
+          <input
+            class="input num"
+            type="number"
+            min="0"
+            max="100"
+            [(ngModel)]="p.percentual"
+            [name]="'pl-pct-' + $index"
+            placeholder="%"
+            aria-label="Percentual da parcela"
+          />
+        } @else {
+          <input
+            class="input num"
+            type="number"
+            min="0"
+            [(ngModel)]="p.valor_fixo"
+            [name]="'pl-fix-' + $index"
+            placeholder="R$"
+            aria-label="Valor fixo da parcela"
+          />
+        }
+        <app-select
+          [opcoes]="vencimentos"
+          [compacto]="true"
+          ariaLabel="Vencimento da parcela"
+          [ngModel]="vencSel(p)"
+          (ngModelChange)="setVenc(p, $event)"
+          [name]="'pl-venc-' + $index"
+        ></app-select>
+        @if (p.tipo_vencimento === 'dias') {
+          <input
+            class="input num"
+            type="number"
+            min="0"
+            [(ngModel)]="p.dias"
+            [name]="'pl-dias-' + $index"
+            placeholder="dias"
+            aria-label="Dias corridos após a aprovação"
+          />
+        } @else {
+          <span></span>
+        }
+        <span class="calc bold small">{{ money(valorParcela(p)) }}</span>
+        <button class="icon-btn" type="button" (click)="removerParcela(p)" aria-label="Remover parcela">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    }
+
+    @if (!plano.length) {
+      <div class="fecho tiny" [class.warn]="!faltaPlano" [class.erro]="faltaPlano">
+        @if (faltaPlano) {
+          Defina ao menos uma parcela antes de emitir. Para o caso simples, use
+          o botão Parcela única (100% na aprovação).
+        } @else {
+          Nenhuma parcela definida ainda. Use Parcela única (100% na aprovação)
+          ou monte o plano parcela por parcela.
+        }
+      </div>
+    } @else {
+      <div class="fecho tiny" [class.ok]="diferencaPlano() === 0" [class.warn]="diferencaPlano() !== 0">
+        @if (diferencaPlano() === 0) {
+          As parcelas fecham o total de {{ money(totalForm()) }}.
+        } @else if (diferencaPlano() > 0) {
+          As parcelas somam {{ money(somaPlano()) }}. Faltam {{ money(diferencaPlano()) }} para fechar o total.
+        } @else {
+          As parcelas somam {{ money(somaPlano()) }}, {{ money(-diferencaPlano()) }} a mais que o total.
+        }
+      </div>
+    }
+  </div>
+
+  <!-- 4. Condicoes -->
+  <div class="card card-pad secao">
+    <div class="section-title">4. Condições</div>
+    <div class="row-3">
+      <div class="field">
+        <label for="prazo">Prazo de entrega</label>
+        <input id="prazo" class="input" [(ngModel)]="form.prazo" name="prazo" placeholder="Ex.: 30 dias" />
+      </div>
+      <div class="field">
+        <label for="validade">Validade do orçamento (dias)</label>
+        <input id="validade" class="input" type="number" min="1" [(ngModel)]="form.validade_dias" name="validade" />
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <app-select [opcoes]="statusOpc" ariaLabel="Status" [(ngModel)]="form.status" name="status"></app-select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Observacoes -->
+  <div class="card card-pad secao">
+    <div class="section-title">5. Observações</div>
+    <textarea
+      class="textarea"
+      [(ngModel)]="form.obs"
+      name="obs"
+      placeholder="Informações extras que saem no PDF"
+    ></textarea>
+  </div>
+
+  <!-- 6. Proposta em PDF -->
+  <div class="card card-pad secao">
+    <div class="section-title">6. Proposta em PDF (opcional)</div>
+    @if (original) {
+      <app-proposta-anexo [orc]="original" (mudou)="aoMudarAnexo($event)"></app-proposta-anexo>
+    } @else {
+      <p class="mut small" style="margin:0">
+        Salve o orçamento primeiro para poder anexar uma proposta pronta em PDF.
+      </p>
+    }
+  </div>
+
+  <!-- Rodape fixo -->
+  <div class="rodape no-print">
+    <button class="btn ghost" (click)="cancelar()">Cancelar</button>
+    <span class="items-center">
+      <button class="btn" (click)="salvar()" [disabled]="salvando || !valido">
+        {{ salvando ? 'Salvando...' : 'Salvar' }}
+      </button>
+      <button class="btn primary" (click)="salvarEmitir()" [disabled]="salvando || !valido">
+        Salvar e emitir PDF
+      </button>
+    </span>
+  </div>
+}

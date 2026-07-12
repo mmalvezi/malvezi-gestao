@@ -354,7 +354,8 @@ class NotaProjeto(Base):
     projeto_id = Column(
         Integer, ForeignKey("projetos.id", ondelete="CASCADE"), nullable=False
     )
-    texto = Column(Text, nullable=False)
+    titulo = Column(String, nullable=False, default="")
+    texto = Column(Text, nullable=False)  # HTML simples, sanitizado ao salvar
     criado = Column(DateTime, default=agora)
 
 

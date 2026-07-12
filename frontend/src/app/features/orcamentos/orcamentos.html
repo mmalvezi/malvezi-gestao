@@ -98,16 +98,6 @@
   </div>
 }
 
-@if (formAberto) {
-  <app-orcamento-form
-    [inicial]="formInicial"
-    [clientes]="clientes"
-    [clienteIdInicial]="formClienteId"
-    (salvo)="aoSalvarForm()"
-    (fechar)="formAberto = false"
-  ></app-orcamento-form>
-}
-
 @if (docOrc) {
   <app-orcamento-viewer
     [orc]="docOrc"

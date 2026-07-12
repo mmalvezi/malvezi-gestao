@@ -247,7 +247,7 @@ export const AREA_LABEL: Record<AreaTarefa, string> = {
 export const RESPONSAVEIS: { valor: string; rot: string }[] = [
   { valor: '', rot: 'Sem responsável' },
   { valor: 'Matheus', rot: 'Matheus' },
-  { valor: 'Pai', rot: 'Pai' },
+  { valor: 'Elvio', rot: 'Elvio' },
 ];
 
 /** Iniciais para o avatar do responsavel (ate 2 letras). */

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..auth import get_current_user
 from ..database import get_db
 from ..models import NotaProjeto, Projeto
+from ..sanitize import limpar_html
 from ..schemas import NotaProjetoCreate, NotaProjetoRead
 
 router = APIRouter(
@@ -30,11 +31,31 @@ def criar(
 ):
     if not db.get(Projeto, projeto_id):
         raise HTTPException(status_code=404, detail="Projeto nao encontrado")
-    texto = (dados.texto or "").strip()
+    # O texto e HTML simples do editor: sanitizado como no contrato
+    texto = limpar_html((dados.texto or "").strip())
     if not texto:
         raise HTTPException(status_code=422, detail="Nota vazia")
-    nota = NotaProjeto(projeto_id=projeto_id, texto=texto)
+    nota = NotaProjeto(
+        projeto_id=projeto_id,
+        titulo=(dados.titulo or "").strip(),
+        texto=texto,
+    )
     db.add(nota)
+    db.commit()
+    db.refresh(nota)
+    return nota
+
+
+@router.put("/notas/{nota_id}", response_model=NotaProjetoRead)
+def atualizar(nota_id: int, dados: NotaProjetoCreate, db: Session = Depends(get_db)):
+    nota = db.get(NotaProjeto, nota_id)
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota nao encontrada")
+    texto = limpar_html((dados.texto or "").strip())
+    if not texto:
+        raise HTTPException(status_code=422, detail="Nota vazia")
+    nota.titulo = (dados.titulo or "").strip()
+    nota.texto = texto
     db.commit()
     db.refresh(nota)
     return nota

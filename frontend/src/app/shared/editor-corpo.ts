@@ -17,9 +17,11 @@ import {
         <button type="button" class="fb" (click)="cmd('bold')" title="Negrito" aria-label="Negrito"><b>N</b></button>
         <button type="button" class="fb" (click)="cmd('italic')" title="Italico" aria-label="Italico"><i>I</i></button>
         <span class="sep"></span>
-        <button type="button" class="fb" (click)="bloco('H3')" title="Titulo" aria-label="Titulo">Titulo</button>
-        <button type="button" class="fb" (click)="bloco('P')" title="Paragrafo" aria-label="Paragrafo">Paragrafo</button>
-        <button type="button" class="fb" (click)="cmd('insertUnorderedList')" title="Lista" aria-label="Lista">Lista</button>
+        @if (!compacto) {
+          <button type="button" class="fb" (click)="bloco('H3')" title="Titulo" aria-label="Titulo">Titulo</button>
+          <button type="button" class="fb" (click)="bloco('P')" title="Paragrafo" aria-label="Paragrafo">Paragrafo</button>
+        }
+        <button type="button" class="fb" (click)="cmd('insertUnorderedList')" title="Lista com marcadores" aria-label="Lista com marcadores">Lista</button>
       </div>
       <div
         #area
@@ -84,6 +86,8 @@ import {
 })
 export class EditorCorpo implements AfterViewInit {
   @Input() valor = '';
+  /** Versao enxuta (notas): so negrito, italico e lista. */
+  @Input() compacto = false;
   @Output() valorChange = new EventEmitter<string>();
   @ViewChild('area', { static: true }) area!: ElementRef<HTMLDivElement>;
 

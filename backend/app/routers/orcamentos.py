@@ -83,6 +83,14 @@ def listar(db: Session = Depends(get_db)):
     return db.query(Orcamento).order_by(Orcamento.criado.desc()).all()
 
 
+@router.get("/{orcamento_id}", response_model=OrcamentoRead)
+def obter(orcamento_id: int, db: Session = Depends(get_db)):
+    orcamento = db.get(Orcamento, orcamento_id)
+    if not orcamento:
+        raise HTTPException(status_code=404, detail="Orcamento nao encontrado")
+    return orcamento
+
+
 @router.post("", response_model=OrcamentoRead, status_code=201)
 def criar(dados: OrcamentoCreate, db: Session = Depends(get_db)):
     _validar_cliente(dados.cliente_id, db)

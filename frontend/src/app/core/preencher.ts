@@ -6,6 +6,13 @@ export interface ItemDoc {
   valor: number;
 }
 
+/** Parcela da forma de pagamento, ja com o vencimento em texto legivel. */
+export interface ParcelaDoc {
+  descricao: string;
+  vencimento: string; // "Na aprovação", "Na entrega", "30 dias após a aprovação"
+  valor: number;
+}
+
 export interface DadosDoc {
   data?: string; // iso; default hoje
   cliente?: string;
@@ -22,6 +29,7 @@ export interface DadosDoc {
   foro?: string;
   titulo?: string;
   itens?: ItemDoc[];
+  parcelas?: ParcelaDoc[];
   desconto?: number;
   validade?: number | string;
   obs?: string;
@@ -51,6 +59,42 @@ function tabelaItens(itens: ItemDoc[]): string {
       </tr>
     </thead>
     <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+/** Bloco de forma de pagamento do PDF: tabela das parcelas com o total para
+    conferencia. Orcamentos antigos sem plano caem no texto livre que tinham. */
+function blocoPagamento(dados: DadosDoc): string {
+  const parcelas = dados.parcelas || [];
+  if (!parcelas.length) {
+    const texto = (dados.pagamento || '').trim() || 'A combinar';
+    return `<div class="doc-box"><b>Pagamento:</b> ${escapar(texto)}</div>`;
+  }
+  const soma = parcelas.reduce((s, p) => s + Number(p.valor || 0), 0);
+  const linhas = parcelas
+    .map(
+      (p) => `
+      <tr>
+        <td><b>${escapar(p.descricao)}</b></td>
+        <td>${escapar(p.vencimento)}</td>
+        <td style="text-align:right">${moeda(p.valor)}</td>
+      </tr>`,
+    )
+    .join('');
+  return `<table>
+    <thead>
+      <tr>
+        <th>Parcela</th>
+        <th style="width:200px">Vencimento</th>
+        <th style="width:130px;text-align:right">Valor</th>
+      </tr>
+    </thead>
+    <tbody>${linhas}
+      <tr>
+        <td colspan="2" style="border-bottom:none"><b>Total das parcelas</b></td>
+        <td style="text-align:right;border-bottom:none"><b>${moeda(soma)}</b></td>
+      </tr>
+    </tbody>
   </table>`;
 }
 
@@ -105,6 +149,7 @@ export function preencherCorpo(corpo: string, dados: DadosDoc): string {
 
   return corpo.replace(/\{\{\s*(\w+)\s*\}\}/g, (_todo, chave: string) => {
     if (chave === 'itens') return tabelaItens(itens);
+    if (chave === 'parcelas') return blocoPagamento(dados);
     return chave in mapa ? mapa[chave] : '';
   });
 }

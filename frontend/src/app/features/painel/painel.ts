@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
@@ -18,6 +19,7 @@ import { moeda, STAGE_LABEL } from '../../core/utils';
 export class Painel implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
+  private router = inject(Router);
   alertas = inject(AlertasStore);
 
   dash?: Dashboard;
@@ -66,6 +68,19 @@ export class Painel implements OnInit {
 
   larguraFunil(count: number): string {
     return Math.round((count / this.maxFunil()) * 100) + '%';
+  }
+
+  /* Navegacao dos cards clicaveis */
+  ir(rota: string, params?: Record<string, string>) {
+    this.router.navigate([rota], params ? { queryParams: params } : {});
+  }
+
+  abrirProjeto(id: number) {
+    this.router.navigate(['/projetos', id]);
+  }
+
+  abrirPendencia(p: Pendencia) {
+    if (p.link) this.router.navigateByUrl(p.link);
   }
 
   adicionar() {

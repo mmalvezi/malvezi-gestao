@@ -122,6 +122,9 @@ export class ApiService {
   getOrcamentos(): Observable<Orcamento[]> {
     return this.http.get<Orcamento[]>(`${this.base}/orcamentos`);
   }
+  getOrcamento(id: number): Observable<Orcamento> {
+    return this.http.get<Orcamento>(`${this.base}/orcamentos/${id}`);
+  }
   criarOrcamento(dados: OrcamentoInput): Observable<Orcamento> {
     return this.http.post<Orcamento>(`${this.base}/orcamentos`, dados);
   }
@@ -356,11 +359,20 @@ export class ApiService {
       `${this.base}/projetos/${projetoId}/notas`,
     );
   }
-  criarNota(projetoId: number, texto: string): Observable<NotaProjeto> {
+  criarNota(
+    projetoId: number,
+    dados: { titulo: string; texto: string },
+  ): Observable<NotaProjeto> {
     return this.http.post<NotaProjeto>(
       `${this.base}/projetos/${projetoId}/notas`,
-      { texto },
+      dados,
     );
+  }
+  atualizarNota(
+    id: number,
+    dados: { titulo: string; texto: string },
+  ): Observable<NotaProjeto> {
+    return this.http.put<NotaProjeto>(`${this.base}/notas/${id}`, dados);
   }
   excluirNota(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/notas/${id}`);

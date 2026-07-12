@@ -1,6 +1,36 @@
-import { Orcamento, Projeto, TipoDocumento } from './models';
-import { DadosDoc } from './preencher';
+import {
+  Orcamento,
+  ParcelaOrcamento,
+  Projeto,
+  TipoDocumento,
+} from './models';
+import { DadosDoc, ParcelaDoc } from './preencher';
 import { TIPO_LABEL } from './utils';
+
+/** Parcelas do plano no formato do documento (vencimento legivel e valor). */
+export function parcelasDoc(
+  plano: ParcelaOrcamento[] | undefined,
+  total: number,
+): ParcelaDoc[] {
+  return (plano || []).map((p, i) => {
+    const valor =
+      p.tipo_valor === 'fixo'
+        ? Number(p.valor_fixo || 0)
+        : (total * Number(p.percentual || 0)) / 100;
+    let vencimento = 'Na aprovação';
+    if (p.tipo_vencimento === 'dias') {
+      const dias = Number(p.dias || 0);
+      vencimento = `${dias} dias após a aprovação`;
+    } else if (p.marco === 'entrega') {
+      vencimento = 'Na entrega';
+    }
+    return {
+      descricao: (p.descricao || '').trim() || `Parcela ${i + 1}`,
+      vencimento,
+      valor: Math.round(valor * 100) / 100,
+    };
+  });
+}
 
 const CIDADE_SEDE = 'Cabreúva';
 const FORO = 'comarca de Jundiaí';
@@ -99,6 +129,7 @@ export function dadosDeOrcamento(o: Orcamento, numero?: string): DadosDoc {
     desconto: o.desconto,
     validade: o.validade_dias,
     pagamento: o.pagamento,
+    parcelas: parcelasDoc(o.plano, o.total),
     prazo: o.prazo,
     obs: o.obs,
     valor: o.total,

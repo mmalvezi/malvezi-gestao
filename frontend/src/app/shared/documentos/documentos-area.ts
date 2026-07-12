@@ -1,12 +1,13 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiService } from '../../core/api.service';
 import { Cliente, Documento, Orcamento, Projeto, TipoDocumento } from '../../core/models';
 import { dataBr } from '../../core/utils';
 import { DadosDoc, preencherCorpo } from '../../core/preencher';
-import { dadosDeProjeto, orcamentoDeProjeto } from '../../core/dados-doc';
+import { dadosDeProjeto } from '../../core/dados-doc';
 import { Dialog } from '../dialog';
 import { DocumentoEditor } from './documento-editor';
 import { DocumentoAuto } from './documento-auto';
@@ -149,6 +150,7 @@ function pad(id: number): string {
 export class DocumentosArea implements OnInit {
   private api = inject(ApiService);
   private confirm = inject(ConfirmService);
+  private router = inject(Router);
 
   @Input({ required: true }) tipos: TipoDocumento[] = [];
   @Input({ required: true }) projeto!: Projeto;
@@ -186,7 +188,7 @@ export class DocumentosArea implements OnInit {
       if (this.contratosSalvos().length) this.escolha = true;
       else this.gerarContrato();
     } else if (tipo === 'orcamento') {
-      this.orcViewer = orcamentoDeProjeto(this.projeto);
+      this.abrirOrcamento();
     } else {
       const numero = 'RC-' + pad(this.projeto.id);
       this.auto = {
@@ -194,6 +196,30 @@ export class DocumentosArea implements OnInit {
         dados: dadosDeProjeto(this.projeto, 'recibo', numero),
       };
     }
+  }
+
+  /** Orcamento do projeto: abre o vinculado; sem nenhum, vai criar na tela. */
+  private abrirOrcamento() {
+    this.ocupado = true;
+    this.api.getOrcamentos().subscribe({
+      next: (lista) => {
+        this.ocupado = false;
+        const doProjeto = lista
+          .filter((o) => o.projeto_id === this.projeto.id)
+          .sort((a, b) => b.id - a.id);
+        if (doProjeto.length) {
+          this.orcViewer = doProjeto[0];
+        } else {
+          this.router.navigate(['/orcamentos/novo'], {
+            queryParams: {
+              cliente: this.projeto.cliente_id,
+              projeto: this.projeto.id,
+            },
+          });
+        }
+      },
+      error: () => (this.ocupado = false),
+    });
   }
 
   /* ---- Contrato (dois niveis) ---- */

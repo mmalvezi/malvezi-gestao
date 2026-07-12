@@ -385,6 +385,7 @@ class DispensarInput(BaseModel):
 
 # ---------- Notas do projeto ----------
 class NotaProjetoCreate(BaseModel):
+    titulo: str = ""
     texto: str
 
 
@@ -393,5 +394,6 @@ class NotaProjetoRead(BaseModel):
 
     id: int
     projeto_id: int
+    titulo: str = ""
     texto: str
     criado: datetime

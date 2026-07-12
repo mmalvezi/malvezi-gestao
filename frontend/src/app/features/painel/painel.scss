@@ -8,6 +8,32 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* KPI clicavel: reset de button + feedback visual */
+.kpi-link {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+.kpi-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.kpi-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.3);
+}
+
+/* Itens de lista clicaveis (entregas e pendencias) */
+.clicavel {
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.12s ease;
+}
+.clicavel:hover {
+  background: var(--soft);
+}
+
 .entrega {
   display: flex;
   align-items: center;

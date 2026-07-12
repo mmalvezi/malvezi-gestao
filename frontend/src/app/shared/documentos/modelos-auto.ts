@@ -26,10 +26,13 @@ export const CORPO_ORCAMENTO = `
   <div class="linha total"><span>Total</span><span>{{total}}</span></div>
 </div>
 
+<h4>Forma de pagamento</h4>
+{{parcelas}}
+
 <h4>Condições</h4>
 <div class="doc-box">
-  <div><b>Pagamento:</b> {{pagamento}}</div>
   <div><b>Prazo de entrega:</b> {{prazo}}</div>
+  <div><b>Validade do orçamento:</b> {{validade}} dias</div>
   <div style="margin-top:6px"><b>Observações:</b> {{obs}}</div>
 </div>
 `.trim();

@@ -204,6 +204,8 @@ export interface Pendencia {
   tipo: string;
   titulo: string;
   detalhe: string;
+  /** Rota para onde o clique no alerta leva. */
+  link?: string | null;
 }
 
 export interface Dashboard {
@@ -281,6 +283,8 @@ export interface DocumentoInput {
 export interface NotaProjeto {
   id: number;
   projeto_id: number;
+  titulo: string;
+  /** HTML simples (negrito, italico, lista), sanitizado no backend. */
   texto: string;
   criado: string;
 }

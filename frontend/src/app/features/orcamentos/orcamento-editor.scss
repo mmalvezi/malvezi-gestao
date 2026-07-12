@@ -1,0 +1,108 @@
+.secao {
+  margin-bottom: 16px;
+}
+
+/* Linha de item do escopo */
+.item {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 110px 34px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.item .valor {
+  text-align: right;
+}
+
+/* Resumo dos itens */
+.resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--soft);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+.resumo .total {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+}
+.field-desc {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sm-num {
+  width: 110px;
+  text-align: right;
+}
+
+/* Linha de parcela do plano */
+.parc {
+  display: grid;
+  grid-template-columns: 1.3fr 118px 76px 172px 70px 92px 34px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.parc .num {
+  text-align: right;
+}
+.parc .calc {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Fechamento do plano */
+.fecho {
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+.fecho.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.fecho.warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.fecho.erro {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+/* Rodape fixo com as acoes */
+.rodape {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(245, 246, 252, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--borda);
+  padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
+  margin: 0 -4px;
+}
+
+@media (max-width: 720px) {
+  .item {
+    grid-template-columns: 1fr 1fr;
+  }
+  .item .valor {
+    grid-column: 1;
+  }
+  .parc {
+    grid-template-columns: 1fr 1fr;
+  }
+  .parc .calc {
+    text-align: left;
+  }
+}

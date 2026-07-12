@@ -4,7 +4,7 @@
   <!-- KPIs: compromisso (a receber) e expectativa (em negociação) sao coisas
        diferentes e agora aparecem separados -->
   <div class="grid grid-4 mb-16">
-    <div class="kpi grad">
+    <button class="kpi grad kpi-link" (click)="ir('/mensalidades')" aria-label="Abrir mensalidades">
       <span class="rot">Recorrente por mês</span>
       <span class="val">{{ money(dash.recorrente_mes) }}</span>
       @if (dash.recorrente_previsto) {
@@ -12,48 +12,60 @@
           + {{ money(dash.recorrente_previsto) }} previsto
         </span>
       }
-    </div>
-    <div class="kpi">
+    </button>
+    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
       <span class="rot">A receber</span>
       <span class="val">{{ money(dash.a_receber) }}</span>
       <span class="legenda mut">Fechado e não pago</span>
-    </div>
-    <div class="kpi">
+    </button>
+    <button
+      class="kpi kpi-link"
+      (click)="ir('/projetos', { filtro: 'negociacao' })"
+      aria-label="Abrir projetos em negociação"
+    >
       <span class="rot">Em negociação</span>
       <span class="val">{{ money(dash.em_negociacao) }}</span>
       <span class="legenda mut">
         Propostas em aberto ({{ dash.em_negociacao_qtd }})
       </span>
-    </div>
-    <div class="kpi">
+    </button>
+    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
       <span class="rot">Já recebido</span>
       <span class="val">{{ money(dash.ja_recebido) }}</span>
       <span class="legenda mut">Parcelas pagas</span>
-    </div>
+    </button>
   </div>
 
   <div class="grid grid-4 mb-16">
-    <div class="kpi">
+    <button
+      class="kpi kpi-link"
+      (click)="ir('/projetos', { filtro: 'ativos' })"
+      aria-label="Abrir projetos ativos"
+    >
       <span class="rot">Projetos ativos</span>
       <span class="val">{{ dash.projetos_ativos }}</span>
       <span class="legenda mut">Aprovados e em produção</span>
-    </div>
-    <div class="kpi">
+    </button>
+    <button
+      class="kpi kpi-link"
+      (click)="ir('/projetos', { filtro: 'ativos' })"
+      aria-label="Abrir projetos em produção"
+    >
       <span class="rot">Em produção</span>
       <span class="val">{{ money(dash.em_producao) }}</span>
-    </div>
-    <div class="kpi">
+    </button>
+    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
       <span class="rot">Carteira total</span>
       <span class="val">{{ money(dash.carteira_total) }}</span>
       <span class="legenda mut">Tudo que foi fechado</span>
-    </div>
-    <div class="kpi">
+    </button>
+    <button class="kpi kpi-link" (click)="ir('/projetos')" aria-label="Abrir projetos">
       <span class="rot">Taxa de aprovação</span>
       <span class="val">{{ dash.taxa_aprovacao }}%</span>
       @if (dash.recusados_qtd) {
         <span class="legenda mut">{{ dash.recusados_qtd }} recusado(s)</span>
       }
-    </div>
+    </button>
   </div>
 
   <div class="grid painel-cols">
@@ -62,7 +74,14 @@
       <div class="section-title">Próximas entregas</div>
       @if (dash.proximas_entregas.length) {
         @for (e of dash.proximas_entregas; track e.id) {
-          <div class="entrega">
+          <div
+            class="entrega clicavel"
+            role="link"
+            tabindex="0"
+            (click)="abrirProjeto(e.id)"
+            (keydown.enter)="abrirProjeto(e.id)"
+            [attr.aria-label]="'Abrir projeto de ' + e.cliente"
+          >
             <div>
               <div class="bold">{{ e.cliente }}</div>
               <div class="mut small">{{ e.tipo }}</div>
@@ -106,7 +125,14 @@
       }
 
       @for (p of pendenciasVisiveis(); track p.chave) {
-        <div class="pend">
+        <div
+          class="pend"
+          [class.clicavel]="p.link"
+          [attr.role]="p.link ? 'link' : null"
+          [attr.tabindex]="p.link ? 0 : null"
+          (click)="abrirPendencia(p)"
+          (keydown.enter)="abrirPendencia(p)"
+        >
           <span class="pt"></span>
           <div class="corpo">
             <div class="bold small">{{ p.titulo }}</div>
@@ -114,7 +140,7 @@
           </div>
           <button
             class="icon-btn sm dispensar"
-            (click)="alertas.dispensar(p.chave)"
+            (click)="$event.stopPropagation(); alertas.dispensar(p.chave)"
             title="Dispensar"
             aria-label="Dispensar alerta"
           >

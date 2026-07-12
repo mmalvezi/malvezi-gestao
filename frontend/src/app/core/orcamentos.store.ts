@@ -13,6 +13,9 @@ export class OrcamentosStore {
 
   orcamentos = signal<Orcamento[]>([]);
   carregando = signal(false);
+  /** Id de orcamento para abrir o documento assim que a lista carregar
+      (usado pelo "Salvar e emitir PDF" da tela de edicao). */
+  abrirDoc = signal<number | null>(null);
 
   carregar() {
     this.carregando.set(true);

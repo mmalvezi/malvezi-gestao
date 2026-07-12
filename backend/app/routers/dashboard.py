@@ -152,6 +152,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"orcamento:{o.id}:enviado",
+                    "link": "/orcamentos",
                     "tipo": "orcamento",
                     "titulo": f"Orcamento {o.numero} aguardando resposta",
                     "detalhe": f"{o.titulo} - {nome}",
@@ -170,6 +171,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"entrega:{p.id}:{motivo}",
+                    "link": f"/projetos/{p.id}",
                     "tipo": "entrega",
                     "titulo": f"{titulo} ({_nome_cliente(p)})",
                     "detalhe": detalhe,
@@ -182,6 +184,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"pagamento:{p.id}:sem_pagamento",
+                    "link": f"/projetos/{p.id}",
                     "tipo": "pagamento",
                     "titulo": f"Projeto sem pagamento ({_nome_cliente(p)})",
                     "detalhe": f"{p.tipo} aprovado sem entrada registrada",
@@ -192,6 +195,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"saldo:{p.id}:entregue",
+                    "link": f"/projetos/{p.id}",
                     "tipo": "pagamento",
                     "titulo": f"Receber saldo ({_nome_cliente(p)})",
                     "detalhe": (
@@ -208,6 +212,7 @@ def dashboard(db: Session = Depends(get_db)):
                 pendencias.append(
                     {
                         "chave": f"parcela:{parcela.id}:vencida",
+                        "link": f"/projetos/{p.id}",
                         "tipo": "pagamento",
                         "titulo": f"Parcela vencida ({_nome_cliente(p)})",
                         "detalhe": (
@@ -221,6 +226,7 @@ def dashboard(db: Session = Depends(get_db)):
                 pendencias.append(
                     {
                         "chave": f"parcela:{parcela.id}:a_vencer",
+                        "link": f"/projetos/{p.id}",
                         "tipo": "pagamento",
                         "titulo": f"Parcela a vencer ({_nome_cliente(p)})",
                         "detalhe": (
@@ -245,6 +251,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"cobranca:{c.id}:vencida",
+                    "link": "/mensalidades",
                     "tipo": "cobranca",
                     "titulo": f"Mensalidade vencida ({nome})",
                     "detalhe": (
@@ -258,6 +265,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"cobranca:{c.id}:a_vencer",
+                    "link": "/mensalidades",
                     "tipo": "cobranca",
                     "titulo": f"Mensalidade a vencer ({nome})",
                     "detalhe": (
@@ -274,6 +282,7 @@ def dashboard(db: Session = Depends(get_db)):
             pendencias.append(
                 {
                     "chave": f"recorrencia:{r.id}:pausada",
+                    "link": "/mensalidades",
                     "tipo": "recorrencia",
                     "titulo": f"Mensalidade pausada ({nome})",
                     "detalhe": f"Plano {r.plano} esta pausado",

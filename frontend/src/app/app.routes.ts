@@ -36,6 +36,20 @@ export const routes: Routes = [
           import('./features/orcamentos/orcamentos').then((m) => m.Orcamentos),
       },
       {
+        path: 'orcamentos/novo',
+        loadComponent: () =>
+          import('./features/orcamentos/orcamento-editor').then(
+            (m) => m.OrcamentoEditor,
+          ),
+      },
+      {
+        path: 'orcamentos/:id',
+        loadComponent: () =>
+          import('./features/orcamentos/orcamento-editor').then(
+            (m) => m.OrcamentoEditor,
+          ),
+      },
+      {
         path: 'mensalidades',
         loadComponent: () =>
           import('./features/recorrencia/recorrencia').then(

@@ -1,13 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
 import { OrcamentosStore } from '../../core/orcamentos.store';
 import { Cliente, Orcamento, StatusOrcamento } from '../../core/models';
 import { moeda, STATUS_ORC, STATUS_ORC_CLASSE, TIPO_LABEL } from '../../core/utils';
-import { OrcamentoForm } from '../../shared/orcamento-form';
 import { OrcamentoViewer } from '../../shared/documentos/orcamento-viewer';
 import { PropostaAnexo } from '../../shared/documentos/proposta-anexo';
 import { Dialog } from '../../shared/dialog';
@@ -21,7 +21,6 @@ import { AppSelect } from '../../shared/ui/app-select';
     CommonModule,
     FormsModule,
     Dialog,
-    OrcamentoForm,
     OrcamentoViewer,
     PropostaAnexo,
     AppSelect,
@@ -33,6 +32,7 @@ export class Orcamentos implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
   private confirm = inject(ConfirmService);
+  private router = inject(Router);
   store = inject(OrcamentosStore);
 
   clientes: Cliente[] = [];
@@ -41,10 +41,6 @@ export class Orcamentos implements OnInit {
   statusClasse = STATUS_ORC_CLASSE;
   tipoLabel = TIPO_LABEL;
   money = moeda;
-
-  formAberto = false;
-  formInicial: Orcamento | null = null;
-  formClienteId?: number;
 
   docOrc: Orcamento | null = null;
   propostaOrc: Orcamento | null = null;
@@ -60,6 +56,12 @@ export class Orcamentos implements OnInit {
     this.ui.setTitulo('Orçamentos');
     this.api.getClientes().subscribe((c) => (this.clientes = c));
     this.store.carregar();
+    // "Salvar e emitir PDF" da tela de edicao: abre o documento ao chegar
+    const abrir = this.store.abrirDoc();
+    if (abrir) {
+      this.store.abrirDoc.set(null);
+      this.api.getOrcamento(abrir).subscribe((o) => (this.docOrc = o));
+    }
   }
 
   filtrados(): Orcamento[] {
@@ -74,19 +76,11 @@ export class Orcamentos implements OnInit {
   }
 
   abrirNovo() {
-    this.formInicial = null;
-    this.formClienteId = this.clientes[0]?.id;
-    this.formAberto = true;
+    this.router.navigate(['/orcamentos/novo']);
   }
 
   abrirEditar(o: Orcamento) {
-    this.formInicial = o;
-    this.formAberto = true;
-  }
-
-  aoSalvarForm() {
-    // O OrcamentoForm ja atualizou o store; so fechamos.
-    this.formAberto = false;
+    this.router.navigate(['/orcamentos', o.id]);
   }
 
   trocarStatus(o: Orcamento, status: string) {

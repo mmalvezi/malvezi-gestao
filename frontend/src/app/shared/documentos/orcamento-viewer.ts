@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { ApiService } from '../../core/api.service';
@@ -18,7 +19,6 @@ import { dadosDeOrcamento } from '../../core/dados-doc';
 import { imprimirDocumento } from '../../core/imprimir';
 import { Dialog } from '../dialog';
 import { Timbre } from '../timbre';
-import { OrcamentoForm } from '../orcamento-form';
 import { CORPO_ORCAMENTO } from './modelos-auto';
 import { PropostaAnexo } from './proposta-anexo';
 
@@ -33,7 +33,7 @@ import { PropostaAnexo } from './proposta-anexo';
 @Component({
   selector: 'app-orcamento-viewer',
   standalone: true,
-  imports: [CommonModule, Dialog, Timbre, OrcamentoForm, PropostaAnexo],
+  imports: [CommonModule, Dialog, Timbre, PropostaAnexo],
   template: `
     <div class="doc-overlay">
       <div class="doc-toolbar no-print">
@@ -58,7 +58,9 @@ import { PropostaAnexo } from './proposta-anexo';
             </button>
           }
 
-          <button class="btn" (click)="formAberto = true">Alterar</button>
+          @if (podeAnexar) {
+            <button class="btn" (click)="alterar()">Alterar</button>
+          }
 
           @if (modo === 'anexo') {
             <button class="btn primary" (click)="abrirEmNovaAba()">Abrir em nova aba</button>
@@ -93,16 +95,6 @@ import { PropostaAnexo } from './proposta-anexo';
         }
       </div>
     </div>
-
-    @if (formAberto) {
-      <app-orcamento-form
-        [inicial]="orc"
-        [clientes]="clientes"
-        [zIndex]="90"
-        (salvo)="aoSalvar($event)"
-        (fechar)="formAberto = false"
-      ></app-orcamento-form>
-    }
 
     @if (propostaAberta) {
       <app-dialog
@@ -161,6 +153,7 @@ import { PropostaAnexo } from './proposta-anexo';
 export class OrcamentoViewer implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private sanitizer = inject(DomSanitizer);
+  private router = inject(Router);
 
   @Input({ required: true }) orc!: Orcamento;
   @Input() clientes: Cliente[] = [];
@@ -170,7 +163,6 @@ export class OrcamentoViewer implements OnInit, OnDestroy {
   /** 'anexo' mostra a proposta em PDF; 'auto' mostra o documento gerado. */
   modo: 'anexo' | 'auto' = 'auto';
   corpo = '';
-  formAberto = false;
   propostaAberta = false;
 
   pdfUrl: SafeResourceUrl | null = null;
@@ -248,18 +240,10 @@ export class OrcamentoViewer implements OnInit, OnDestroy {
     this.atualizado.emit(o);
   }
 
-  aoSalvar(o: Orcamento) {
-    // O formulario nao mexe no anexo: preservamos os campos do anexo atual
-    this.orc = {
-      ...o,
-      tem_anexo: this.orc.tem_anexo,
-      anexo_nome: this.orc.anexo_nome,
-      anexo_tamanho: this.orc.anexo_tamanho,
-      anexo_criado: this.orc.anexo_criado,
-    };
-    this.render();
-    this.formAberto = false;
-    this.atualizado.emit(this.orc);
+  /** Abre a tela dedicada de edicao do orcamento. */
+  alterar() {
+    this.fechar.emit();
+    this.router.navigate(['/orcamentos', this.orc.id]);
   }
 
   imprimir() {

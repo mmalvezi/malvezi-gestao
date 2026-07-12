@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ApiService } from '../../core/api.service';
 import { UiState } from '../../core/ui-state';
@@ -37,14 +37,17 @@ export class Projetos implements OnInit {
   private api = inject(ApiService);
   private ui = inject(UiState);
   private router = inject(Router);
+  private rota = inject(ActivatedRoute);
   private confirm = inject(ConfirmService);
 
   projetos: Projeto[] = [];
   clientes: Cliente[] = [];
   carregando = true;
 
-  /** "todos" nao inclui os recusados: eles so aparecem no filtro Recusados. */
-  filtro: StageProjeto | 'todos' = 'todos';
+  /** "todos" nao inclui os recusados: eles so aparecem no filtro Recusados.
+      "negociacao" (lead+orcamento) e "ativos" (aprovado+desenvolvimento) sao
+      grupos usados pelos cards clicaveis do painel. */
+  filtro: StageProjeto | 'todos' | 'negociacao' | 'ativos' = 'todos';
   vista: 'cartoes' | 'quadro' = 'cartoes';
 
   /** Menu de acoes do cartao. */
@@ -64,6 +67,11 @@ export class Projetos implements OnInit {
 
   ngOnInit() {
     this.ui.setTitulo('Projetos');
+    // Vindo dos cards do painel: ?filtro=negociacao ou ?filtro=ativos
+    const f = this.rota.snapshot.queryParamMap.get('filtro');
+    if (f === 'negociacao' || f === 'ativos' || f === 'recusado') {
+      this.filtro = f;
+    }
     this.carregar();
   }
 
@@ -98,10 +106,13 @@ export class Projetos implements OnInit {
     const busca = this.ui.busca().toLowerCase().trim();
     return this.projetos.filter((p) => {
       // Recusado e terminal: so aparece quando o filtro pede por ele
-      const okStage =
-        this.filtro === 'todos'
-          ? p.stage !== 'recusado'
-          : p.stage === this.filtro;
+      let okStage: boolean;
+      if (this.filtro === 'todos') okStage = p.stage !== 'recusado';
+      else if (this.filtro === 'negociacao')
+        okStage = p.stage === 'lead' || p.stage === 'orcamento';
+      else if (this.filtro === 'ativos')
+        okStage = p.stage === 'aprovado' || p.stage === 'desenvolvimento';
+      else okStage = p.stage === this.filtro;
       const okBusca =
         !busca ||
         (p.cliente?.nome || '').toLowerCase().includes(busca) ||
