@@ -7,18 +7,23 @@
   min-height: 100vh;
 }
 
-/* Menu lateral */
+/* Menu lateral: fixo na janela, sempre de ponta a ponta,
+   independente da altura da pagina. */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
   width: var(--sidebar-w);
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   flex-shrink: 0;
   background: #fff;
   border-right: 1px solid var(--borda);
   display: flex;
   flex-direction: column;
   padding: 20px 14px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
 }
 .logo {
   padding: 6px 8px 20px;
@@ -68,10 +73,11 @@
   padding: 12px 8px 0;
 }
 
-/* Conteudo */
+/* Conteudo: abre espaco para a barra lateral fixa */
 .conteudo {
   flex: 1;
   min-width: 0;
+  margin-left: var(--sidebar-w);
   display: flex;
   flex-direction: column;
 }
@@ -134,21 +140,20 @@
 }
 
 @media (max-width: 900px) {
+  /* Vira gaveta: sai da tela e o conteudo ocupa tudo */
   .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
     z-index: 50;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     box-shadow: var(--shadow-lg);
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-left: calc(14px + env(safe-area-inset-left));
   }
   .sidebar.aberta {
     transform: translateX(0);
   }
-  .sidebar {
-    padding-top: calc(20px + env(safe-area-inset-top));
-    padding-left: calc(14px + env(safe-area-inset-left));
+  .conteudo {
+    margin-left: 0;
   }
   .hamburguer {
     display: inline-flex;
