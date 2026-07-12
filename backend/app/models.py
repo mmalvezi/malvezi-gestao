@@ -249,6 +249,9 @@ class Orcamento(Base):
     obs = Column(Text, default="")
     # rascunho | enviado | aprovado | recusado
     status = Column(String, default="rascunho")
+    # a_combinar (definir com o cliente) | parcelas (plano montado).
+    # Campo explicito para nao confundir "ainda nao preenchi" com "a combinar".
+    forma_pagamento = Column(String, nullable=False, default="parcelas")
     criado = Column(DateTime, default=agora)
     # Controle do plano de pagamento: quando as parcelas foram geradas no
     # projeto e quando o plano mudou pela ultima vez (para avisar se divergiu)

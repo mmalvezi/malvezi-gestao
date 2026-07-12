@@ -128,8 +128,11 @@ export function dadosDeOrcamento(o: Orcamento, numero?: string): DadosDoc {
     })),
     desconto: o.desconto,
     validade: o.validade_dias,
-    pagamento: o.pagamento,
-    parcelas: parcelasDoc(o.plano, o.total),
+    // A combinar: sem tabela de parcelas, o PDF mostra so "A combinar"
+    pagamento:
+      o.forma_pagamento === 'a_combinar' ? 'A combinar' : o.pagamento,
+    parcelas:
+      o.forma_pagamento === 'a_combinar' ? [] : parcelasDoc(o.plano, o.total),
     prazo: o.prazo,
     obs: o.obs,
     valor: o.total,

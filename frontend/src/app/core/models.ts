@@ -168,6 +168,8 @@ export interface PlanoInfo {
   orcamento_numero?: string | null;
   gerado?: boolean;
   plano_mudou?: boolean;
+  /** Orcamento vinculado marcado como a combinar: recebimentos manuais. */
+  a_combinar?: boolean;
 }
 
 export interface Orcamento {
@@ -183,6 +185,8 @@ export interface Orcamento {
   validade_dias: number;
   obs: string;
   status: StatusOrcamento;
+  /** a_combinar: definir com o cliente; parcelas: plano montado. */
+  forma_pagamento?: 'a_combinar' | 'parcelas';
   criado?: string;
   cliente?: Cliente | null;
   itens: OrcamentoItem[];
@@ -312,6 +316,7 @@ export interface OrcamentoInput {
   validade_dias: number;
   obs: string;
   status: StatusOrcamento;
+  forma_pagamento?: 'a_combinar' | 'parcelas';
   itens: OrcamentoItem[];
   plano?: ParcelaOrcamento[];
 }

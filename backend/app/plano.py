@@ -94,6 +94,24 @@ def plano_info(projeto: Projeto, db: Session) -> dict:
     """Situacao do plano para a tela de parcelas do projeto."""
     orc = orcamento_com_plano(projeto, db)
     if not orc:
+        # Sem plano montado: se o orcamento vinculado foi marcado como
+        # "a combinar", a tela avisa que os recebimentos sao manuais
+        candidatos = (
+            db.query(Orcamento)
+            .filter(Orcamento.projeto_id == projeto.id)
+            .order_by(Orcamento.criado.desc())
+            .all()
+        )
+        a_combinar = [o for o in candidatos if o.forma_pagamento == "a_combinar"]
+        if a_combinar:
+            aprovados = [o for o in a_combinar if o.status == "aprovado"]
+            escolhido = (aprovados or a_combinar)[0]
+            return {
+                "tem_plano": False,
+                "a_combinar": True,
+                "orcamento_id": escolhido.id,
+                "orcamento_numero": escolhido.numero,
+            }
         return {"tem_plano": False}
     mudou = bool(
         orc.plano_gerado_em

@@ -98,6 +98,9 @@ def criar(dados: OrcamentoCreate, db: Session = Depends(get_db)):
     payload = dados.model_dump()
     itens = payload.pop("itens", [])
     plano = payload.pop("plano", [])
+    # A combinar nao carrega plano: evita parcela fantasma
+    if payload.get("forma_pagamento") == "a_combinar":
+        plano = []
     orcamento = Orcamento(numero=_proximo_numero(db), **payload)
     orcamento.itens = [OrcamentoItem(**item) for item in itens]
     orcamento.plano = [ParcelaOrcamento(**p) for p in plano]
@@ -121,6 +124,8 @@ def atualizar(orcamento_id: int, dados: OrcamentoCreate, db: Session = Depends(g
     payload = dados.model_dump()
     itens = payload.pop("itens", [])
     plano = payload.pop("plano", [])
+    if payload.get("forma_pagamento") == "a_combinar":
+        plano = []
     ja_aprovado = orcamento.status == "aprovado"
     assinatura_antiga = _assinatura_plano(orcamento.plano)
     for campo, valor in payload.items():

@@ -280,6 +280,8 @@ class PlanoInfo(BaseModel):
     orcamento_numero: Optional[str] = None
     gerado: bool = False
     plano_mudou: bool = False
+    # Orcamento vinculado marcado como "a combinar": recebimentos manuais
+    a_combinar: bool = False
 
 
 class OrcamentoCreate(BaseModel):
@@ -293,6 +295,7 @@ class OrcamentoCreate(BaseModel):
     validade_dias: int = 15
     obs: str = ""
     status: StatusOrcamento = "rascunho"
+    forma_pagamento: Literal["a_combinar", "parcelas"] = "parcelas"
     itens: list[OrcamentoItemCreate] = []
     plano: list[ParcelaOrcamentoCreate] = []
 
@@ -312,6 +315,7 @@ class OrcamentoRead(BaseModel):
     validade_dias: int
     obs: str = ""
     status: StatusOrcamento
+    forma_pagamento: Literal["a_combinar", "parcelas"] = "parcelas"
     criado: datetime
     cliente: Optional[ClienteRead] = None
     itens: list[OrcamentoItemRead] = []

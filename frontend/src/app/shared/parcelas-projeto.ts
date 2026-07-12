@@ -87,6 +87,11 @@ import { ConfirmService } from './ui/confirm.service';
             </button>
           </div>
         }
+      } @else if (info.a_combinar && !parcelas.length) {
+        <div class="plano-box tiny">
+          O orçamento {{ info.orcamento_numero }} ficou com pagamento a
+          combinar: nenhum plano foi definido. Cadastre os recebimentos aqui.
+        </div>
       }
     }
 

@@ -43,6 +43,7 @@ COLUNAS_LEGADAS = [
     ("notas_projeto", "titulo", "VARCHAR", "''"),
     ("tarefas_projeto", "prazo", "DATE", None),
     ("tarefas_projeto", "modelo_id", "INTEGER", None),
+    ("orcamentos", "forma_pagamento", "VARCHAR", "'parcelas'"),
 ]
 
 

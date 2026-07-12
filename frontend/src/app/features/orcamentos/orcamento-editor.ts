@@ -1,4 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,14 +21,20 @@ import {
   Projeto,
 } from '../../core/models';
 import {
+  LIMITE_ANEXO_MB,
   moeda,
   MODELOS_ESCOPO,
   STATUS_ORC,
+  tamanhoArquivo,
   TIPO_LABEL,
   TIPOS,
 } from '../../core/utils';
 import { PropostaAnexo } from '../../shared/documentos/proposta-anexo';
 import { AppSelect, OpcaoSelect } from '../../shared/ui/app-select';
+import { ConfirmService } from '../../shared/ui/confirm.service';
+
+/** As tres formas de pagamento oferecidas na tela. */
+type ModoPagamento = 'a_combinar' | 'unica' | 'personalizadas';
 
 /** Como a parcela vence, achatado num unico select. */
 type VencimentoSel = 'aprovacao' | 'entrega' | 'dias';
@@ -45,6 +57,9 @@ export class OrcamentoEditor implements OnInit {
   private store = inject(OrcamentosStore);
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
+  private confirm = inject(ConfirmService);
+
+  @ViewChild('campoArquivo') campoArquivo?: ElementRef<HTMLInputElement>;
 
   clientes: Cliente[] = [];
   projetos: Projeto[] = [];
@@ -56,6 +71,18 @@ export class OrcamentoEditor implements OnInit {
 
   form: OrcamentoInput = this.novoForm();
   plano: ParcelaOrcamento[] = [];
+
+  /* Proposta em PDF selecionada antes de salvar (upload adiado) */
+  arquivoRetido: File | null = null;
+  sobreArquivo = false;
+  erroArquivo = '';
+  enviandoAnexo = false;
+  /** Orcamento salvo mas com o envio do anexo pendente de nova tentativa. */
+  erroAnexo = '';
+  private idSalvo: number | null = null;
+
+  limiteAnexo = LIMITE_ANEXO_MB;
+  tamArquivo = tamanhoArquivo;
 
   tipos = TIPOS;
   statusOpc = STATUS_ORC;
@@ -74,7 +101,9 @@ export class OrcamentoEditor implements OnInit {
   get editId(): number | null {
     const bruto = this.rota.snapshot.paramMap.get('id');
     const id = Number(bruto);
-    return bruto && !isNaN(id) ? id : null;
+    if (bruto && !isNaN(id)) return id;
+    // Orcamento novo ja salvo nesta tela (ex.: upload do anexo falhou)
+    return this.idSalvo;
   }
 
   ngOnInit() {
@@ -125,6 +154,7 @@ export class OrcamentoEditor implements OnInit {
       validade_dias: o.validade_dias,
       obs: o.obs,
       status: o.status,
+      forma_pagamento: o.forma_pagamento || 'parcelas',
       itens: (o.itens || []).map((i) => ({ ...i })),
     };
     this.plano = (o.plano || []).map((p) => ({ ...p }));
@@ -143,6 +173,7 @@ export class OrcamentoEditor implements OnInit {
       validade_dias: 15,
       obs: '',
       status: 'rascunho',
+      forma_pagamento: 'parcelas',
       itens: [],
     };
   }
@@ -195,7 +226,69 @@ export class OrcamentoEditor implements OnInit {
     this.form.itens = this.form.itens.filter((i) => i !== item);
   }
 
-  /* ---------- Forma de pagamento (plano de parcelas) ---------- */
+  /* ---------- Forma de pagamento (a combinar | unica | personalizadas) ---------- */
+  get aCombinar(): boolean {
+    return this.form.forma_pagamento === 'a_combinar';
+  }
+
+  /** Qual das tres opcoes esta ativa, para destacar o chip certo. */
+  modoAtivo(): ModoPagamento {
+    if (this.aCombinar) return 'a_combinar';
+    return this.ehParcelaUnica() ? 'unica' : 'personalizadas';
+  }
+
+  private ehParcelaUnica(): boolean {
+    const p = this.plano[0];
+    return (
+      this.plano.length === 1 &&
+      p.tipo_valor === 'percentual' &&
+      Number(p.percentual) === 100 &&
+      p.tipo_vencimento === 'marco' &&
+      p.marco === 'aprovacao'
+    );
+  }
+
+  async escolherModo(modo: ModoPagamento) {
+    if (modo === this.modoAtivo()) return;
+    this.faltaPlano = false;
+
+    if (modo === 'a_combinar') {
+      if (this.plano.length) {
+        const ok = await this.confirm.ask({
+          title: 'Forma de pagamento a combinar',
+          message:
+            'As parcelas montadas serão descartadas e a forma de pagamento fica para definir com o cliente. Continuar?',
+          confirmText: 'Usar a combinar',
+          tone: 'danger',
+        });
+        if (!ok) return;
+      }
+      this.plano = [];
+      this.form.forma_pagamento = 'a_combinar';
+      return;
+    }
+
+    // Saindo de "a combinar" nada se perde; trocar um plano montado pela
+    // parcela unica descarta o que foi montado, entao confirma
+    if (modo === 'unica' && this.plano.length && !this.ehParcelaUnica()) {
+      const ok = await this.confirm.ask({
+        title: 'Parcela única',
+        message:
+          'O plano atual será substituído por uma parcela única de 100% na aprovação. Continuar?',
+        confirmText: 'Usar parcela única',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+
+    this.form.forma_pagamento = 'parcelas';
+    if (modo === 'unica') {
+      this.parcelaUnica();
+    } else if (!this.plano.length) {
+      this.addParcela();
+    }
+  }
+
   addParcela() {
     this.faltaPlano = false;
     this.plano.push({
@@ -261,6 +354,85 @@ export class OrcamentoEditor implements OnInit {
     return Math.round((this.totalForm() - this.somaPlano()) * 100) / 100;
   }
 
+  /* ---------- Proposta em PDF antes de salvar (upload adiado) ---------- */
+  escolherArquivo() {
+    this.erroArquivo = '';
+    this.campoArquivo?.nativeElement.click();
+  }
+
+  aoEscolherArquivo(ev: Event) {
+    const campo = ev.target as HTMLInputElement;
+    const arquivo = campo.files?.[0];
+    campo.value = '';
+    if (arquivo) this.reterArquivo(arquivo);
+  }
+
+  aoArrastarArquivo(ev: DragEvent) {
+    ev.preventDefault();
+    this.sobreArquivo = true;
+  }
+
+  aoSoltarArquivo(ev: DragEvent) {
+    ev.preventDefault();
+    this.sobreArquivo = false;
+    const arquivo = ev.dataTransfer?.files?.[0];
+    if (arquivo) this.reterArquivo(arquivo);
+  }
+
+  /** Valida na hora e guarda o arquivo; ele so sobe junto com o Salvar. */
+  private reterArquivo(arquivo: File) {
+    this.erroArquivo = '';
+    const ehPdf =
+      arquivo.type === 'application/pdf' ||
+      arquivo.name.toLowerCase().endsWith('.pdf');
+    if (!ehPdf) {
+      this.erroArquivo =
+        'Somente arquivos PDF sao aceitos. Escolha um arquivo .pdf.';
+      return;
+    }
+    if (arquivo.size > LIMITE_ANEXO_MB * 1024 * 1024) {
+      this.erroArquivo = `Arquivo muito grande (${tamanhoArquivo(arquivo.size)}). O limite e ${LIMITE_ANEXO_MB} MB.`;
+      return;
+    }
+    this.arquivoRetido = arquivo;
+  }
+
+  removerArquivoRetido() {
+    this.arquivoRetido = null;
+    this.erroArquivo = '';
+  }
+
+  /** Nova tentativa depois de "salvou, mas o anexo falhou". */
+  tentarAnexoNovamente() {
+    const id = this.editId;
+    const arquivo = this.arquivoRetido;
+    if (!id || !arquivo) return;
+    this.enviandoAnexo = true;
+    this.erroAnexo = '';
+    this.api.enviarAnexoOrcamento(id, arquivo).subscribe({
+      next: (a) => {
+        this.enviandoAnexo = false;
+        this.arquivoRetido = null;
+        if (this.original) {
+          this.original = {
+            ...this.original,
+            tem_anexo: true,
+            anexo_nome: a.nome,
+            anexo_tamanho: a.tamanho,
+            anexo_criado: a.criado,
+          };
+          this.store.upsert(this.original);
+        }
+      },
+      error: (e) => {
+        this.enviandoAnexo = false;
+        this.erroAnexo =
+          e?.error?.detail ||
+          'O envio da proposta falhou de novo. Verifique a conexão e tente outra vez.';
+      },
+    });
+  }
+
   /* ---------- Salvar ---------- */
   private montarPayload(): OrcamentoInput {
     return {
@@ -268,13 +440,14 @@ export class OrcamentoEditor implements OnInit {
       projeto_id: this.form.projeto_id || null,
       desconto: Number(this.form.desconto) || 0,
       validade_dias: Number(this.form.validade_dias) || 15,
+      forma_pagamento: this.form.forma_pagamento || 'parcelas',
       itens: this.form.itens.map((i, idx) => ({
         titulo: i.titulo,
         descricao: i.descricao || '',
         valor: Number(i.valor) || 0,
         ordem: idx + 1,
       })),
-      plano: this.plano.map((p, idx) => ({
+      plano: (this.aCombinar ? [] : this.plano).map((p, idx) => ({
         descricao: (p.descricao || '').trim() || `Parcela ${idx + 1}`,
         tipo_valor: p.tipo_valor,
         percentual:
@@ -295,15 +468,41 @@ export class OrcamentoEditor implements OnInit {
   private gravar(depois: (o: Orcamento) => void) {
     if (!this.valido) return;
     this.salvando = true;
+    this.erroAnexo = '';
     const payload = this.montarPayload();
     const req = this.editId
       ? this.api.atualizarOrcamento(this.editId, payload)
       : this.api.criarOrcamento(payload);
     req.subscribe({
       next: (o) => {
-        this.salvando = false;
         this.store.upsert(o);
-        depois(o);
+        // Proposta selecionada antes de salvar: sobe agora, com o id em maos
+        if (this.arquivoRetido) {
+          this.enviandoAnexo = true;
+          this.api.enviarAnexoOrcamento(o.id, this.arquivoRetido).subscribe({
+            next: () => {
+              this.salvando = false;
+              this.enviandoAnexo = false;
+              this.arquivoRetido = null;
+              depois(o);
+            },
+            error: (e) => {
+              // O orcamento NAO se perde: fica na tela, ja salvo, com o
+              // aviso e o botao de tentar o envio de novo
+              this.salvando = false;
+              this.enviandoAnexo = false;
+              this.idSalvo = o.id;
+              this.original = o;
+              this.ui.setTitulo(`Orçamento ${o.numero}`);
+              this.erroAnexo =
+                e?.error?.detail ||
+                'O orçamento foi salvo, mas o envio da proposta em PDF falhou. Tente de novo.';
+            },
+          });
+        } else {
+          this.salvando = false;
+          depois(o);
+        }
       },
       error: () => (this.salvando = false),
     });
@@ -315,8 +514,9 @@ export class OrcamentoEditor implements OnInit {
 
   /** Salva e ja abre o documento para emitir o PDF. */
   salvarEmitir() {
-    if (!this.plano.length) {
-      // Todo orcamento emitido precisa de ao menos uma parcela
+    // Com "a combinar" nao ha parcela para exigir; com plano montado, ao
+    // menos uma parcela e obrigatoria para emitir
+    if (!this.aCombinar && !this.plano.length) {
       this.faltaPlano = true;
       document
         .getElementById('secao-pagamento')
