@@ -62,6 +62,27 @@ docker compose down -v          # para tudo e apaga o volume do banco
 Os anexos de proposta em PDF ficam no volume `uploads`, também preservado entre
 deploys.
 
+## Migrações do banco (Alembic)
+
+O schema é versionado pelo Alembic (`backend/alembic`). No Docker, o
+`entrypoint.sh` roda `python -m app.migrar` antes do uvicorn: todo deploy
+aplica as migrações pendentes sozinho. No desenvolvimento local, o próprio
+startup do app faz o mesmo, então basta rodar o uvicorn normalmente.
+
+Bancos criados antes do Alembic (como o de produção) são adotados
+automaticamente no primeiro boot: o `app/migrar.py` completa tabelas e colunas
+que faltarem, com os tipos certos de cada banco (`TIMESTAMP` no Postgres,
+`DATETIME` no SQLite), e marca o banco como atualizado (`stamp head`). Cada
+ajuste roda isolado: uma coluna com problema é logada e não derruba o boot.
+
+Para criar uma migração nova depois de mexer nos models:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "descricao da mudanca"
+alembic upgrade head
+```
+
 ## Automação (n8n)
 
 As cobranças mensais das mensalidades ativas são geradas sozinhas (competência,

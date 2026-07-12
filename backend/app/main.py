@@ -1,11 +1,13 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import auth
 from .cobrancas import garantir_cobrancas
 from .config import settings
-from .database import Base, SessionLocal, engine
-from .migracoes import rodar_migracoes
+from .database import SessionLocal
+from .migrar import migrar
 from .routers import (
     alertas,
     anexos,
@@ -24,9 +26,6 @@ from .routers import (
     tarefas_projeto,
 )
 from .seed import run_seed, run_seed_modelos
-
-# Cria as tabelas
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Malvezi Gestão")
 
@@ -65,11 +64,18 @@ def health():
 
 @app.on_event("startup")
 def _preparar():
+    # No Docker o entrypoint ja migrou antes do uvicorn; aqui e a rede de
+    # seguranca para o dev local (uvicorn direto). Rodar duas vezes e inocuo.
+    try:
+        migrar()
+    except Exception as erro:  # noqa: BLE001 - o boot nao pode cair por migracao
+        logging.getLogger("malvezi.migracoes").error(
+            "Falha ao aplicar migracoes no startup: %s", erro
+        )
     db = SessionLocal()
     try:
         run_seed(db)
         run_seed_modelos(db)
-        rodar_migracoes(db)
         garantir_cobrancas(db)
     finally:
         db.close()

@@ -68,7 +68,8 @@ class ProjetoRead(BaseModel):
     valor: float
     stage: StageProjeto
     entrega: Optional[date] = None
-    escopo: str = ""
+    # Tolerante a NULL (linhas inseridas a mao direto no banco)
+    escopo: Optional[str] = ""
     criado: datetime
     cliente: Optional[ClienteRead] = None
     # Recebimentos: derivados das parcelas
