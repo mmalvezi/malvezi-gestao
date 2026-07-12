@@ -34,10 +34,13 @@ export class Financeiro implements OnInit {
   statusClasse = STATUS_ORC_CLASSE;
 
   recorrenteMes = 0;
+  recorrentePrevisto = 0;
   recebido = 0;
   aReceber = 0;
   carteira = 0;
   emNegociacao = 0;
+  emProducao = 0;
+  taxaAprovacao = 0;
   barras: Barra[] = [];
 
   /** Propostas em aberto: expectativa, nao caixa. */
@@ -71,8 +74,22 @@ export class Financeiro implements OnInit {
     this.recorrenteMes = this.recorrencias
       .filter((r) => r.status === 'ativo')
       .reduce((s, r) => s + Number(r.valor || 0), 0);
+    this.recorrentePrevisto = this.recorrencias
+      .filter((r) => r.status === 'previsto')
+      .reduce((s, r) => s + Number(r.valor || 0), 0);
 
     this.recebido = vivos.reduce((s, p) => s + Number(p.pago || 0), 0);
+
+    // Em producao e taxa de aprovacao (vieram do painel para ca)
+    const ativos = vivos.filter(
+      (p) => p.stage === 'aprovado' || p.stage === 'desenvolvimento',
+    );
+    this.emProducao = ativos.reduce((s, p) => s + Number(p.valor || 0), 0);
+    const recusados = this.projetos.filter((p) => p.stage === 'recusado');
+    const decididos = fechados.length + recusados.length;
+    this.taxaAprovacao = decididos
+      ? Math.round((fechados.length / decididos) * 100)
+      : 0;
 
     // A receber: so o que ja foi fechado e ainda tem saldo, incluindo os
     // entregues que nao foram pagos

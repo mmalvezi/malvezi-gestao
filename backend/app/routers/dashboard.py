@@ -146,10 +146,45 @@ def dashboard(db: Session = Depends(get_db)):
             "id": p.id,
             "cliente": _nome_cliente(p),
             "tipo": p.tipo,
+            "stage": p.stage,
             "entrega": p.entrega.isoformat(),
             "dias_restantes": (p.entrega - hoje).days,
         }
         for p in com_entrega[:5]
+    ]
+
+    # Dinheiro do mes corrente (bloco Dinheiro do painel)
+    def _no_mes(d) -> bool:
+        return bool(d and d.year == hoje.year and d.month == hoje.month)
+
+    recebido_mes = _dinheiro(
+        sum(
+            pp.valor or 0
+            for p in vivos
+            for pp in p.parcelas
+            if pp.pago and _no_mes(pp.pago_em)
+        )
+        + sum(
+            c.valor or 0
+            for c in cobrancas
+            if c.status == "paga" and _no_mes(c.pago_em)
+        )
+    )
+    cobrancas_abertas = _dinheiro(
+        sum(c.valor or 0 for c in cobrancas if c.status == "aberta")
+    )
+
+    # Propostas aguardando resposta (bloco Propostas em aberto)
+    propostas = [
+        {
+            "id": o.id,
+            "numero": o.numero,
+            "cliente": (o.cliente.nome if o.cliente else ""),
+            "total": _dinheiro(o.total),
+            "dias": (hoje - o.criado.date()).days if o.criado else 0,
+        }
+        for o in orcamentos
+        if o.status == "enviado"
     ]
 
     pendencias = []
@@ -339,6 +374,10 @@ def dashboard(db: Session = Depends(get_db)):
         # Verificacoes do mes corrente (saude dos entregues)
         "verificacoes_pendentes": len(verif_pendentes),
         "verificacoes_concluidas": verif_concluidas,
+        # Bloco Dinheiro e bloco Propostas do painel
+        "recebido_mes": recebido_mes,
+        "cobrancas_abertas": cobrancas_abertas,
+        "propostas": propostas,
         "funil": funil,
         "proximas_entregas": proximas_entregas,
         "pendencias": pendencias,

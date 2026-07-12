@@ -28,6 +28,21 @@
       <span class="val">{{ money(carteira) }}</span>
       <span class="mut tiny bold">Tudo que foi fechado</span>
     </div>
+    <div class="kpi">
+      <span class="rot">Em produção</span>
+      <span class="val">{{ money(emProducao) }}</span>
+      <span class="mut tiny bold">Aprovados e em desenvolvimento</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Mensalidades previstas</span>
+      <span class="val">{{ money(recorrentePrevisto) }}</span>
+      <span class="mut tiny bold">Começam na entrega do projeto</span>
+    </div>
+    <div class="kpi">
+      <span class="rot">Taxa de aprovação</span>
+      <span class="val">{{ taxaAprovacao }}%</span>
+      <span class="mut tiny bold">Fechados sobre decididos</span>
+    </div>
   </div>
 
   <!-- Grafico ilustrativo -->

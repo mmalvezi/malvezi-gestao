@@ -67,10 +67,16 @@ export class Projetos implements OnInit {
 
   ngOnInit() {
     this.ui.setTitulo('Projetos');
-    // Vindo dos cards do painel: ?filtro=negociacao ou ?filtro=ativos
+    // Vindo do painel: grupos (negociacao, ativos) ou um estagio especifico
     const f = this.rota.snapshot.queryParamMap.get('filtro');
-    if (f === 'negociacao' || f === 'ativos' || f === 'recusado') {
-      this.filtro = f;
+    const validos = [
+      'negociacao',
+      'ativos',
+      'recusado',
+      ...STAGES.map((s) => s.valor),
+    ];
+    if (f && validos.includes(f)) {
+      this.filtro = f as typeof this.filtro;
     }
     this.carregar();
   }

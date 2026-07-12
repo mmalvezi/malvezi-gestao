@@ -246,8 +246,18 @@ export interface ProximaEntrega {
   id: number;
   cliente: string;
   tipo: TipoProjeto;
+  stage: StageProjeto;
   entrega: string;
   dias_restantes: number;
+}
+
+/** Orcamento enviado aguardando resposta (bloco Propostas do painel). */
+export interface PropostaAberta {
+  id: number;
+  numero: string;
+  cliente: string;
+  total: number;
+  dias: number;
 }
 
 export interface Pendencia {
@@ -278,6 +288,10 @@ export interface Dashboard {
   /** Verificacoes mensais dos entregues, no mes corrente. */
   verificacoes_pendentes: number;
   verificacoes_concluidas: number;
+  /** Dinheiro do mes e propostas em aberto (blocos do painel). */
+  recebido_mes: number;
+  cobrancas_abertas: number;
+  propostas: PropostaAberta[];
   funil: FunilItem[];
   proximas_entregas: ProximaEntrega[];
   pendencias: Pendencia[];

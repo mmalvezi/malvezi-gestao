@@ -1,232 +1,285 @@
 @if (carregando) {
   <div class="loading"><span class="spin"></span> Carregando painel...</div>
 } @else if (dash) {
-  <!-- KPIs: compromisso (a receber) e expectativa (em negociação) sao coisas
-       diferentes e agora aparecem separados -->
-  <div class="grid grid-4 mb-16">
-    <button class="kpi grad kpi-link" (click)="ir('/mensalidades')" aria-label="Abrir mensalidades">
-      <span class="rot">Recorrente por mês</span>
-      <span class="val">{{ money(dash.recorrente_mes) }}</span>
-      @if (dash.recorrente_previsto) {
-        <span class="legenda">
-          + {{ money(dash.recorrente_previsto) }} previsto
-        </span>
-      }
-    </button>
-    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
+  <!-- Faixa compacta de KPIs -->
+  <div class="faixa-kpi">
+    <button class="kpi-mini destaque" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
+      <span class="num">{{ money(dash.a_receber) }}</span>
       <span class="rot">A receber</span>
-      <span class="val">{{ money(dash.a_receber) }}</span>
-      <span class="legenda mut">Fechado e não pago</span>
     </button>
-    <button
-      class="kpi kpi-link"
-      (click)="ir('/projetos', { filtro: 'negociacao' })"
-      aria-label="Abrir projetos em negociação"
-    >
-      <span class="rot">Em negociação</span>
-      <span class="val">{{ money(dash.em_negociacao) }}</span>
-      <span class="legenda mut">
-        Propostas em aberto ({{ dash.em_negociacao_qtd }})
-      </span>
+    <button class="kpi-mini" (click)="ir('/mensalidades')" aria-label="Abrir mensalidades">
+      <span class="num">{{ money(dash.recorrente_mes) }}</span>
+      <span class="rot">Recorrente / mês</span>
     </button>
-    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
-      <span class="rot">Já recebido</span>
-      <span class="val">{{ money(dash.ja_recebido) }}</span>
-      <span class="legenda mut">Parcelas pagas</span>
-    </button>
-  </div>
-
-  <div class="grid grid-4 mb-16">
-    <button
-      class="kpi kpi-link"
-      (click)="ir('/projetos', { filtro: 'ativos' })"
-      aria-label="Abrir projetos ativos"
-    >
+    <button class="kpi-mini" (click)="ir('/projetos', { filtro: 'ativos' })" aria-label="Abrir projetos ativos">
+      <span class="num">{{ dash.projetos_ativos }}</span>
       <span class="rot">Projetos ativos</span>
-      <span class="val">{{ dash.projetos_ativos }}</span>
-      <span class="legenda mut">Aprovados e em produção</span>
     </button>
-    <button
-      class="kpi kpi-link"
-      (click)="ir('/projetos', { filtro: 'ativos' })"
-      aria-label="Abrir projetos em produção"
-    >
-      <span class="rot">Em produção</span>
-      <span class="val">{{ money(dash.em_producao) }}</span>
-    </button>
-    <button class="kpi kpi-link" (click)="ir('/financeiro')" aria-label="Abrir financeiro">
-      <span class="rot">Carteira total</span>
-      <span class="val">{{ money(dash.carteira_total) }}</span>
-      <span class="legenda mut">Tudo que foi fechado</span>
-    </button>
-    <button class="kpi kpi-link" (click)="ir('/projetos')" aria-label="Abrir projetos">
-      <span class="rot">Taxa de aprovação</span>
-      <span class="val">{{ dash.taxa_aprovacao }}%</span>
-      @if (dash.recusados_qtd) {
-        <span class="legenda mut">{{ dash.recusados_qtd }} recusado(s)</span>
-      }
+    <button class="kpi-mini" (click)="ir('/projetos', { filtro: 'negociacao' })" aria-label="Abrir projetos em negociação">
+      <span class="num">{{ money(dash.em_negociacao) }}</span>
+      <span class="rot">Em negociação</span>
     </button>
   </div>
 
-  <!-- Saude dos projetos entregues no mes -->
-  @if (dash.verificacoes_pendentes + dash.verificacoes_concluidas > 0) {
-    <div class="card verif-resumo mb-16">
-      <span class="bold small">Verificações do mês</span>
+  <!-- Bloco 1: Para hoje -->
+  <div class="bloco card">
+    <button class="bloco-topo" (click)="alternarBloco('hoje')" [attr.aria-expanded]="blocos.hoje">
+      <span class="bloco-titulo">Para hoje ({{ totalHoje() }})</span>
       <span class="items-center gap-6">
-        <span class="badge ok">{{ dash.verificacoes_concluidas }} concluída(s)</span>
-        <span class="badge" [class.warn]="dash.verificacoes_pendentes > 0">
-          {{ dash.verificacoes_pendentes }} pendente(s)
-        </span>
-      </span>
-    </div>
-  }
-
-  <div class="grid painel-cols">
-    <!-- Proximas entregas -->
-    <div class="card card-pad">
-      <div class="section-title">Próximas entregas</div>
-      @if (dash.proximas_entregas.length) {
-        @for (e of dash.proximas_entregas; track e.id) {
-          <div
-            class="entrega clicavel"
-            role="link"
+        @if (pendenciasDispensadas().length) {
+          <span
+            class="link tiny"
+            role="button"
             tabindex="0"
-            (click)="abrirProjeto(e.id)"
-            (keydown.enter)="abrirProjeto(e.id)"
-            [attr.aria-label]="'Abrir projeto de ' + e.cliente"
+            (click)="$event.stopPropagation(); mostrarDispensados = !mostrarDispensados"
+            (keydown.enter)="$event.stopPropagation(); mostrarDispensados = !mostrarDispensados"
           >
-            <div>
-              <div class="bold">{{ e.cliente }}</div>
-              <div class="mut small">{{ e.tipo }}</div>
+            {{ pendenciasDispensadas().length }} dispensado(s)
+          </span>
+        }
+        <svg class="chev" [class.girada]="blocos.hoje" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+    </button>
+
+    @if (blocos.hoje) {
+      <div class="bloco-corpo">
+        @if (alertas.erro()) {
+          <div class="aviso-alerta tiny">{{ alertas.erro() }}</div>
+        }
+
+        @if (!totalHoje()) {
+          <div class="tudo-em-dia small">Tudo em dia. Bom trabalho!</div>
+        }
+
+        @for (p of pendenciasExibidas(); track p.chave) {
+          <div
+            class="item-hoje"
+            [class.clicavel]="p.link"
+            [attr.role]="p.link ? 'link' : null"
+            [attr.tabindex]="p.link ? 0 : null"
+            (click)="abrirPendencia(p)"
+            (keydown.enter)="abrirPendencia(p)"
+          >
+            <span class="ponto" [class.urgente]="urgente(p)"></span>
+            <div class="corpo">
+              <span class="bold small">{{ p.titulo }}</span>
+              <span class="mut tiny">{{ p.detalhe }}</span>
             </div>
-            <div style="text-align:right">
+            <button
+              class="icon-btn sm"
+              (click)="$event.stopPropagation(); alertas.dispensar(p.chave)"
+              title="Dispensar"
+              aria-label="Dispensar alerta"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        }
+
+        @for (t of lembretesExibidos(); track t.id) {
+          <div class="item-hoje lembrete">
+            <button
+              class="check"
+              [class.on]="t.done"
+              (click)="alternar(t)"
+              [attr.aria-label]="t.done ? 'Desmarcar lembrete' : 'Concluir lembrete'"
+            >
+              @if (t.done) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              }
+            </button>
+            <div class="corpo">
+              <span class="small">{{ t.texto }}</span>
+            </div>
+            <button class="icon-btn sm" (click)="remover(t)" aria-label="Remover lembrete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        }
+
+        @if (ocultosHoje() > 0) {
+          <button class="link small ver-todos" (click)="mostrarTodosHoje = true">
+            Ver todos ({{ totalHoje() }})
+          </button>
+        } @else if (mostrarTodosHoje && totalHoje() > 6) {
+          <button class="link small ver-todos" (click)="mostrarTodosHoje = false">
+            Ver menos
+          </button>
+        }
+
+        @if (mostrarDispensados && pendenciasDispensadas().length) {
+          <div class="dispensados-box">
+            <div class="mut tiny mb-8">Dispensados</div>
+            @for (p of pendenciasDispensadas(); track p.chave) {
+              <div class="item-hoje dispensado">
+                <div class="corpo">
+                  <span class="small">{{ p.titulo }}</span>
+                </div>
+                <span class="link tiny" role="button" tabindex="0" (click)="alertas.reexibir(p.chave)" (keydown.enter)="alertas.reexibir(p.chave)">Reexibir</span>
+              </div>
+            }
+          </div>
+        }
+
+        <form class="novo-lembrete" (ngSubmit)="adicionar()">
+          <input
+            class="input"
+            [(ngModel)]="novaTarefa"
+            name="novaTarefa"
+            placeholder="Novo lembrete..."
+          />
+          <button class="btn primary sm" type="submit">Adicionar</button>
+        </form>
+      </div>
+    }
+  </div>
+
+  <!-- Bloco 2: Andamento -->
+  <div class="bloco card">
+    <button class="bloco-topo" (click)="alternarBloco('andamento')" [attr.aria-expanded]="blocos.andamento">
+      <span class="bloco-titulo">Andamento ({{ dash.proximas_entregas.length }})</span>
+      <svg class="chev" [class.girada]="blocos.andamento" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
+    @if (blocos.andamento) {
+      <div class="bloco-corpo">
+        @if (dash.proximas_entregas.length) {
+          @for (e of dash.proximas_entregas; track e.id) {
+            <div
+              class="item-hoje clicavel"
+              role="link"
+              tabindex="0"
+              (click)="abrirProjeto(e.id)"
+              (keydown.enter)="abrirProjeto(e.id)"
+              [attr.aria-label]="'Abrir projeto de ' + e.cliente"
+            >
+              <div class="corpo linha-entrega">
+                <span class="bold small trunc">{{ e.cliente }}</span>
+                <span class="mut tiny">{{ tipoLabel[e.tipo] }} · {{ stageLabel[e.stage] }}</span>
+              </div>
               <span
                 class="badge"
                 [class.bad]="e.dias_restantes < 0"
                 [class.warn]="e.dias_restantes >= 0 && e.dias_restantes <= 7"
                 [class.info]="e.dias_restantes > 7"
               >
+                {{ data(e.entrega) }}
                 @if (e.dias_restantes < 0) {
-                  Atrasado {{ -e.dias_restantes }}d
+                  · atrasado {{ -e.dias_restantes }}d
                 } @else if (e.dias_restantes === 0) {
-                  Entrega hoje
+                  · hoje
                 } @else {
-                  Faltam {{ e.dias_restantes }}d
+                  · {{ e.dias_restantes }}d
                 }
               </span>
             </div>
-          </div>
+          }
+        } @else {
+          <div class="mut small vazio-linha">Nenhuma entrega agendada.</div>
         }
-      } @else {
-        <div class="empty">Nenhuma entrega agendada.</div>
-      }
-    </div>
 
-    <!-- Precisa de atenção -->
-    <div class="card card-pad">
-      <div class="between mb-8">
-        <div class="section-title" style="margin-bottom:0">Precisa de atenção</div>
-        @if (pendenciasDispensadas().length) {
-          <button class="link tiny" (click)="mostrarDispensados = !mostrarDispensados">
-            {{ pendenciasDispensadas().length }} dispensado(s)
-          </button>
-        }
-      </div>
-
-      @if (alertas.erro()) {
-        <div class="aviso-alerta tiny">{{ alertas.erro() }}</div>
-      }
-
-      @for (p of pendenciasVisiveis(); track p.chave) {
-        <div
-          class="pend"
-          [class.clicavel]="p.link"
-          [attr.role]="p.link ? 'link' : null"
-          [attr.tabindex]="p.link ? 0 : null"
-          (click)="abrirPendencia(p)"
-          (keydown.enter)="abrirPendencia(p)"
-        >
-          <span class="pt"></span>
-          <div class="corpo">
-            <div class="bold small">{{ p.titulo }}</div>
-            <div class="mut tiny">{{ p.detalhe }}</div>
-          </div>
-          <button
-            class="icon-btn sm dispensar"
-            (click)="$event.stopPropagation(); alertas.dispensar(p.chave)"
-            title="Dispensar"
-            aria-label="Dispensar alerta"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-        </div>
-      }
-      @if (!pendenciasVisiveis().length) {
-        <div class="mut small mb-8">Nenhum alerta automático agora.</div>
-      }
-
-      @if (mostrarDispensados && pendenciasDispensadas().length) {
-        <div class="dispensados-box">
-          <div class="mut tiny mb-8">Dispensados</div>
-          @for (p of pendenciasDispensadas(); track p.chave) {
-            <div class="pend dispensado">
-              <div class="corpo">
-                <div class="small">{{ p.titulo }}</div>
-              </div>
-              <button class="link tiny" (click)="alertas.reexibir(p.chave)">Reexibir</button>
-            </div>
+        <!-- Funil em uma linha -->
+        <div class="funil-linha-unica">
+          @for (f of dash.funil; track f.stage; let ultimo = $last) {
+            <button class="funil-item" (click)="irFunil(f.stage)" [attr.aria-label]="'Filtrar projetos em ' + stageLabel[f.stage]">
+              {{ stageLabel[f.stage] }} <b>{{ f.count }}</b>
+            </button>
+            @if (!ultimo) {
+              <span class="mut tiny">·</span>
+            }
           }
         </div>
-      }
 
-      <div class="divisor"></div>
-      <div class="mut tiny mb-8">Lembretes</div>
-
-      @for (t of tarefas; track t.id) {
-        <div class="lembrete">
-          <button
-            class="check"
-            [class.on]="t.done"
-            (click)="alternar(t)"
-            [attr.aria-label]="t.done ? 'Desmarcar' : 'Concluir'"
-          >
-            @if (t.done) {
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            }
-          </button>
-          <span class="txt" [class.feito]="t.done">{{ t.texto }}</span>
-          <button class="icon-btn sm" (click)="remover(t)" aria-label="Remover lembrete">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-        </div>
-      }
-
-      <form class="novo-lembrete" (ngSubmit)="adicionar()">
-        <input
-          class="input"
-          [(ngModel)]="novaTarefa"
-          name="novaTarefa"
-          placeholder="Novo lembrete..."
-        />
-        <button class="btn primary sm" type="submit">Adicionar</button>
-      </form>
-    </div>
+        @if (dash.verificacoes_pendentes + dash.verificacoes_concluidas > 0) {
+          <div class="mut tiny verif-linha">
+            Verificações do mês: {{ dash.verificacoes_concluidas }} concluída(s) ·
+            {{ dash.verificacoes_pendentes }} pendente(s)
+          </div>
+        }
+      </div>
+    }
   </div>
 
-  <!-- Funil -->
-  <div class="card card-pad mt-16">
-    <div class="section-title">Funil por estágio</div>
-    @for (f of dash.funil; track f.stage) {
-      <div class="funil-linha">
-        <span class="rot">{{ stageLabel[f.stage] }}</span>
-        <div class="bar"><span [style.width]="larguraFunil(f.count)"></span></div>
-        <span class="cnt">{{ f.count }}</span>
+  <!-- Bloco 3: Dinheiro -->
+  <div class="bloco card">
+    <button class="bloco-topo" (click)="alternarBloco('dinheiro')" [attr.aria-expanded]="blocos.dinheiro">
+      <span class="bloco-titulo">Dinheiro</span>
+      <svg class="chev" [class.girada]="blocos.dinheiro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
+    @if (blocos.dinheiro) {
+      <div class="bloco-corpo">
+        <div class="dinheiro-grid">
+          <div>
+            <span class="mut tiny">A receber</span>
+            <span class="bold small">{{ money(dash.a_receber) }}</span>
+          </div>
+          <div>
+            <span class="mut tiny">Recebido no mês</span>
+            <span class="bold small" style="color:var(--ok)">{{ money(dash.recebido_mes) }}</span>
+          </div>
+          <div>
+            <span class="mut tiny">MRR (mensalidades)</span>
+            <span class="bold small">{{ money(dash.recorrente_mes) }}</span>
+          </div>
+          <div>
+            <span class="mut tiny">Cobranças em aberto</span>
+            <span class="bold small">{{ money(dash.cobrancas_abertas) }}</span>
+          </div>
+        </div>
+        <button class="link small ver-todos" (click)="ir('/financeiro')">
+          Ver o Financeiro completo
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Bloco 4: Propostas em aberto -->
+  <div class="bloco card">
+    <button class="bloco-topo" (click)="alternarBloco('propostas')" [attr.aria-expanded]="blocos.propostas">
+      <span class="bloco-titulo">Propostas em aberto ({{ dash.propostas.length }})</span>
+      <svg class="chev" [class.girada]="blocos.propostas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
+    @if (blocos.propostas) {
+      <div class="bloco-corpo">
+        @if (dash.propostas.length) {
+          @for (o of dash.propostas; track o.id) {
+            <div
+              class="item-hoje clicavel"
+              role="link"
+              tabindex="0"
+              (click)="ir('/orcamentos')"
+              (keydown.enter)="ir('/orcamentos')"
+              [attr.aria-label]="'Abrir orçamentos (' + o.numero + ')'"
+            >
+              <div class="corpo linha-entrega">
+                <span class="bold small trunc">{{ o.cliente }}</span>
+                <span class="mut tiny">{{ o.numero }} · enviada há {{ o.dias }} dia(s)</span>
+              </div>
+              <span class="bold small">{{ money(o.total) }}</span>
+            </div>
+          }
+        } @else {
+          <div class="mut small vazio-linha">Nenhuma proposta aguardando resposta.</div>
+        }
+        <button class="link small ver-todos" (click)="ir('/orcamentos')">
+          Ver todos os orçamentos
+        </button>
       </div>
     }
   </div>
