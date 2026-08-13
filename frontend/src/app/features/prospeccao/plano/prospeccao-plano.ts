@@ -141,7 +141,7 @@ export class ProspeccaoPlano implements OnInit {
   }
 
   alertaSemResposta(c: CategoriaAlvo): boolean {
-    return this.emailsDe(c) >= 30 && c.respostas === 0;
+    return this.emailsDe(c) >= 20 && c.respostas === 0;
   }
 
   private mudarCategoria(id: string, mud: Partial<CategoriaAlvo>) {
@@ -246,9 +246,28 @@ export class ProspeccaoPlano implements OnInit {
   statusMetrica(m: MetricaFunil): StatusMetrica {
     const v = this.valor(m);
     if (v === null) return 'sem';
+    if (m.melhorMenor) {
+      // Faixa é um teto (ex.: ciclo em dias): estourar é o caso ruim
+      return v <= m.faixaMax ? 'dentro' : 'abaixo';
+    }
     if (v < m.faixaMin) return 'abaixo';
     if (v > m.faixaMax) return 'acima';
     return 'dentro';
+  }
+
+  /** 'abaixo' = fora da faixa saudável (pra teto, significa estourou). */
+  rotuloFora(m: MetricaFunil): string {
+    return m.melhorMenor ? 'Estourado' : 'Abaixo';
+  }
+
+  unidade(m: MetricaFunil): string {
+    return m.unidade || '%';
+  }
+
+  faixaLabel(m: MetricaFunil): string {
+    return m.melhorMenor
+      ? `Saudável: até ${m.faixaMax} ${this.unidade(m)}`
+      : `Faixa saudável: ${m.faixaMin}–${m.faixaMax}%`;
   }
 
   setManual(m: MetricaFunil, texto: string) {

@@ -155,7 +155,7 @@
       </div>
       @if (alertaSemResposta(c)) {
         <div class="alerta-cat tiny">
-          30+ emails sem resposta — troque a dor da 1ª linha ou despriorize.
+          20+ emails sem resposta — troque a dor da 1ª linha ou despriorize.
         </div>
       }
     </div>
@@ -198,7 +198,7 @@
         <div class="rot-metrica">{{ m.nome }}</div>
         <div class="linha-valor">
           @if (valor(m) !== null) {
-            <span class="valor-metrica">{{ valor(m) }}%</span>
+            <span class="valor-metrica">{{ valor(m) }}{{ unidade(m) === '%' ? '%' : ' ' + unidade(m) }}</span>
           } @else {
             <span class="valor-metrica mut">—</span>
           }
@@ -210,17 +210,17 @@
               <span class="badge info"><span class="dot"></span>Acima</span>
             }
             @case ('abaixo') {
-              <span class="badge warn"><span class="dot"></span>Abaixo</span>
+              <span class="badge warn"><span class="dot"></span>{{ rotuloFora(m) }}</span>
             }
             @case ('sem') {
               <span class="badge">Sem dados</span>
             }
           }
         </div>
-        <div class="mut tiny">Faixa saudável: {{ m.faixaMin }}–{{ m.faixaMax }}%</div>
+        <div class="mut tiny">{{ faixaLabel(m) }}</div>
         @if (!ehCalculada(m)) {
           <div class="manual tiny">
-            <label class="mut" [attr.for]="'manual-' + m.id">Valor manual (%):</label>
+            <label class="mut" [attr.for]="'manual-' + m.id">Valor manual ({{ unidade(m) }}):</label>
             <input
               [id]="'manual-' + m.id"
               class="input entrada-manual"

@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { ProspeccaoStore } from '../prospeccao.store';
 import { statusIndex } from '../prospeccao.models';
 import { PLANO_DATA } from './plano.data';
-import { CategoriaAlvo, PlanoCaptacao, planoSeed } from './plano.models';
+import { CategoriaAlvo, PlanoCaptacao, migrarPlano, planoSeed } from './plano.models';
 
 /**
  * Fonte única do Plano de Captação. A integração com o pipeline é somente
@@ -23,7 +23,10 @@ export class PlanoStore {
     this.carregado = true;
     const salvo = this.data.ler();
     if (salvo) {
-      this.plano.set(salvo);
+      // Migração de seed roda uma única vez (controlada por seedVersion)
+      const migrado = migrarPlano(salvo);
+      this.plano.set(migrado);
+      if (migrado !== salvo) this.data.gravar(migrado);
     } else {
       // Primeiro acesso: o seed do playbook já entra persistido
       this.data.gravar(this.plano());
