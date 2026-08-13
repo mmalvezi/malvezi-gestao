@@ -69,6 +69,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'prospeccao/plano',
+        loadComponent: () =>
+          import('./features/prospeccao/plano/prospeccao-plano').then(
+            (m) => m.ProspeccaoPlano,
+          ),
+      },
+      {
         path: 'prospeccao/pipeline',
         loadComponent: () =>
           import('./features/prospeccao/pipeline/prospeccao-pipeline').then(

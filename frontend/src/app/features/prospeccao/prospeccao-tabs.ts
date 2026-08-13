@@ -15,6 +15,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         [routerLinkActiveOptions]="{ exact: true }"
         >Painel</a
       >
+      <a class="chip" routerLink="/prospeccao/plano" routerLinkActive="active">Plano</a>
       <a class="chip" routerLink="/prospeccao/pipeline" routerLinkActive="active">Pipeline</a>
       <a class="chip" routerLink="/prospeccao/fechados" routerLinkActive="active">Fechados</a>
       <a class="chip" routerLink="/prospeccao/modelos" routerLinkActive="active">Modelos</a>

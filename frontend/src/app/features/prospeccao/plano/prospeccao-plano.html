@@ -1,0 +1,242 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<!-- 4.1 Hoje -->
+@if (blocoHoje(); as bloco) {
+  <div class="card card-pad hoje" [class.feito]="concluidoHoje()">
+    <div class="hoje-regua"></div>
+    <div class="between wrap">
+      <div style="min-width:0">
+        <div class="rot-hoje">Bloco de hoje</div>
+        <div class="titulo-hoje">{{ bloco.titulo }}</div>
+        <div class="ink2 small">{{ bloco.descricao }}</div>
+      </div>
+      <div class="items-center wrap">
+        <a class="btn sm ghost" [routerLink]="linkDoDia().rota">{{ linkDoDia().rotulo }}</a>
+        @if (concluidoHoje()) {
+          <span class="badge roxo selo-feito"><span class="dot"></span>Concluído hoje</span>
+        } @else {
+          <button class="btn primary" (click)="concluirHoje()">Concluir bloco de hoje ✓</button>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="card card-pad hoje neutro">
+    <div class="between wrap">
+      <div>
+        <div class="rot-hoje">Fim de semana</div>
+        <div class="ink2 small">Sem bloco hoje. Segunda: Garimpo.</div>
+      </div>
+      <a class="btn sm ghost" routerLink="/prospeccao">Abrir painel</a>
+    </div>
+  </div>
+}
+
+<div class="semana mb-16">
+  @for (m of marcadores(); track m.dia) {
+    <div class="marcador-dia" [class.feito]="m.feito" [class.hoje]="m.hoje">
+      @if (m.feito) {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      } @else {
+        {{ m.letra }}
+      }
+    </div>
+  }
+  <span class="mut tiny">blocos concluídos nesta semana</span>
+</div>
+
+<!-- 4.2 Checklist de partida -->
+@if (partidaCompleta() && !partidaExpandida) {
+  <div class="card card-pad between wrap mb-16">
+    <span class="badge roxo"><span class="dot"></span>Partida concluída</span>
+    <button class="link tiny" (click)="partidaExpandida = true">rever checklist</button>
+  </div>
+} @else {
+  <div class="card card-pad mb-16">
+    <div class="between mb-8">
+      <div class="section-title" style="margin-bottom:0">Checklist de partida</div>
+      @if (partidaCompleta()) {
+        <button class="link tiny" (click)="partidaExpandida = false">recolher</button>
+      }
+    </div>
+    @for (item of store.plano().checklistPartida; track item.id) {
+      <div class="check-linha">
+        <button
+          class="check"
+          [class.on]="item.feito"
+          (click)="alternarItem(item)"
+          [attr.aria-label]="item.feito ? 'Desmarcar' : 'Concluir'"
+        >
+          @if (item.feito) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          }
+        </button>
+        <span class="txt" [class.feito]="item.feito">{{ item.texto }}</span>
+      </div>
+    }
+  </div>
+}
+
+<!-- 4.3 Região e categorias-alvo -->
+<div class="card card-pad mb-16">
+  <div class="section-title">Região</div>
+  <div class="chips">
+    @for (cidade of store.plano().cidades; track cidade) {
+      <span class="chip cidade">
+        {{ cidade }}
+        <button class="tira" (click)="removerCidade(cidade)" [attr.aria-label]="'Remover ' + cidade">×</button>
+      </span>
+    }
+    <form class="add-cidade" (ngSubmit)="addCidade()">
+      <input
+        class="input"
+        [(ngModel)]="novaCidade"
+        name="novaCidade"
+        placeholder="+ cidade"
+        aria-label="Adicionar cidade"
+      />
+      <button class="btn sm ghost" type="submit" [disabled]="!novaCidade.trim()">Adicionar</button>
+    </form>
+  </div>
+</div>
+
+<div class="card card-pad mb-16">
+  <div class="between mb-8">
+    <div class="section-title" style="margin-bottom:0">Categorias-alvo</div>
+    <button class="btn sm ghost" (click)="addCategoria()">+ Categoria</button>
+  </div>
+  <div class="mut tiny mb-8">
+    A dor típica vai na 1ª linha do email. Emails enviados vêm do pipeline; respostas você marca aqui.
+  </div>
+
+  @for (c of store.plano().categorias; track c.id) {
+    <div class="cat" [class.despriorizada]="!c.ativa">
+      <div class="cat-topo">
+        <input
+          class="inline-edit nome"
+          [value]="c.nome"
+          (change)="setNomeCategoria(c, $any($event.target).value)"
+          aria-label="Nome da categoria"
+        />
+        <button
+          class="badge toggle"
+          [class.roxo]="c.ativa"
+          (click)="alternarAtiva(c)"
+          [attr.aria-label]="c.ativa ? 'Despriorizar' : 'Reativar'"
+        >
+          <span class="dot"></span>{{ c.ativa ? 'Ativa' : 'Despriorizada' }}
+        </button>
+        <button class="icon-btn sm" (click)="removerCategoria(c)" aria-label="Remover categoria">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+      <input
+        class="inline-edit dor"
+        [value]="c.dorTipica"
+        (change)="setDor(c, $any($event.target).value)"
+        placeholder="Dor típica (1ª linha do email)..."
+        aria-label="Dor típica"
+      />
+      <div class="cat-nums">
+        <span class="num-chip">
+          <b>{{ emailsDe(c) }}</b> emails enviados
+        </span>
+        <span class="num-chip resp">
+          <button class="passo" (click)="mudarRespostas(c, -1)" aria-label="Menos uma resposta">−</button>
+          <b>{{ c.respostas }}</b> resposta(s)
+          <button class="passo" (click)="mudarRespostas(c, 1)" aria-label="Mais uma resposta">+</button>
+        </span>
+      </div>
+      @if (alertaSemResposta(c)) {
+        <div class="alerta-cat tiny">
+          30+ emails sem resposta — troque a dor da 1ª linha ou despriorize.
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- 4.4 Fontes de busca -->
+<div class="card card-pad mb-16">
+  <div class="between mb-8">
+    <div class="section-title" style="margin-bottom:0">Fontes de busca</div>
+    <span class="small"><b>{{ totalColetadas() }}</b> <span class="mut">coletadas no total</span></span>
+  </div>
+  <div class="grid grid-auto">
+    @for (f of store.plano().fontes; track f.id) {
+      <div class="fonte">
+        <div class="bold small">{{ f.nome }}</div>
+        <textarea
+          class="inline-edit desc"
+          rows="2"
+          [value]="f.descricao"
+          (change)="setDescricaoFonte(f, $any($event.target).value)"
+          aria-label="Instrução da fonte"
+        ></textarea>
+        <div class="contador">
+          <button class="passo" (click)="mudarColetadas(f, -1)" aria-label="Menos uma empresa">−</button>
+          <span class="valor">{{ f.empresasColetadas }}</span>
+          <button class="passo" (click)="mudarColetadas(f, 1)" aria-label="Mais uma empresa">+</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- 4.5 Métricas do funil -->
+<div class="card card-pad">
+  <div class="section-title">Métricas do funil</div>
+  <div class="grid grid-auto">
+    @for (m of store.plano().metricas; track m.id) {
+      <div class="metrica">
+        <div class="rot-metrica">{{ m.nome }}</div>
+        <div class="linha-valor">
+          @if (valor(m) !== null) {
+            <span class="valor-metrica">{{ valor(m) }}%</span>
+          } @else {
+            <span class="valor-metrica mut">—</span>
+          }
+          @switch (statusMetrica(m)) {
+            @case ('dentro') {
+              <span class="badge ok"><span class="dot"></span>Na faixa</span>
+            }
+            @case ('acima') {
+              <span class="badge info"><span class="dot"></span>Acima</span>
+            }
+            @case ('abaixo') {
+              <span class="badge warn"><span class="dot"></span>Abaixo</span>
+            }
+            @case ('sem') {
+              <span class="badge">Sem dados</span>
+            }
+          }
+        </div>
+        <div class="mut tiny">Faixa saudável: {{ m.faixaMin }}–{{ m.faixaMax }}%</div>
+        @if (!ehCalculada(m)) {
+          <div class="manual tiny">
+            <label class="mut" [attr.for]="'manual-' + m.id">Valor manual (%):</label>
+            <input
+              [id]="'manual-' + m.id"
+              class="input entrada-manual"
+              type="number"
+              min="0"
+              [value]="m.valorManual ?? ''"
+              (change)="setManual(m, $any($event.target).value)"
+            />
+          </div>
+        } @else {
+          <div class="mut tiny">Calculada do pipeline em tempo real.</div>
+        }
+        @if (statusMetrica(m) === 'abaixo') {
+          <div class="acao-metrica tiny">{{ m.acaoSeAbaixo }}</div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,339 @@
+/* Card "Hoje": único lugar com o acento do gradiente */
+.hoje {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.hoje .hoje-regua {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--grad);
+}
+.hoje.feito {
+  background: linear-gradient(135deg, rgba(110, 75, 255, 0.07), rgba(46, 134, 255, 0.07));
+}
+.hoje.neutro .hoje-regua {
+  display: none;
+}
+.rot-hoje {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mut);
+  font-weight: 600;
+}
+.titulo-hoje {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 2px 0 4px;
+}
+.selo-feito {
+  font-size: 13px;
+}
+
+/* Marcadores da semana (S T Q Q S) */
+.semana {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.marcador-dia {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--borda);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mut);
+  flex-shrink: 0;
+}
+.marcador-dia.feito {
+  background: var(--grad);
+  border: none;
+  color: #fff;
+}
+.marcador-dia.feito svg {
+  width: 15px;
+  height: 15px;
+}
+.marcador-dia.hoje {
+  box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.3);
+}
+.semana .tiny {
+  margin-left: 4px;
+}
+
+/* Checklist de partida (mesmo visual dos lembretes do painel) */
+.check-linha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.check-linha .check {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--borda);
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.check-linha .check.on {
+  background: var(--grad);
+  border: none;
+}
+.check-linha .check svg {
+  width: 14px;
+  height: 14px;
+}
+.check-linha .txt {
+  font-size: 14px;
+  min-width: 0;
+}
+.check-linha .txt.feito {
+  text-decoration: line-through;
+  color: var(--mut);
+}
+
+.link {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--roxo);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.link:hover {
+  background: var(--soft);
+}
+
+/* Cidades */
+.chip.cidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+}
+.chip.cidade .tira {
+  border: none;
+  background: transparent;
+  color: var(--mut);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.chip.cidade .tira:hover {
+  color: var(--bad);
+}
+.add-cidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.add-cidade .input {
+  width: 150px;
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+/* Edição inline: parece texto, vira campo no foco */
+.inline-edit {
+  font-family: inherit;
+  color: var(--tinta);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 3px 6px;
+  margin-left: -6px;
+  width: 100%;
+  min-width: 0;
+}
+.inline-edit:hover {
+  border-color: var(--borda);
+}
+.inline-edit:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--roxo);
+  box-shadow: 0 0 0 3px rgba(110, 75, 255, 0.15);
+}
+
+/* Categorias */
+.cat {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borda);
+}
+.cat:last-child {
+  border-bottom: none;
+}
+.cat.despriorizada {
+  opacity: 0.55;
+}
+.cat-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cat-topo .nome {
+  font-weight: 700;
+  flex: 1;
+}
+.badge.toggle {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  min-height: 30px;
+}
+.cat .dor {
+  font-size: 13px;
+  color: var(--ink2);
+  margin-top: 2px;
+}
+.cat-nums {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.num-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink2);
+  background: var(--soft);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.num-chip b {
+  font-family: 'Space Grotesk', sans-serif;
+}
+.alerta-cat {
+  margin-top: 8px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* Botões de passo (+/−) com toque confortável */
+.passo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--borda);
+  background: #fff;
+  color: var(--ink2);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.passo:hover {
+  background: var(--soft);
+}
+
+/* Fontes */
+.fonte {
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fonte .desc {
+  resize: none;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.45;
+}
+.fonte .contador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+.fonte .contador .valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Métricas */
+.metrica {
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rot-metrica {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mut);
+  font-weight: 600;
+}
+.linha-valor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.valor-metrica {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.manual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.entrada-manual {
+  width: 80px;
+  padding: 6px 10px;
+}
+.acao-metrica {
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .passo {
+    width: 38px;
+    height: 38px;
+  }
+  .titulo-hoje {
+    font-size: 20px;
+  }
+}
