@@ -1,0 +1,38 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<div class="grid grid-4 mb-16">
+  <div class="kpi grad">
+    <span class="rot">MRR (soma das mensalidades)</span>
+    <span class="val">{{ money(store.mrr()) }}</span>
+  </div>
+  <div class="kpi">
+    <span class="rot">Clientes fechados</span>
+    <span class="val">{{ store.fechadas().length }}</span>
+  </div>
+</div>
+
+@if (!store.fechadas().length) {
+  <div class="card card-pad empty">
+    Nenhum cliente fechado ainda. Cada card aqui é um pedaço dos 10k.
+  </div>
+} @else {
+  <div class="grid grid-auto">
+    @for (e of store.fechadas(); track e.id) {
+      <div class="card card-pad">
+        <div class="between">
+          <div style="min-width:0">
+            <div class="bold">{{ e.nome }}</div>
+            <div class="mut small">{{ e.categoria }}</div>
+          </div>
+          <span class="badge roxo"><span class="dot"></span>Fechado</span>
+        </div>
+        <div class="mt-8" style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700">
+          {{ money(e.mensalidade) }}<span class="mut small" style="font-family:'Inter',sans-serif;font-weight:400">/mês</span>
+        </div>
+        @if (e.contato) {
+          <div class="mut tiny mt-8">{{ e.contato }}</div>
+        }
+      </div>
+    }
+  </div>
+}

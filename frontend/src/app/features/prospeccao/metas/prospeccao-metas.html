@@ -1,0 +1,41 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<div style="max-width:560px;margin-inline:auto">
+  <div class="card card-pad">
+    <div class="section-title">Metas da prospecção</div>
+
+    <div class="field">
+      <label>Meta de MRR (R$/mês)</label>
+      <input class="input" type="number" min="1" [(ngModel)]="form.metaMrr" name="metaMrr" />
+    </div>
+    <div class="field">
+      <label>Prazo final</label>
+      <app-datepicker
+        [(ngModel)]="form.prazoFinal"
+        name="prazoFinal"
+        ariaLabel="Prazo final da meta"
+        placeholder="Escolher data"
+      ></app-datepicker>
+    </div>
+    <div class="field">
+      <label>1ºs emails por semana</label>
+      <input class="input" type="number" min="1" [(ngModel)]="form.emailsPorSemana" name="emailsPorSemana" />
+    </div>
+
+    <div class="mut tiny mb-8">
+      Início da contagem de ritmo: {{ dataBr(store.metas().dataInicio) }} (fixado no primeiro uso).
+    </div>
+
+    <div class="items-center wrap" style="justify-content:space-between">
+      <button class="btn ghost" (click)="exportar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Exportar backup (JSON)
+      </button>
+      <button class="btn primary" (click)="salvar()" [disabled]="!valido()">
+        {{ salvo ? 'Salvo ✓' : 'Salvar metas' }}
+      </button>
+    </div>
+  </div>
+</div>

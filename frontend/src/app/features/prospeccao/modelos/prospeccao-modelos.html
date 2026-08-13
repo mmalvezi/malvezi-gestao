@@ -1,0 +1,26 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<div class="modelos">
+  @for (m of modelos; track m.id) {
+    <div class="card card-pad">
+      <div class="between wrap mb-8">
+        <div>
+          <div class="section-title" style="margin-bottom:2px">{{ m.titulo }}</div>
+          <div class="mut tiny">{{ m.descricao }}</div>
+        </div>
+        <button class="btn sm" [class.primary]="copiado() !== m.id" (click)="copiar(m)">
+          @if (copiado() === m.id) {
+            Copiado ✓
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="12" height="12" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-linecap="round" />
+            </svg>
+            Copiar
+          }
+        </button>
+      </div>
+      <pre class="texto-modelo">{{ m.texto }}</pre>
+    </div>
+  }
+</div>

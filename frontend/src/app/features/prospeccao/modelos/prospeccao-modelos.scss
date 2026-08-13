@@ -1,0 +1,19 @@
+.modelos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+}
+
+.texto-modelo {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink2);
+  background: var(--soft);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -74,6 +74,11 @@ export class Shell implements OnInit {
       icone: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11',
     },
     {
+      rota: '/prospeccao',
+      rot: 'Prospecção',
+      icone: 'M22 12h-3M5 12H2m10-7V2m0 20v-3m7-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0Zm-4 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+    },
+    {
       rota: '/financeiro',
       rot: 'Financeiro',
       icone: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',

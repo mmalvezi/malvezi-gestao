@@ -1,0 +1,66 @@
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.busca-emp {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+.filtro-status {
+  min-width: 170px;
+}
+
+.lista-emp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emp .ident {
+  min-width: 0;
+}
+.emp.encerrada {
+  opacity: 0.65;
+}
+.emp .contato {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.emp .mensal {
+  margin-top: 6px;
+}
+.roxo-txt {
+  color: var(--roxo);
+}
+
+.prox-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-weight: 600;
+  color: var(--ink2);
+  background: var(--soft);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.prox-acao svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.prox-acao.atrasada {
+  color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.emp .acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}

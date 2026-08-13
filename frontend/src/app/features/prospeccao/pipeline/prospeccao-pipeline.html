@@ -1,0 +1,166 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<div class="filtros mb-16">
+  <input
+    class="input busca-emp"
+    [(ngModel)]="busca"
+    name="busca"
+    placeholder="Buscar por nome ou categoria..."
+    aria-label="Buscar empresa"
+  />
+  <app-select
+    class="filtro-status"
+    [opcoes]="filtroOpc"
+    ariaLabel="Filtrar por status"
+    [(ngModel)]="filtroStatus"
+    name="filtroStatus"
+  ></app-select>
+  <button class="btn primary" (click)="abrirNovo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+    </svg>
+    Empresa
+  </button>
+</div>
+
+@if (!lista().length) {
+  <div class="card card-pad empty">
+    @if (busca || filtroStatus !== 'todos') {
+      Nenhuma empresa com esses filtros.
+    } @else {
+      Nenhuma empresa ainda. Adiciona a primeira e manda o 1º email hoje.
+    }
+  </div>
+} @else {
+  <div class="lista-emp">
+    @for (e of lista(); track e.id) {
+      <div class="card card-pad emp" [class.encerrada]="e.status === 'perdido'">
+        <div class="between wrap">
+          <div class="ident">
+            <div class="bold">{{ e.nome }}</div>
+            <div class="mut small">{{ e.categoria }}</div>
+          </div>
+          <span class="badge {{ statusClasse[e.status] }}">
+            <span class="dot"></span>
+            {{ statusLabel[e.status] }}
+          </span>
+        </div>
+
+        @if (e.contato || e.telefone || e.email) {
+          <div class="mut small contato">{{ contatoLinha(e) }}</div>
+        }
+
+        @if (e.status === 'fechado') {
+          <div class="small mensal roxo-txt bold">
+            {{ money(e.mensalidade) }}/mês de recorrência
+          </div>
+        } @else if (e.mensalidade) {
+          <div class="mut small mensal">
+            Mensalidade proposta: <b>{{ money(e.mensalidade) }}/mês</b>
+          </div>
+        }
+
+        @if (proxima(e); as a) {
+          <div class="prox-acao small" [class.atrasada]="atrasada(a)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 3" stroke-linecap="round" />
+            </svg>
+            {{ a.rotulo }}
+            @if (a.vence) {
+              · {{ atrasada(a) ? 'venceu ' + dataBr(a.vence) : dataBr(a.vence) }}
+            }
+          </div>
+        }
+
+        <div class="acoes">
+          @if (podeAvancar(e)) {
+            <button class="btn sm primary" (click)="avancar(e)">Avançar →</button>
+          }
+          @if (podePerder(e)) {
+            <button class="btn sm ghost" (click)="perder(e)">Perdido</button>
+          }
+          <button class="icon-btn" (click)="abrirEditar(e)" aria-label="Editar empresa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (editorAberto) {
+  <app-dialog
+    [titulo]="editId ? 'Editar empresa' : 'Nova empresa'"
+    [largura]="560"
+    (fechar)="editorAberto = false"
+  >
+    <div class="row-2">
+      <div class="field">
+        <label>Empresa</label>
+        <input class="input" [(ngModel)]="form.nome" name="nome" placeholder="Ex.: Oficina do Zé" />
+      </div>
+      <div class="field">
+        <label>Categoria</label>
+        <input class="input" [(ngModel)]="form.categoria" name="categoria" placeholder="Ex.: oficina, clínica..." />
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Contato (pessoa)</label>
+        <input class="input" [(ngModel)]="form.contato" name="contato" />
+      </div>
+      <div class="field">
+        <label>Telefone</label>
+        <input class="input" [(ngModel)]="form.telefone" name="telefone" placeholder="(11) 99999-9999" />
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Email</label>
+        <input class="input" type="email" [(ngModel)]="form.email" name="email" />
+      </div>
+      <div class="field">
+        <label>Mensalidade proposta (R$/mês)</label>
+        <input class="input" type="number" min="0" [(ngModel)]="form.mensalidade" name="mensalidade" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea
+        class="textarea"
+        [(ngModel)]="form.notas"
+        name="notas"
+        placeholder="Dor do cliente, contexto da conversa..."
+      ></textarea>
+    </div>
+
+    <div foot class="between" style="width:100%">
+      @if (editId) {
+        <button class="btn danger sm" (click)="excluir()">Excluir</button>
+      } @else {
+        <span></span>
+      }
+      <span class="items-center">
+        <button class="btn ghost" (click)="editorAberto = false">Cancelar</button>
+        <button
+          class="btn primary"
+          (click)="salvar()"
+          [disabled]="!form.nome.trim() || !form.categoria.trim()"
+        >
+          Salvar
+        </button>
+      </span>
+    </div>
+  </app-dialog>
+}
+
+@if (fechando) {
+  <app-fechar-dialog
+    [empresa]="fechando"
+    (confirmar)="confirmarFechar($event)"
+    (cancelar)="fechando = null"
+  ></app-fechar-dialog>
+}

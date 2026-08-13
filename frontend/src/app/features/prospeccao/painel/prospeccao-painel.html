@@ -1,0 +1,111 @@
+<app-prospeccao-tabs></app-prospeccao-tabs>
+
+<!-- Pista de progresso rumo à meta -->
+<div class="card card-pad mb-16">
+  <div class="between wrap mb-8">
+    <div class="section-title" style="margin-bottom:0">
+      Rumo aos {{ money(store.metas().metaMrr) }}/mês
+    </div>
+    @if (noRitmo()) {
+      <span class="chip-ritmo ok">
+        No ritmo — pra hoje o esperado era {{ money(ritmoEsperado()) }}
+      </span>
+    } @else {
+      <span class="chip-ritmo atras">
+        Abaixo do ritmo — {{ money(atrasReais()) }} atrás
+      </span>
+    }
+  </div>
+
+  <div class="pista">
+    <div class="preenchido" [style.width.%]="pctMrr()"></div>
+    <div
+      class="marcador"
+      [style.left.%]="pctRitmo()"
+      title="Onde o MRR deveria estar hoje"
+    ></div>
+  </div>
+  <div class="between mt-8">
+    <span class="tiny mut">R$ 0</span>
+    <span class="tiny mut">
+      {{ money(store.metas().metaMrr) }} até {{ dataBr(store.metas().prazoFinal) }}
+    </span>
+  </div>
+</div>
+
+<!-- Indicadores -->
+<div class="grid kpis-prosp mb-16">
+  <div class="kpi grad">
+    <span class="rot">MRR fechado</span>
+    <span class="val">{{ money(store.mrr()) }}</span>
+  </div>
+  <div class="kpi">
+    <span class="rot">Falta</span>
+    <span class="val">{{ money(falta()) }}</span>
+  </div>
+  <div class="kpi">
+    <span class="rot">Dias restantes</span>
+    <span class="val">{{ diasRestantes() }}</span>
+  </div>
+  <div class="kpi">
+    <span class="rot">Ticket médio</span>
+    <span class="val">{{ money(ticketMedio()) }}</span>
+  </div>
+</div>
+
+<div class="grid cols-prosp">
+  <!-- Ações de hoje -->
+  <div class="card card-pad">
+    <div class="section-title">Ações de hoje</div>
+    @if (acoesHoje().length) {
+      @for (a of acoesHoje(); track a.e.id) {
+        <div class="acao">
+          <div class="corpo">
+            <div class="bold small">{{ a.e.nome }}</div>
+            <div class="mut tiny">{{ a.rotulo }}</div>
+          </div>
+          <span class="badge" [class.bad]="a.atrasada" [class.warn]="!a.atrasada">
+            {{ a.atrasada ? 'Atrasada · ' + dataBr(a.vence) : 'Hoje' }}
+          </span>
+          <button class="btn sm primary" (click)="feito(a)">Feito ✓</button>
+        </div>
+      }
+    } @else {
+      <div class="empty">Nada vencido hoje. Aproveita pra mandar 1ºs emails novos.</div>
+    }
+  </div>
+
+  <div class="coluna-dir">
+    <!-- Meta da semana -->
+    <div class="card card-pad mb-16">
+      <div class="between mb-8">
+        <div class="section-title" style="margin-bottom:0">Meta da semana</div>
+        <span class="small bold">
+          {{ emailsSemana() }} / {{ store.metas().emailsPorSemana }}
+        </span>
+      </div>
+      <div class="bar"><span [style.width.%]="pctSemana()"></span></div>
+      <div class="mut tiny mt-8">1ºs emails enviados nesta semana (seg–dom)</div>
+    </div>
+
+    <!-- Funil acumulado -->
+    <div class="card card-pad">
+      <div class="section-title">Funil acumulado</div>
+      @for (f of funil(); track f.rot) {
+        <div class="funil-linha">
+          <span class="rot">{{ f.rot }}</span>
+          <div class="bar"><span [style.width]="larguraFunil(f.count)"></span></div>
+          <span class="cnt">{{ f.count }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (fechando) {
+  <app-fechar-dialog
+    [empresa]="fechando"
+    (confirmar)="confirmarFechar($event)"
+    (cancelar)="fechando = null"
+  ></app-fechar-dialog>
+}

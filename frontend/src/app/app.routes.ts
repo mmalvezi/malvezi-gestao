@@ -62,6 +62,41 @@ export const routes: Routes = [
           import('./features/clientes/clientes').then((m) => m.Clientes),
       },
       {
+        path: 'prospeccao',
+        loadComponent: () =>
+          import('./features/prospeccao/painel/prospeccao-painel').then(
+            (m) => m.ProspeccaoPainel,
+          ),
+      },
+      {
+        path: 'prospeccao/pipeline',
+        loadComponent: () =>
+          import('./features/prospeccao/pipeline/prospeccao-pipeline').then(
+            (m) => m.ProspeccaoPipeline,
+          ),
+      },
+      {
+        path: 'prospeccao/fechados',
+        loadComponent: () =>
+          import('./features/prospeccao/fechados/prospeccao-fechados').then(
+            (m) => m.ProspeccaoFechados,
+          ),
+      },
+      {
+        path: 'prospeccao/modelos',
+        loadComponent: () =>
+          import('./features/prospeccao/modelos/prospeccao-modelos').then(
+            (m) => m.ProspeccaoModelos,
+          ),
+      },
+      {
+        path: 'prospeccao/metas',
+        loadComponent: () =>
+          import('./features/prospeccao/metas/prospeccao-metas').then(
+            (m) => m.ProspeccaoMetas,
+          ),
+      },
+      {
         path: 'financeiro',
         loadComponent: () =>
           import('./features/financeiro/financeiro').then((m) => m.Financeiro),
