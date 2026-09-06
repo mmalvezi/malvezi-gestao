@@ -1,0 +1,271 @@
+<app-conteudo-tabs></app-conteudo-tabs>
+
+<!-- Régua do plano: 2 por semana, e no máximo 2 dos próximos 8 com convite -->
+<div class="placar card card-pad mb-16">
+  <div class="reg">
+    <span class="n">{{ store.pendentes().length }}</span>
+    <span class="mut small">na fila</span>
+  </div>
+  <div class="reg">
+    <span class="n">{{ store.prontos().length }}</span>
+    <span class="mut small">prontos pra postar</span>
+  </div>
+  <div class="reg">
+    <span class="n">{{ store.publicados().length }}</span>
+    <span class="mut small">publicados</span>
+  </div>
+  <div class="reg" [class.estourou]="store.vendemNosProximos8() > 2">
+    <span class="n">{{ store.vendemNosProximos8() }}/2</span>
+    <span class="mut small">vendem, nos próximos 8</span>
+  </div>
+</div>
+
+@if (store.vendemNosProximos8() > 2) {
+  <div class="card card-pad aviso mb-16 small">
+    O plano permite no máximo 2 posts com convite a cada 8. Hoje são
+    {{ store.vendemNosProximos8() }}. Conteúdo que só existe pra vender, o
+    leitor sente.
+  </div>
+}
+
+<div class="filtros mb-16">
+  <input
+    class="input busca-post"
+    [(ngModel)]="busca"
+    name="busca"
+    placeholder="Buscar por título, ângulo ou pilar..."
+    aria-label="Buscar post"
+  />
+  <app-select
+    class="filtro-status"
+    [opcoes]="filtroOpc"
+    ariaLabel="Filtrar por status"
+    [(ngModel)]="filtroStatus"
+    name="filtroStatus"
+  ></app-select>
+  <button class="btn primary" (click)="abrirNovo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+    </svg>
+    Post
+  </button>
+</div>
+
+@if (!lista().length) {
+  <div class="card card-pad empty">
+    @if (busca || filtroStatus !== 'todos') {
+      Nenhum post com esses filtros.
+    } @else {
+      Fila vazia. Adiciona o primeiro tema e pede a criação pro MazyOS.
+    }
+  </div>
+} @else {
+  <div class="lista-post">
+    @for (p of lista(); track p.id; let i = $index) {
+      <div class="card card-pad post" [class.publicado]="p.status === 'publicado'">
+        <div class="between wrap">
+          <div class="ident">
+            <div class="bold">{{ p.titulo }}</div>
+            <div class="mut small">
+              {{ pilarLabel[p.pilar] }} · {{ formatoLabel[p.formato] }}
+              @if (p.vende) {
+                · <span class="convite">com convite</span>
+              }
+            </div>
+          </div>
+          <span class="badge {{ statusClasse[p.status] }}">
+            <span class="dot"></span>
+            {{ statusLabel[p.status] }}
+          </span>
+        </div>
+
+        @if (p.angulo) {
+          <div class="mut small angulo">{{ p.angulo }}</div>
+        }
+
+        <div class="meta small mut">
+          @if (p.dataPrevista) {
+            <span>Previsto {{ dataBr(p.dataPrevista) }}</span>
+          }
+          @if (p.publicadoEm) {
+            <span>Publicado {{ dataBr(p.publicadoEm) }}</span>
+          }
+          @if (p.pasta) {
+            <span class="pasta" [title]="p.pasta">{{ p.pasta }}</span>
+          }
+        </div>
+
+        <div class="acoes">
+          @if (p.status === 'ideia') {
+            <button class="btn sm primary" (click)="pedirCriacao(p)">
+              Pedir criação
+            </button>
+          } @else if (podeAvancar(p)) {
+            <button class="btn sm primary" (click)="avancar(p)">
+              {{ rotuloAvancar(p) }} →
+            </button>
+          }
+          @if (p.status !== 'ideia') {
+            <button class="btn sm ghost" (click)="voltar(p)">Voltar</button>
+          }
+          @if (p.status !== 'ideia') {
+            <button class="btn sm ghost" (click)="pedirCriacao(p)">
+              Comando
+            </button>
+          }
+          <span class="ordem">
+            <button
+              class="icon-btn"
+              (click)="mover(p, -1)"
+              [disabled]="i === 0"
+              aria-label="Subir na fila"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 15 6-6 6 6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <button
+              class="icon-btn"
+              (click)="mover(p, 1)"
+              [disabled]="i === lista().length - 1"
+              aria-label="Descer na fila"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </span>
+          <button class="icon-btn" (click)="abrirEditar(p)" aria-label="Editar post">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Pedido de criação: o comando pronto para colar no MazyOS -->
+@if (pedido(); as p) {
+  <app-dialog
+    titulo="Pedir criação no MazyOS"
+    [largura]="620"
+    (fechar)="pedido.set(null)"
+  >
+    <p class="mut small mb-16">
+      Cola isso no Claude Code aberto na pasta do MazyOS. O briefing vai junto,
+      então a skill não precisa adivinhar ângulo nem pilar.
+    </p>
+    <pre class="comando">{{ comando(p) }}</pre>
+    @if (copiado()) {
+      <div class="small copiado">Copiado. Agora é colar no MazyOS.</div>
+    }
+
+    <div foot class="between" style="width: 100%">
+      <span class="mut tiny">Depois de gerar, marque o post como texto escrito.</span>
+      <span class="items-center">
+        <button class="btn ghost" (click)="pedido.set(null)">Fechar</button>
+        <button class="btn primary" (click)="copiarComando()">
+          Copiar comando
+        </button>
+      </span>
+    </div>
+  </app-dialog>
+}
+
+@if (editorAberto) {
+  <app-dialog
+    [titulo]="editId ? 'Editar post' : 'Novo post'"
+    [largura]="620"
+    (fechar)="editorAberto = false"
+  >
+    <div class="field">
+      <label>Título</label>
+      <input
+        class="input"
+        [(ngModel)]="form.titulo"
+        name="titulo"
+        placeholder="Ex.: Você fechou a obra. Sobrou quanto?"
+      />
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Pilar</label>
+        <app-select
+          [opcoes]="pilarOpc"
+          ariaLabel="Pilar"
+          [(ngModel)]="form.pilar"
+          name="pilar"
+        ></app-select>
+      </div>
+      <div class="field">
+        <label>Formato</label>
+        <app-select
+          [opcoes]="formatoOpc"
+          ariaLabel="Formato"
+          [(ngModel)]="form.formato"
+          name="formato"
+        ></app-select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Ângulo</label>
+      <textarea
+        class="textarea"
+        [(ngModel)]="form.angulo"
+        name="angulo"
+        placeholder="O que o post diz, em uma ou duas frases. Vira o briefing."
+      ></textarea>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Data prevista</label>
+        <input
+          class="input"
+          type="date"
+          [(ngModel)]="form.dataPrevista"
+          name="dataPrevista"
+        />
+      </div>
+      <div class="field checkbox-field">
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.vende" name="vende" />
+          <span>Traz convite (no máximo 2 a cada 8)</span>
+        </label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Pasta gerada no MazyOS</label>
+      <input
+        class="input"
+        [(ngModel)]="form.pasta"
+        name="pasta"
+        placeholder="marketing/conteudo/carrossel-tema-2026-09-05"
+      />
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea
+        class="textarea"
+        [(ngModel)]="form.observacoes"
+        name="observacoes"
+        placeholder="Referências, prints a usar, o que evitar..."
+      ></textarea>
+    </div>
+
+    <div foot class="between" style="width: 100%">
+      @if (editId) {
+        <button class="btn danger sm" (click)="excluir()">Excluir</button>
+      } @else {
+        <span></span>
+      }
+      <span class="items-center">
+        <button class="btn ghost" (click)="editorAberto = false">Cancelar</button>
+        <button class="btn primary" (click)="salvar()" [disabled]="!form.titulo.trim()">
+          Salvar
+        </button>
+      </span>
+    </div>
+  </app-dialog>
+}

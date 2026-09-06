@@ -1,0 +1,140 @@
+.placar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+
+  .reg {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .n {
+      font-family: 'Space Grotesk', Inter, sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    &.estourou .n {
+      color: #c0392b;
+    }
+  }
+}
+
+.aviso {
+  border-left: 3px solid #c0392b;
+}
+
+.filtros {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .busca-post {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .filtro-status {
+    min-width: 190px;
+  }
+}
+
+.lista-post {
+  display: grid;
+  gap: 12px;
+}
+
+.post {
+  display: grid;
+  gap: 10px;
+
+  &.publicado {
+    opacity: 0.62;
+  }
+
+  .ident {
+    min-width: 0;
+  }
+
+  .convite {
+    color: var(--roxo, #6d4aff);
+    font-weight: 600;
+  }
+
+  .angulo {
+    line-height: 1.45;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+
+    .pasta {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+  }
+
+  .acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .ordem {
+      display: inline-flex;
+      gap: 2px;
+      margin-left: auto;
+    }
+  }
+}
+
+/* O comando fica selecionável mesmo quando a cópia automática falha */
+.comando {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--fundo, #f6f7fd);
+  border: 1px solid var(--linha, rgba(23, 22, 43, 0.09));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: all;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.copiado {
+  margin-top: 10px;
+  color: #1c7a45;
+  font-weight: 600;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-end;
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    padding-bottom: 11px;
+
+    input {
+      width: 17px;
+      height: 17px;
+      flex: none;
+      cursor: pointer;
+    }
+  }
+}

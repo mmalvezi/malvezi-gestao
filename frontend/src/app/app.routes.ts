@@ -104,6 +104,27 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'conteudo',
+        loadComponent: () =>
+          import('./features/conteudo/fila/conteudo-fila').then(
+            (m) => m.ConteudoFila,
+          ),
+      },
+      {
+        path: 'conteudo/calendario',
+        loadComponent: () =>
+          import(
+            './features/conteudo/calendario/conteudo-calendario'
+          ).then((m) => m.ConteudoCalendario),
+      },
+      {
+        path: 'conteudo/pilares',
+        loadComponent: () =>
+          import('./features/conteudo/pilares/conteudo-pilares').then(
+            (m) => m.ConteudoPilares,
+          ),
+      },
+      {
         path: 'financeiro',
         loadComponent: () =>
           import('./features/financeiro/financeiro').then((m) => m.Financeiro),

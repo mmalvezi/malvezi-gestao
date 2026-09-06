@@ -1,0 +1,103 @@
+<app-conteudo-tabs></app-conteudo-tabs>
+
+<div class="card card-pad mb-16">
+  <div class="bold mb-8">Os próximos 8 da fila</div>
+  <p class="mut small" style="margin: 0">
+    O pilar de ensino é o que constrói autoridade: ensinar a calcular margem
+    posiciona a Malvezi como quem entende a operação dele, não como quem vende
+    sistema. Por isso a régua é 3 de dor, 3 de ensino e 2 de prova.
+  </p>
+</div>
+
+@if (!proximos().length) {
+  <div class="card card-pad empty">
+    Fila vazia. Sem posts pendentes não há equilíbrio a medir.
+  </div>
+} @else {
+  <div class="lista-pilar">
+    @for (e of store.equilibrio(); track e.pilar) {
+      <div class="card card-pad">
+        <div class="between wrap" style="align-items: flex-start">
+          <div>
+            <div class="bold">{{ pilarLabel[e.pilar] }}</div>
+            <div class="mut small">{{ pilarDescricao[e.pilar] }}</div>
+          </div>
+          @if (e.meta === null) {
+            <span class="mut small">quando couber · {{ e.tem }}</span>
+          } @else {
+            <span
+              class="contagem"
+              [class.ok]="situacao(e.tem, e.meta) === 'ok'"
+              [class.falta]="situacao(e.tem, e.meta) === 'falta'"
+              [class.sobra]="situacao(e.tem, e.meta) === 'sobra'"
+            >
+              {{ e.tem }} de {{ e.meta }}
+            </span>
+          }
+        </div>
+
+        @if (e.meta !== null && e.tem < e.meta) {
+          <div class="small aviso-pilar">
+            Faltam {{ e.meta - e.tem }} para fechar a régua deste pilar.
+          </div>
+        }
+
+        @if (postsDoPilar(e.pilar).length) {
+          <div class="posts-pilar">
+            @for (p of postsDoPilar(e.pilar); track p.id) {
+              <div class="linha-pp">
+                <span class="badge {{ statusClasse[p.status] }}">
+                  <span class="dot"></span>
+                  {{ statusLabel[p.status] }}
+                </span>
+                <span class="tit">{{ p.titulo }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+<style>
+  .lista-pilar {
+    display: grid;
+    gap: 12px;
+  }
+  .contagem {
+    font-family: 'Space Grotesk', Inter, sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .contagem.ok {
+    color: #1c7a45;
+  }
+  .contagem.falta {
+    color: #8a6d3b;
+  }
+  .contagem.sobra {
+    color: #6d4aff;
+  }
+  .aviso-pilar {
+    margin-top: 10px;
+    color: #8a6d3b;
+  }
+  .posts-pilar {
+    margin-top: 12px;
+    display: grid;
+    gap: 8px;
+  }
+  .linha-pp {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .linha-pp .tit {
+    font-weight: 600;
+  }
+</style>
