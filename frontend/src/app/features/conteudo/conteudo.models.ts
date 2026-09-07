@@ -171,7 +171,7 @@ export const POSTS_INICIAIS: Array<
     formato: 'carrossel',
     vende: true,
     angulo:
-      'Prova que é real, com nome e cidade. O print é dele, escrito em agosto, e não foi pedido.',
+      'Prova que é real, com nome e cidade. O print é dele, escrito em agosto, e não foi pedido. O convite fecha no sob medida: o sistema segue o jeito dele de tocar obra.',
   },
   {
     titulo: 'Como calcular o preço da sua hora',
@@ -200,7 +200,7 @@ export const POSTS_INICIAIS: Array<
     formato: 'carrossel',
     vende: true,
     angulo:
-      'Ele montava orçamento no Excel, sem lista automatizada. A fala mais forte é a segunda mensagem dele.',
+      'Ele montava orçamento no Excel, sem lista automatizada. É o post mais forte para o argumento de sob medida: a personalização sai da boca dele, "ajustado de acordo com o seguimento de sua empresa" e "ficou do jeito que eu precisava". Usar as frases, não parafrasear.',
   },
   {
     titulo: 'Orçamento em dois minutos',
