@@ -57,6 +57,15 @@ export interface ParcelaInput {
   pago: boolean;
 }
 
+/** Parcelamento: a quantidade vira as parcelas, com valores e datas calculados. */
+export interface ParcelamentoInput {
+  quantidade: number;
+  valor_total: number;
+  primeiro_vencimento?: string | null;
+  descricao?: string;
+  substituir?: boolean;
+}
+
 /* Quadro de tarefas dentro do projeto */
 export type ColunaTarefa = 'afazer' | 'fazendo' | 'validacao' | 'concluido';
 export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';

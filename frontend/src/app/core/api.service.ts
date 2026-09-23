@@ -12,6 +12,7 @@ import {
   Dashboard,
   ParcelaInput,
   ParcelaProjeto,
+  ParcelamentoInput,
   PlanoInfo,
   StatusCobranca,
   Documento,
@@ -89,6 +90,16 @@ export class ApiService {
   ): Observable<ParcelaProjeto> {
     return this.http.post<ParcelaProjeto>(
       `${this.base}/projetos/${projetoId}/parcelas`,
+      dados,
+    );
+  }
+  /** Cria N parcelas de uma vez, com valores e vencimentos calculados. */
+  parcelar(
+    projetoId: number,
+    dados: ParcelamentoInput,
+  ): Observable<ParcelaProjeto[]> {
+    return this.http.post<ParcelaProjeto[]>(
+      `${this.base}/projetos/${projetoId}/parcelas/parcelar`,
       dados,
     );
   }

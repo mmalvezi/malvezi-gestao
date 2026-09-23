@@ -25,6 +25,31 @@ export function dataBr(iso: string | null | undefined): string {
   return d.toLocaleDateString('pt-BR');
 }
 
+/**
+ * Divide um valor em N parcelas, com a sobra dos centavos na primeira.
+ * Mesma conta do backend, para a previa do parcelamento bater com o salvo.
+ */
+export function dividirValor(total: number, quantidade: number): number[] {
+  if (quantidade < 1) return [];
+  const centavos = Math.round(Number(total || 0) * 100);
+  const base = Math.floor(centavos / quantidade);
+  const valores = Array(quantidade).fill(base);
+  valores[0] += centavos - base * quantidade;
+  return valores.map((c) => c / 100);
+}
+
+/** Mesmo dia nos meses seguintes; em mes curto, cai no ultimo dia. */
+export function somarMeses(iso: string, meses: number): string {
+  const [ano, mes, dia] = iso.slice(0, 10).split('-').map(Number);
+  if (!ano || !mes || !dia) return iso;
+  const alvo = new Date(ano, mes - 1 + meses, 1);
+  const ultimo = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate();
+  alvo.setDate(Math.min(dia, ultimo));
+  const mm = String(alvo.getMonth() + 1).padStart(2, '0');
+  const dd = String(alvo.getDate()).padStart(2, '0');
+  return `${alvo.getFullYear()}-${mm}-${dd}`;
+}
+
 export function dataHoraBr(iso: string | null | undefined): string {
   if (!iso) return '';
   const d = new Date(iso);

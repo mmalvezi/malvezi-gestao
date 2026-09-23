@@ -21,6 +21,7 @@ import {
   Projeto,
 } from '../../core/models';
 import {
+  dividirValor,
   LIMITE_ANEXO_MB,
   moeda,
   MODELOS_ESCOPO,
@@ -71,6 +72,10 @@ export class OrcamentoEditor implements OnInit {
 
   form: OrcamentoInput = this.novoForm();
   plano: ParcelaOrcamento[] = [];
+
+  /* Parcelamento automatico: escolhe a quantidade e o plano sai pronto */
+  qtdParcelas = 3;
+  atalhosParcelas = [2, 3, 4, 6, 10, 12];
 
   /* Proposta em PDF selecionada antes de salvar (upload adiado) */
   arquivoRetido: File | null = null;
@@ -287,6 +292,44 @@ export class OrcamentoEditor implements OnInit {
     } else if (!this.plano.length) {
       this.addParcela();
     }
+  }
+
+  /**
+   * Parcelamento automatico: a quantidade vira o plano inteiro. A primeira
+   * vence na aprovacao e as seguintes a cada 30 dias; o valor e dividido em
+   * reais (com a sobra dos centavos na primeira) para fechar o total exato.
+   * Sem total lancado ainda, cai para percentual igual entre as parcelas.
+   */
+  async parcelarEm(quantidade: number) {
+    const qtd = Math.floor(Number(quantidade) || 0);
+    if (qtd < 1 || qtd > 60) return;
+
+    if (this.plano.length) {
+      const ok = await this.confirm.ask({
+        title: `Parcelar em ${qtd}x`,
+        message: 'O plano atual será substituído pelas parcelas calculadas. Continuar?',
+        confirmText: `Parcelar em ${qtd}x`,
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+
+    this.faltaPlano = false;
+    this.form.forma_pagamento = 'parcelas';
+    const total = this.totalForm();
+    const valores = total > 0 ? dividirValor(total, qtd) : [];
+    const percentuais = dividirValor(100, qtd);
+
+    this.plano = Array.from({ length: qtd }, (_, i) => ({
+      descricao: `Parcela ${i + 1}/${qtd}`,
+      tipo_valor: total > 0 ? ('fixo' as const) : ('percentual' as const),
+      percentual: total > 0 ? null : percentuais[i],
+      valor_fixo: total > 0 ? valores[i] : null,
+      tipo_vencimento: i === 0 ? ('marco' as const) : ('dias' as const),
+      marco: i === 0 ? ('aprovacao' as const) : null,
+      dias: i === 0 ? null : 30 * i,
+      ordem: i,
+    }));
   }
 
   addParcela() {

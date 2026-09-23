@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from ..auth import get_current_user
 from ..database import get_db
 from ..models import ParcelaProjeto, Projeto
-from ..schemas import ParcelaCreate, ParcelaRead
+from ..parcelamento import dividir_valor, vencimentos
+from ..schemas import ParcelaCreate, ParcelamentoCreate, ParcelaRead
 
 router = APIRouter(
     tags=["parcelas"],
@@ -58,6 +59,62 @@ def criar(projeto_id: int, dados: ParcelaCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(parcela)
     return parcela
+
+
+@router.post(
+    "/projetos/{projeto_id}/parcelas/parcelar",
+    response_model=list[ParcelaRead],
+    status_code=201,
+)
+def parcelar(
+    projeto_id: int, dados: ParcelamentoCreate, db: Session = Depends(get_db)
+):
+    """Cria de uma vez N parcelas iguais, uma por mes.
+
+    O valor e dividido com a sobra dos centavos na primeira parcela e a
+    primeira vence na data de partida (por padrao, hoje). Com substituir,
+    apaga as parcelas que ja existiam; sem ele, entra na sequencia.
+    """
+    projeto = db.get(Projeto, projeto_id)
+    if not projeto:
+        raise HTTPException(status_code=404, detail="Projeto nao encontrado")
+    if dados.quantidade < 1 or dados.quantidade > 60:
+        raise HTTPException(
+            status_code=400, detail="Quantidade de parcelas entre 1 e 60"
+        )
+
+    if dados.substituir:
+        for antiga in list(projeto.parcelas):
+            db.delete(antiga)
+        db.flush()
+
+    ja_existem = (
+        db.query(ParcelaProjeto)
+        .filter(ParcelaProjeto.projeto_id == projeto_id)
+        .count()
+    )
+    valores = dividir_valor(dados.valor_total or 0, dados.quantidade)
+    datas = vencimentos(dados.primeiro_vencimento or date.today(), dados.quantidade)
+    rotulo = (dados.descricao or "").strip() or "Parcela"
+
+    criadas = []
+    for i, (valor, venc) in enumerate(zip(valores, datas)):
+        parcela = ParcelaProjeto(
+            projeto_id=projeto_id,
+            descricao=f"{rotulo} {i + 1}/{dados.quantidade}",
+            valor=valor,
+            vencimento=venc,
+            pago=False,
+            pago_em=None,
+            ordem=ja_existem + i,
+        )
+        db.add(parcela)
+        criadas.append(parcela)
+
+    db.commit()
+    for parcela in criadas:
+        db.refresh(parcela)
+    return criadas
 
 
 @router.put("/parcelas/{parcela_id}", response_model=ParcelaRead)

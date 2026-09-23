@@ -12,11 +12,19 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import {
   ParcelaInput,
+  ParcelamentoInput,
   ParcelaProjeto,
   PlanoInfo,
   Projeto,
 } from '../core/models';
-import { dataBr, diasAte, moeda, relativo } from '../core/utils';
+import {
+  dataBr,
+  diasAte,
+  dividirValor,
+  moeda,
+  relativo,
+  somarMeses,
+} from '../core/utils';
 import { Dialog } from './dialog';
 import { AppDatepicker } from './ui/app-datepicker';
 import { ConfirmService } from './ui/confirm.service';
@@ -32,12 +40,20 @@ import { ConfirmService } from './ui/confirm.service';
   template: `
     <div class="between mb-16">
       <span class="section-title" style="margin:0">Parcelas de recebimento</span>
-      <button class="btn primary sm" (click)="abrirNova()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14" stroke-linecap="round" />
-        </svg>
-        Nova parcela
-      </button>
+      <div class="items-center gap-6">
+        <button class="btn sm" (click)="abrirParcelar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round" />
+          </svg>
+          Parcelar
+        </button>
+        <button class="btn primary sm" (click)="abrirNova()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+          </svg>
+          Nova parcela
+        </button>
+      </div>
     </div>
 
     <!-- Resumo -->
@@ -215,6 +231,93 @@ import { ConfirmService } from './ui/confirm.service';
         </div>
       </app-dialog>
     }
+
+    @if (parcelarAberto) {
+      <app-dialog titulo="Parcelar recebimento" [largura]="520" (fechar)="parcelarAberto = false">
+        <div class="row-2">
+          <div class="field">
+            <label for="parc-qtd">Quantidade de parcelas</label>
+            <input
+              id="parc-qtd"
+              class="input"
+              type="number"
+              min="1"
+              max="60"
+              [(ngModel)]="parc.quantidade"
+              name="quantidade"
+            />
+          </div>
+          <div class="field">
+            <label for="parc-total">Valor a parcelar (R$)</label>
+            <input
+              id="parc-total"
+              class="input"
+              type="number"
+              min="0"
+              [(ngModel)]="parc.valor_total"
+              name="valor_total"
+            />
+          </div>
+        </div>
+
+        <div class="atalhos">
+          @for (n of atalhos; track n) {
+            <button
+              class="chip-x"
+              type="button"
+              [class.on]="parc.quantidade === n"
+              (click)="parc.quantidade = n"
+            >
+              {{ n }}x
+            </button>
+          }
+        </div>
+
+        <div class="field">
+          <label>Primeiro vencimento</label>
+          <app-datepicker
+            ariaLabel="Primeiro vencimento"
+            [(ngModel)]="parc.primeiro_vencimento"
+            name="primeiro_vencimento"
+          ></app-datepicker>
+        </div>
+
+        @if (parcelas.length) {
+          <label class="marcar">
+            <input type="checkbox" [(ngModel)]="parc.substituir" name="substituir" />
+            <span>Substituir as {{ parcelas.length }} parcelas atuais</span>
+          </label>
+        }
+
+        @if (previa().length) {
+          <div class="previa">
+            <div class="mut tiny mb-8">
+              Prévia — as demais vencem no mesmo dia dos meses seguintes
+            </div>
+            @for (p of previa(); track $index) {
+              <div class="linha tiny">
+                <span class="mut">{{ $index + 1 }}/{{ previa().length }}</span>
+                <span>{{ data(p.vencimento) }}</span>
+                <span class="bold">{{ money(p.valor) }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="aviso tiny">Informe a quantidade e o valor a parcelar.</div>
+        }
+
+        <div foot class="items-center">
+          <button class="btn ghost" (click)="parcelarAberto = false">Cancelar</button>
+          <button
+            class="btn primary"
+            (click)="gerarParcelamento()"
+            [disabled]="parcelando || !previa().length"
+          >
+            {{ parcelando ? 'Gerando...' : 'Gerar ' + previa().length + 'x' }}
+          </button>
+        </div>
+      </app-dialog>
+    }
   `,
   styles: [
     `
@@ -323,6 +426,41 @@ import { ConfirmService } from './ui/confirm.service';
         font-weight: 600;
         color: var(--ink2);
       }
+      .atalhos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .chip-x {
+        border: 1px solid var(--borda);
+        background: #fff;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink2);
+        cursor: pointer;
+      }
+      .chip-x.on {
+        background: var(--soft);
+        border-color: var(--ink2);
+        color: var(--ink);
+      }
+      .previa {
+        background: var(--soft);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 12px;
+        max-height: 220px;
+        overflow: auto;
+      }
+      .previa .linha {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        gap: 8px;
+        padding: 3px 0;
+      }
       @media (max-width: 620px) {
         .resumo {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -354,6 +492,12 @@ export class ParcelasProjeto implements OnInit {
   editId: number | null = null;
   salvando = false;
   form: ParcelaInput = this.novoForm();
+
+  /* Parcelamento automatico: a quantidade vira as parcelas */
+  parcelarAberto = false;
+  parcelando = false;
+  atalhos = [2, 3, 4, 6, 10, 12];
+  parc: ParcelamentoInput = this.novoParcelamento();
 
   ngOnInit() {
     this.carregar();
@@ -430,6 +574,71 @@ export class ParcelasProjeto implements OnInit {
     const falta = this.diferenca();
     if (falta > 0) this.form.valor = falta;
     this.editorAberto = true;
+  }
+
+  novoParcelamento(): ParcelamentoInput {
+    return {
+      quantidade: 2,
+      valor_total: 0,
+      primeiro_vencimento: this.hojeIso(),
+      substituir: false,
+    };
+  }
+
+  private hojeIso(): string {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  }
+
+  abrirParcelar() {
+    this.parc = this.novoParcelamento();
+    // Parcela o que falta para fechar o projeto; sem parcelas, o valor cheio
+    const falta = this.diferenca();
+    this.parc.valor_total = falta > 0 ? falta : Number(this.projeto.valor || 0);
+    this.parcelarAberto = true;
+  }
+
+  /** Previa com a mesma conta do backend: sobra na primeira, uma por mes. */
+  previa(): { vencimento: string; valor: number }[] {
+    const qtd = Math.floor(Number(this.parc.quantidade) || 0);
+    const total = Number(this.parc.valor_total) || 0;
+    if (qtd < 1 || qtd > 60 || total <= 0) return [];
+    const partida = this.parc.primeiro_vencimento || this.hojeIso();
+    return dividirValor(total, qtd).map((valor, i) => ({
+      valor,
+      vencimento: somarMeses(partida, i),
+    }));
+  }
+
+  async gerarParcelamento() {
+    if (!this.previa().length) return;
+    if (this.parc.substituir) {
+      const ok = await this.confirm.ask({
+        title: 'Substituir parcelas',
+        message: `As ${this.parcelas.length} parcelas atuais serão apagadas, inclusive os recebimentos já marcados. Continuar?`,
+        confirmText: 'Substituir',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+    this.parcelando = true;
+    this.api
+      .parcelar(this.projeto.id, {
+        ...this.parc,
+        quantidade: Math.floor(Number(this.parc.quantidade) || 0),
+        valor_total: Number(this.parc.valor_total) || 0,
+        primeiro_vencimento: this.parc.primeiro_vencimento || this.hojeIso(),
+      })
+      .subscribe({
+        next: () => {
+          this.parcelando = false;
+          this.parcelarAberto = false;
+          this.carregar();
+        },
+        error: () => (this.parcelando = false),
+      });
   }
 
   abrirEditar(p: ParcelaProjeto) {

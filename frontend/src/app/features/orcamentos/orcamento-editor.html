@@ -154,6 +154,35 @@
     }
 
     @if (!aCombinar) {
+      <div class="gerador">
+        <span class="tiny bold">Parcelar em</span>
+        <div class="atalhos">
+          @for (n of atalhosParcelas; track n) {
+            <button
+              class="chip-x"
+              type="button"
+              [class.on]="qtdParcelas === n"
+              (click)="qtdParcelas = n"
+            >
+              {{ n }}x
+            </button>
+          }
+        </div>
+        <input
+          class="input num"
+          type="number"
+          min="1"
+          max="60"
+          [(ngModel)]="qtdParcelas"
+          name="qtd-parcelas"
+          aria-label="Quantidade de parcelas"
+        />
+        <button class="btn sm" type="button" (click)="parcelarEm(qtdParcelas)">
+          Gerar parcelas
+        </button>
+        <span class="mut tiny">1ª na aprovação, demais a cada 30 dias</span>
+      </div>
+
       @for (p of plano; track $index) {
       <div class="parc">
         <input

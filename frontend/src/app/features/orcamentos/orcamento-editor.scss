@@ -40,6 +40,42 @@
   text-align: right;
 }
 
+/* Parcelamento automatico: quantidade e o plano sai pronto */
+.gerador {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--soft);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+.gerador .atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gerador .num {
+  width: 70px;
+  text-align: right;
+}
+.chip-x {
+  border: 1px solid var(--borda);
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.chip-x.on {
+  background: #fff;
+  border-color: var(--ink2);
+  color: var(--ink);
+}
+
 /* Linha de parcela do plano */
 .parc {
   display: grid;

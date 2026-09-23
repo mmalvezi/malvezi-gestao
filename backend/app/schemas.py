@@ -91,6 +91,16 @@ class ParcelaCreate(BaseModel):
     pago_em: Optional[date] = None
 
 
+class ParcelamentoCreate(BaseModel):
+    """Gera N parcelas de uma vez: valor dividido e vencimentos mensais."""
+
+    quantidade: int = 2
+    valor_total: float = 0
+    primeiro_vencimento: Optional[date] = None
+    descricao: str = ""
+    substituir: bool = False
+
+
 class ParcelaRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
