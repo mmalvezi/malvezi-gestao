@@ -72,13 +72,16 @@ def parcelar(
     """Cria de uma vez N parcelas iguais, uma por mes.
 
     O valor e dividido com a sobra dos centavos na primeira parcela e a
-    primeira vence na data de partida (por padrao, hoje). Com substituir,
+    primeira vence na data de partida (por padrao, hoje). Se a tela mandar
+    `parcelas`, valem essas linhas como vieram, uma a uma. Com substituir,
     apaga as parcelas que ja existiam; sem ele, entra na sequencia.
     """
     projeto = db.get(Projeto, projeto_id)
     if not projeto:
         raise HTTPException(status_code=404, detail="Projeto nao encontrado")
-    if dados.quantidade < 1 or dados.quantidade > 60:
+
+    quantidade = len(dados.parcelas) or dados.quantidade
+    if quantidade < 1 or quantidade > 60:
         raise HTTPException(
             status_code=400, detail="Quantidade de parcelas entre 1 e 60"
         )
@@ -93,15 +96,30 @@ def parcelar(
         .filter(ParcelaProjeto.projeto_id == projeto_id)
         .count()
     )
-    valores = dividir_valor(dados.valor_total or 0, dados.quantidade)
-    datas = vencimentos(dados.primeiro_vencimento or date.today(), dados.quantidade)
     rotulo = (dados.descricao or "").strip() or "Parcela"
+    if dados.parcelas:
+        # Veio da previa ajustada: cada linha entra como esta
+        linhas = [
+            (
+                (p.descricao or "").strip() or f"{rotulo} {i + 1}/{quantidade}",
+                round(p.valor or 0, 2),
+                p.vencimento,
+            )
+            for i, p in enumerate(dados.parcelas)
+        ]
+    else:
+        valores = dividir_valor(dados.valor_total or 0, quantidade)
+        datas = vencimentos(dados.primeiro_vencimento or date.today(), quantidade)
+        linhas = [
+            (f"{rotulo} {i + 1}/{quantidade}", valor, venc)
+            for i, (valor, venc) in enumerate(zip(valores, datas))
+        ]
 
     criadas = []
-    for i, (valor, venc) in enumerate(zip(valores, datas)):
+    for i, (descricao, valor, venc) in enumerate(linhas):
         parcela = ParcelaProjeto(
             projeto_id=projeto_id,
-            descricao=f"{rotulo} {i + 1}/{dados.quantidade}",
+            descricao=descricao,
             valor=valor,
             vencimento=venc,
             pago=False,

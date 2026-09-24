@@ -29,6 +29,15 @@ import { Dialog } from './dialog';
 import { AppDatepicker } from './ui/app-datepicker';
 import { ConfirmService } from './ui/confirm.service';
 
+/** Linha da previa do parcelamento, ja editavel antes de salvar. */
+interface LinhaParcelamento {
+  descricao: string;
+  valor: number;
+  vencimento: string;
+  /** Marcada quando foi mexida na mao, so para oferecer refazer a divisao. */
+  editada: boolean;
+}
+
 /**
  * Parcelas de recebimento do projeto. O recebido do projeto e a soma das
  * parcelas pagas: nao existe mais campo de valor pago solto.
@@ -233,7 +242,7 @@ import { ConfirmService } from './ui/confirm.service';
     }
 
     @if (parcelarAberto) {
-      <app-dialog titulo="Parcelar recebimento" [largura]="520" (fechar)="parcelarAberto = false">
+      <app-dialog titulo="Parcelar recebimento" [largura]="560" (fechar)="parcelarAberto = false">
         <div class="row-2">
           <div class="field">
             <label for="parc-qtd">Quantidade de parcelas</label>
@@ -243,7 +252,8 @@ import { ConfirmService } from './ui/confirm.service';
               type="number"
               min="1"
               max="60"
-              [(ngModel)]="parc.quantidade"
+              [ngModel]="parc.quantidade"
+              (ngModelChange)="mudarQuantidade($event)"
               name="quantidade"
             />
           </div>
@@ -254,7 +264,8 @@ import { ConfirmService } from './ui/confirm.service';
               class="input"
               type="number"
               min="0"
-              [(ngModel)]="parc.valor_total"
+              [ngModel]="parc.valor_total"
+              (ngModelChange)="mudarTotal($event)"
               name="valor_total"
             />
           </div>
@@ -266,7 +277,7 @@ import { ConfirmService } from './ui/confirm.service';
               class="chip-x"
               type="button"
               [class.on]="parc.quantidade === n"
-              (click)="parc.quantidade = n"
+              (click)="mudarQuantidade(n)"
             >
               {{ n }}x
             </button>
@@ -277,7 +288,8 @@ import { ConfirmService } from './ui/confirm.service';
           <label>Primeiro vencimento</label>
           <app-datepicker
             ariaLabel="Primeiro vencimento"
-            [(ngModel)]="parc.primeiro_vencimento"
+            [ngModel]="parc.primeiro_vencimento"
+            (ngModelChange)="mudarPrimeiroVencimento($event)"
             name="primeiro_vencimento"
           ></app-datepicker>
         </div>
@@ -289,18 +301,54 @@ import { ConfirmService } from './ui/confirm.service';
           </label>
         }
 
-        @if (previa().length) {
+        @if (linhas.length) {
           <div class="previa">
-            <div class="mut tiny mb-8">
-              Prévia — as demais vencem no mesmo dia dos meses seguintes
+            <div class="between mb-8 wrap gap-6">
+              <span class="mut tiny">
+                Ajuste o que quiser: mexer numa parcela não altera as outras.
+              </span>
+              @if (editada) {
+                <button class="btn ghost sm" type="button" (click)="refazerDivisao()">
+                  Refazer divisão
+                </button>
+              }
             </div>
-            @for (p of previa(); track $index) {
-              <div class="linha tiny">
-                <span class="mut">{{ $index + 1 }}/{{ previa().length }}</span>
-                <span>{{ data(p.vencimento) }}</span>
-                <span class="bold">{{ money(p.valor) }}</span>
+
+            @for (l of linhas; track $index) {
+              <div class="linha-edit" [class.tocada]="l.editada">
+                <span class="mut tiny num">{{ $index + 1 }}/{{ linhas.length }}</span>
+                <input
+                  class="input sm"
+                  [(ngModel)]="l.descricao"
+                  [name]="'lin-desc-' + $index"
+                  [attr.aria-label]="'Descrição da parcela ' + ($index + 1)"
+                />
+                <app-datepicker
+                  [ariaLabel]="'Vencimento da parcela ' + ($index + 1)"
+                  [(ngModel)]="l.vencimento"
+                  (ngModelChange)="l.editada = true"
+                  [name]="'lin-venc-' + $index"
+                ></app-datepicker>
+                <input
+                  class="input sm val"
+                  type="number"
+                  min="0"
+                  [(ngModel)]="l.valor"
+                  (ngModelChange)="l.editada = true"
+                  [name]="'lin-val-' + $index"
+                  [attr.aria-label]="'Valor da parcela ' + ($index + 1)"
+                />
               </div>
             }
+
+            <div class="soma tiny" [class.warn]="sobra() !== 0">
+              Soma: <b>{{ money(somaLinhas()) }}</b>
+              @if (sobra() > 0) {
+                — faltam {{ money(sobra()) }} para os {{ money(parc.valor_total) }}
+              } @else if (sobra() < 0) {
+                — {{ money(-sobra()) }} acima dos {{ money(parc.valor_total) }}
+              }
+            </div>
           </div>
         } @else {
           <div class="aviso tiny">Informe a quantidade e o valor a parcelar.</div>
@@ -311,9 +359,9 @@ import { ConfirmService } from './ui/confirm.service';
           <button
             class="btn primary"
             (click)="gerarParcelamento()"
-            [disabled]="parcelando || !previa().length"
+            [disabled]="parcelando || !linhas.length"
           >
-            {{ parcelando ? 'Gerando...' : 'Gerar ' + previa().length + 'x' }}
+            {{ parcelando ? 'Gerando...' : 'Gerar ' + linhas.length + 'x' }}
           </button>
         </div>
       </app-dialog>
@@ -455,11 +503,41 @@ import { ConfirmService } from './ui/confirm.service';
         max-height: 220px;
         overflow: auto;
       }
-      .previa .linha {
+      .previa .linha-edit {
         display: grid;
-        grid-template-columns: 44px 1fr auto;
-        gap: 8px;
+        grid-template-columns: 34px minmax(0, 1fr) 128px 96px;
+        gap: 6px;
+        align-items: center;
         padding: 3px 0;
+      }
+      .previa .num {
+        text-align: right;
+      }
+      .previa .val {
+        text-align: right;
+      }
+      .previa .input.sm {
+        padding: 5px 8px;
+        font-size: 13px;
+      }
+      .linha-edit.tocada .val {
+        border-color: var(--info);
+      }
+      .soma {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--borda);
+      }
+      .soma.warn {
+        color: var(--warn);
+      }
+      @media (max-width: 620px) {
+        .previa .linha-edit {
+          grid-template-columns: 28px minmax(0, 1fr) 88px;
+        }
+        .previa .linha-edit app-datepicker {
+          grid-column: 2 / -1;
+        }
       }
       @media (max-width: 620px) {
         .resumo {
@@ -498,6 +576,8 @@ export class ParcelasProjeto implements OnInit {
   parcelando = false;
   atalhos = [2, 3, 4, 6, 10, 12];
   parc: ParcelamentoInput = this.novoParcelamento();
+  /** Previa ja materializada: cada linha e editavel sem mexer nas outras. */
+  linhas: LinhaParcelamento[] = [];
 
   ngOnInit() {
     this.carregar();
@@ -597,23 +677,59 @@ export class ParcelasProjeto implements OnInit {
     // Parcela o que falta para fechar o projeto; sem parcelas, o valor cheio
     const falta = this.diferenca();
     this.parc.valor_total = falta > 0 ? falta : Number(this.projeto.valor || 0);
+    this.refazerDivisao();
     this.parcelarAberto = true;
   }
 
-  /** Previa com a mesma conta do backend: sobra na primeira, uma por mes. */
-  previa(): { vencimento: string; valor: number }[] {
+  /* Mexer na quantidade, no valor ou na data de partida refaz a divisao
+     inteira; depois disso cada linha e ajustada sozinha. */
+  mudarQuantidade(valor: number) {
+    this.parc.quantidade = valor;
+    this.refazerDivisao();
+  }
+  mudarTotal(valor: number) {
+    this.parc.valor_total = valor;
+    this.refazerDivisao();
+  }
+  mudarPrimeiroVencimento(valor: string | null) {
+    this.parc.primeiro_vencimento = valor;
+    this.refazerDivisao();
+  }
+
+  /** Divide de novo do zero: sobra na primeira, uma por mes. */
+  refazerDivisao() {
     const qtd = Math.floor(Number(this.parc.quantidade) || 0);
     const total = Number(this.parc.valor_total) || 0;
-    if (qtd < 1 || qtd > 60 || total <= 0) return [];
+    if (qtd < 1 || qtd > 60 || total <= 0) {
+      this.linhas = [];
+      return;
+    }
     const partida = this.parc.primeiro_vencimento || this.hojeIso();
-    return dividirValor(total, qtd).map((valor, i) => ({
+    this.linhas = dividirValor(total, qtd).map((valor, i) => ({
+      descricao: `Parcela ${i + 1}/${qtd}`,
       valor,
       vencimento: somarMeses(partida, i),
+      editada: false,
     }));
   }
 
+  /** Alguma linha foi ajustada na mao? */
+  get editada(): boolean {
+    return this.linhas.some((l) => l.editada);
+  }
+
+  somaLinhas(): number {
+    return this.linhas.reduce((s, l) => s + (Number(l.valor) || 0), 0);
+  }
+
+  /** Quanto falta (ou passou) do valor a parcelar depois dos ajustes. */
+  sobra(): number {
+    const dif = Number(this.parc.valor_total || 0) - this.somaLinhas();
+    return Math.round(dif * 100) / 100;
+  }
+
   async gerarParcelamento() {
-    if (!this.previa().length) return;
+    if (!this.linhas.length) return;
     if (this.parc.substituir) {
       const ok = await this.confirm.ask({
         title: 'Substituir parcelas',
@@ -627,9 +743,15 @@ export class ParcelasProjeto implements OnInit {
     this.api
       .parcelar(this.projeto.id, {
         ...this.parc,
-        quantidade: Math.floor(Number(this.parc.quantidade) || 0),
-        valor_total: Number(this.parc.valor_total) || 0,
+        quantidade: this.linhas.length,
+        valor_total: this.somaLinhas(),
         primeiro_vencimento: this.parc.primeiro_vencimento || this.hojeIso(),
+        // Vale o que esta na tela: o backend nao redivide o que foi ajustado
+        parcelas: this.linhas.map((l) => ({
+          descricao: (l.descricao || '').trim(),
+          valor: Number(l.valor) || 0,
+          vencimento: l.vencimento || null,
+        })),
       })
       .subscribe({
         next: () => {

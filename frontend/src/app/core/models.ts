@@ -64,6 +64,12 @@ export interface ParcelamentoInput {
   primeiro_vencimento?: string | null;
   descricao?: string;
   substituir?: boolean;
+  /** Linhas ajustadas na previa; quando vem, mandam no lugar da divisao. */
+  parcelas?: {
+    descricao: string;
+    valor: number;
+    vencimento?: string | null;
+  }[];
 }
 
 /* Quadro de tarefas dentro do projeto */

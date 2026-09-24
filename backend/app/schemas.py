@@ -91,14 +91,27 @@ class ParcelaCreate(BaseModel):
     pago_em: Optional[date] = None
 
 
+class ParcelaLinha(BaseModel):
+    """Linha ja ajustada na previa do parcelamento."""
+
+    descricao: str = ""
+    valor: float = 0
+    vencimento: Optional[date] = None
+
+
 class ParcelamentoCreate(BaseModel):
-    """Gera N parcelas de uma vez: valor dividido e vencimentos mensais."""
+    """Gera N parcelas de uma vez: valor dividido e vencimentos mensais.
+
+    Com `parcelas` preenchido vale o que veio da tela, linha por linha: e o
+    caso de quem ajustou uma parcela na previa e nao quer as outras mexidas.
+    """
 
     quantidade: int = 2
     valor_total: float = 0
     primeiro_vencimento: Optional[date] = None
     descricao: str = ""
     substituir: bool = False
+    parcelas: list[ParcelaLinha] = []
 
 
 class ParcelaRead(BaseModel):
